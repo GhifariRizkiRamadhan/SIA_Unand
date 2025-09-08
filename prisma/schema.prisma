@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model izinkeluar {
+  izin_id         Int              @id @default(autoincrement())
+  reason          String           @db.VarChar(255)
+  date_requested  DateTime         @db.Date
+  status          String?          @default("pending") @db.VarChar(50)
+  Pengelola_id    Int?
+  mahasiswa_id    Int
+  pengelolaasrama pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "izinkeluar_ibfk_1")
+  mahasiswa       mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "izinkeluar_ibfk_2")
+
+  @@index([Pengelola_id], map: "Pengelola_id")
+  @@index([date_requested], map: "idx_izinkeluar_date")
+  @@index([mahasiswa_id], map: "mahasiswa_id")
+}
+
+model mahasiswa {
+  mahasiswa_id       Int                  @id @default(autoincrement())
+  nim                String               @unique(map: "nim") @db.VarChar(50)
+  nama               String               @db.VarChar(50)
+  status             String?              @default("aktif") @db.VarChar(50)
+  user_id            String               @db.VarChar(50)
+  izinkeluar         izinkeluar[]
+  user               user                 @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "mahasiswa_ibfk_1")
+  pelaporankerusakan pelaporankerusakan[]
+  pembayaran         pembayaran[]
+  pemberitahuan      pemberitahuan[]
+  suratbebasasrama   suratbebasasrama[]
+
+  @@index([nim], map: "idx_mahasiswa_nim")
+  @@index([user_id], map: "user_id")
+}
+
+model pelaporankerusakan {
+  laporan_id      Int              @id @default(autoincrement())
+  description     String           @db.VarChar(50)
+  status          String?          @default("dilaporkan") @db.VarChar(50)
+  date_submitted  DateTime         @db.Date
+  mahasiswa_id    Int
+  Pengelola_id    Int?
+  mahasiswa       mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "pelaporankerusakan_ibfk_1")
+  pengelolaasrama pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "pelaporankerusakan_ibfk_2")
+
+  @@index([Pengelola_id], map: "Pengelola_id")
+  @@index([date_submitted], map: "idx_pelaporan_date")
+  @@index([mahasiswa_id], map: "mahasiswa_id")
+}
+
+model pembayaran {
+  pembayaran_id Int       @id @default(autoincrement())
+  amount        Decimal   @db.Decimal(10, 2)
+  payment_date  DateTime  @db.Date
+  status        String?   @default("pending") @db.VarChar(50)
+  mahasiswa_id  Int
+  mahasiswa     mahasiswa @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "pembayaran_ibfk_1")
+
+  @@index([payment_date], map: "idx_pembayaran_date")
+  @@index([mahasiswa_id], map: "mahasiswa_id")
+}
+
+model pemberitahuan {
+  pemberitahuan_id Int             @id @default(autoincrement())
+  title            String          @db.VarChar(50)
+  content          String          @db.VarChar(255)
+  date             DateTime        @db.Date
+  Pengelola_id     Int
+  mahasiswa_id     Int?
+  pengelolaasrama  pengelolaasrama @relation(fields: [Pengelola_id], references: [Pengelola_id], onDelete: Cascade, map: "pemberitahuan_ibfk_1")
+  mahasiswa        mahasiswa?      @relation(fields: [mahasiswa_id], references: [mahasiswa_id], map: "pemberitahuan_ibfk_2")
+
+  @@index([Pengelola_id], map: "Pengelola_id")
+  @@index([date], map: "idx_pemberitahuan_date")
+  @@index([mahasiswa_id], map: "mahasiswa_id")
+}
+
+model pengelolaasrama {
+  Pengelola_id       Int                  @id @default(autoincrement())
+  user_id            String               @db.VarChar(50)
+  izinkeluar         izinkeluar[]
+  pelaporankerusakan pelaporankerusakan[]
+  pemberitahuan      pemberitahuan[]
+  user               user                 @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "pengelolaasrama_ibfk_1")
+  suratbebasasrama   suratbebasasrama[]
+
+  @@index([user_id], map: "user_id")
+}
+
+model suratbebasasrama {
+  Surat_id        Int              @id @default(autoincrement())
+  status          String?          @default("pending") @db.VarChar(50)
+  file            String?          @db.VarChar(50)
+  mahasiswa_id    Int
+  Pengelola_id    Int?
+  mahasiswa       mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "suratbebasasrama_ibfk_1")
+  pengelolaasrama pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "suratbebasasrama_ibfk_2")
+
+  @@index([Pengelola_id], map: "Pengelola_id")
+  @@index([mahasiswa_id], map: "mahasiswa_id")
+}
+
+model user {
+  user_id         String            @id @db.VarChar(50)
+  name            String            @db.VarChar(50)
+  email           String            @unique(map: "email") @db.VarChar(50)
+  password        String            @db.VarChar(50)
+  role            String            @db.VarChar(50)
+  mahasiswa       mahasiswa[]
+  pengelolaasrama pengelolaasrama[]
+
+  @@index([email], map: "idx_user_email")
+}
