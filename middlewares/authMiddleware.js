@@ -35,9 +35,9 @@ const redirectIfAuthenticated = (req, res, next) => {
       
       // Redirect based on role
       if (decoded.role === 'mahasiswa') {
-        return res.redirect('/dashboard/mahasiswa');
+        return res.redirect('/mahasiswa/dashboard');
       } else if (decoded.role === 'pengelola') {
-        return res.redirect('/dashboard/pengelola');
+        return res.redirect('/pengelola/dashboard');
       } else {
         return res.redirect('/dashboard');
       }
