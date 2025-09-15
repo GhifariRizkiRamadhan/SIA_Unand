@@ -1,0 +1,57 @@
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-52 bg-white shadow-lg transform transition-transform duration-300 ease-in-out">
+    <!-- Logo Section -->
+    <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 rounded-lg flex items-center justify-center">
+                <i class="fas fa-graduation-cap text-white text-sm"></i>
+            </div>
+            <span id="logo-text" class="font-bold text-gray-900 text-lg">SIA UNAND</span>
+        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="mt-6 px-3">
+        <ul class="space-y-2">
+            <!-- Dashboard -->
+            <li>
+                <a href="/dashboard" class="flex items-center px-3 py-3 <%= activeMenu === 'dashboard' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                    <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
+                    <span class="sidebar-text font-medium text-sm">Dashboard</span>
+                </a>
+            </li>
+            
+            <!-- Data Penghuni -->
+            <li>
+                <a href="/penghuni" class="flex items-center px-3 py-3 <%= activeMenu === 'penghuni' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                    <i class="fas fa-users w-5 h-5 mr-3"></i>
+                    <span class="sidebar-text font-medium text-sm">Data Penghuni</span>
+                </a>
+            </li>
+            
+            <!-- Pemberitahuan -->
+            <li>
+                <a href="/pemberitahuan" class="flex items-center px-3 py-3 <%= activeMenu === 'pemberitahuan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="sidebar-text font-medium text-sm">Pemberitahuan</span>
+                </a>
+            </li>
+            
+            <!-- Perizinan -->
+            <li>
+                <a href="/perizinan" class="flex items-center px-3 py-3 <%= activeMenu === 'perizinan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                    <i class="fas fa-file-alt w-5 h-5 mr-3"></i>
+                    <span class="sidebar-text font-medium text-sm">Perizinan</span>
+                </a>
+            </li>
+            
+            <!-- Surat Bebas Asrama -->
+            <li>
+                <a href="/surat-bebas" class="flex items-center px-3 py-3 <%= activeMenu === 'surat-bebas' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                    <i class="fas fa-certificate w-5 h-5 mr-3"></i>
+                    <span class="sidebar-text font-medium text-sm">Surat Bebas Asrama</span>
+                </a>
+            </li>
+        </ul>
+
+    </nav>
+</aside>

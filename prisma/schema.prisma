@@ -110,7 +110,7 @@ model user {
   user_id         String            @id @db.VarChar(50)
   name            String            @db.VarChar(50)
   email           String            @unique(map: "email") @db.VarChar(50)
-  password        String            @db.VarChar(50)
+  password        String            @db.VarChar(100)
   role            String            @db.VarChar(50)
   mahasiswa       mahasiswa[]
   pengelolaasrama pengelolaasrama[]
