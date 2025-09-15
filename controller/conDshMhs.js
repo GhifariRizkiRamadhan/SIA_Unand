@@ -4,10 +4,18 @@ const jwt = require('jsonwebtoken');
 
 const showDashboard = async (req, res) => {
   try {
-    res.render("mahasiswa/dashboard", { 
-      activePage: "",
-      error: null,
-      success: null
+    res.render("layouts/main", { 
+        title: 'Dashboard',
+        pageTitle: 'Dashboard',
+        activeMenu: 'dashboard',
+        user: {
+            name: 'Erano',
+            role: 'Mahasiswa',
+            avatar: 'E'
+        },
+        activePage: "",
+        error: null,
+        success: null
     });
   } catch (error) {
     console.log("error", error);

@@ -14,11 +14,13 @@ router.get("/", (req, res) => {
 const controller1 = require("../controller/conLogin");
 const controller2 = require("../controller/conRegis");
 
+
 // Public routes (redirect if authenticated)
 router.get("/login", redirectIfAuthenticated, controller1.showLogin);
 router.post('/login', redirectIfAuthenticated, controller1.authController.login);
 router.get("/register", redirectIfAuthenticated, controller2.regcon.showRegis);
 router.post("/register", redirectIfAuthenticated, controller2.regcon.register);
+router.get("/logout", controller1.authController.logout);
 
 //mahasiswa
 const controller3 = require("../controller/conDshMhs");
