@@ -56,6 +56,24 @@ const User = {
     }
   },
 
+  
+  // Find user by id
+  async findById(user_id) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { user_id }
+      });
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Count all users
+  async countAll() {
+    return await prisma.user.count();
+  },
+
   // Verify password
   async verifyPassword(plainPassword, hashedPassword) {
     return await bcrypt.compare(plainPassword, hashedPassword);

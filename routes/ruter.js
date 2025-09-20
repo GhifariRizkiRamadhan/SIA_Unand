@@ -24,7 +24,11 @@ router.get("/logout", controller1.authController.logout);
 
 //mahasiswa
 const controller3 = require("../controller/conDshMhs");
+const controller5 = require("../controller/conPbyr.js");
+const controller6 = require("../controller/conBbsAsr.js");
 router.get("/mahasiswa/dashboard", authMiddleware, controller3.showDashboard);  
+router.get("/mahasiswa/pembayaran", authMiddleware, controller5.showPembayaran);
+router.get("/mahasiswa/bebas-asrama", authMiddleware, controller6.showBebasAsrama);
 
 
 //pengelola

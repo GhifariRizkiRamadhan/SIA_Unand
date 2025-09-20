@@ -49,9 +49,9 @@
     function toggleCollapse(collapse) {
         if (collapse) {
             sidebar.classList.add('w-16');
-            sidebar.classList.remove('w-64');
+            sidebar.classList.remove('w-52');
             mainContent.classList.add('lg:ml-16');
-            mainContent.classList.remove('lg:ml-64');
+            mainContent.classList.remove('lg:ml-52');
             
             sidebarTexts.forEach(text => {
                 text.classList.add('hidden');
@@ -64,9 +64,9 @@
             });
         } else {
             sidebar.classList.remove('w-16');
-            sidebar.classList.add('w-64');
+            sidebar.classList.add('w-52');
             mainContent.classList.remove('lg:ml-16');
-            mainContent.classList.add('lg:ml-64');
+            mainContent.classList.add('lg:ml-52');
             
             sidebarTexts.forEach(text => {
                 text.classList.remove('hidden');

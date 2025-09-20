@@ -14,7 +14,7 @@
         <ul class="space-y-2">
             <!-- Dashboard -->
             <li>
-                <a href="/dashboard" class="flex items-center px-3 py-3 <%= activeMenu === 'dashboard' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                <a href="/mahasiswa/dashboard" class="flex items-center px-3 py-3 <%= activeMenu === 'dashboard' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
                     <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
                     <span class="sidebar-text font-medium text-sm">Dashboard</span>
                 </a>
@@ -46,7 +46,7 @@
             
             <!-- Surat Bebas Asrama -->
             <li>
-                <a href="/surat-bebas" class="flex items-center px-3 py-3 <%= activeMenu === 'surat-bebas' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                <a href="/mahasiswa/bebas-asrama" class="flex items-center px-3 py-3 <%= activeMenu === 'bebas-asrama' || activeMenu === 'pembayaran'  ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
                     <i class="fas fa-certificate w-5 h-5 mr-3"></i>
                     <span class="sidebar-text font-medium text-sm">Surat Bebas Asrama</span>
                 </a>
