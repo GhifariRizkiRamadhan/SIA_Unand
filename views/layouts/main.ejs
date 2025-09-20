@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title || 'SIA UNAND' %> - Dashboard</title>
+    <title><%= title || 'SIA UNAND' %></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             theme: {
@@ -33,23 +34,24 @@
     <!-- Include Sidebar Component -->
     <%- include('../components/sidebar', { 
         activeMenu: activeMenu || 'dashboard',
-        user: user || { name: 'Erano', role: 'Mahasiswa' }
     }) %>
+
+    
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <!-- Main Content -->
-    <div id="main-content" class="lg:ml-52 transition-all duration-300">
+    <div id="main-content" class="lg:ml-52  transition-all duration-300">
         <!-- Include Header Component -->
         <%- include('../components/header', { 
-            user: user || { name: 'Erano', role: 'Mahasiswa', avatar: 'E' },
-            pageTitle: pageTitle || 'Dashboard'
+            user: user || { name: 'Penghuni', role: 'Tamu', avatar: 'T' },
+            pageTitle: pageTitle || ''
         }) %>
 
         <!-- Page Content -->
         <main class="p-6">
-            <%- include('../mahasiswa/dashboard', { user: user }) %>
+            <%- body %>
         </main>
     </div>
 

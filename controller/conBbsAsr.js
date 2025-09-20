@@ -5,42 +5,43 @@ const ejs = require('ejs');
 const User = require('../models/userModels');
 const path = require('path');
 
-const showDashboard = async (req, res) => {
-   try {
+const showBebasAsrama = async (req, res) => {
+  try {
+    // Ambil user_id dari session atau JWT
     const userId = req.session?.user_id || req.user?.user_id;
     if (!userId) {
       return res.redirect('/login');
     }
 
+    // Ambil data user dari database
     const user = await User.findById(userId);
 
-    const totalUsers = await User.countAll();
-
-    // Render isi dashboard.ejs sebagai body
+    // Render isi bebasAsrama.ejs sebagai body
     const body = await ejs.renderFile(
-      path.join(__dirname, '../views/mahasiswa/dashboard.ejs'),
-      { user, totalUsers }
+      path.join(__dirname, '../views/mahasiswa/bebasAsrama.ejs'),
+      { user }
     );
-    res.render("layouts/main", { 
-      title: 'Dashboard',
-      pageTitle: 'Dashboard',
-      activeMenu: 'dashboard',
+
+    res.render('layouts/main', {
+      title: 'Surat Bebas Asrama',
+      pageTitle: 'Surat Bebas Asrama',
+      activeMenu: 'bebas-asrama',
+      body,
       user: {
         name: user.name,
         role: user.role,
         avatar: user.avatar || user.name.charAt(0)
       },
-      body,
       activePage: "",
       error: null,
       success: null
     });
   } catch (error) {
-    console.log("error", error);
-    res.status(500).json({ message: error });
+    console.error(error);
+    res.status(500).render('error', { message: error.message });
   }
 };
 
 module.exports = {
-    showDashboard
+  showBebasAsrama
 };
