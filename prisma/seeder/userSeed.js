@@ -1,22 +1,30 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
+// file: prisma/seeder/userSeed.js
 
-const prisma = new PrismaClient();
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 
 async function main() {
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  // Gunakan import() dinamis di dalam fungsi async
+  const { v4: uuidv4 } = await import('uuid');
 
-  const user = await prisma.user.create({
+  const hashedPassword = bcrypt.hashSync('pengelola123', 10);
+  const userId = uuidv4();
+
+  // Lanjutkan dengan kode Prisma Anda
+  await prisma.user.create({
     data: {
-      username: 'admin',
+      user_id: userId,
+      name: 'Admin Pengelola',
+      email: 'pengelola@example.com',
       password: hashedPassword,
-      email: 'admin@example.com',
+      role: 'pengelola',
     },
   });
 
-  console.log('User created:', user);
+  console.log('Seeding selesai! ✅');
 }
 
+const prisma = new PrismaClient();
 main()
   .catch((e) => {
     console.error(e);

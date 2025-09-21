@@ -4,14 +4,14 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <!-- Form Header -->
         <div class="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 px-6 py-4">
-            <h2 class="text-sm font-semibold text-white">Konfirmasi Pembayaran</h2>
+            <h2 class="text-lg font-semibold text-white">Konfirmasi Pembayaran</h2>
         </div>
 
         <!-- Form Content -->
         <div class="p-6">
             <form id="payment-form" action="/konfirmasi-pembayaran" method="POST" enctype="multipart/form-data">
                 <!-- Payment Details Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-1">
                     <!-- Left Column - Payment Info -->
                     <div class="space-y-6">
                         <div>
@@ -26,7 +26,7 @@
                                 
                                 <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                     <span class="text-gray-600 text-sm">NIM</span>
-                                    <span class="font-medium text-gray-900"><%= user?.nim || '22211521009' %></span>
+                                    <span class="font-medium text-gray-900"><%= user?.nim || '' %></span>
                                 </div>
                                 
                                 <div class="flex justify-between items-center py-2 border-b border-gray-100">
@@ -35,12 +35,92 @@
                                         <%= user?.status || 'Menunggu Pembayaran' %>
                                     </span>
                                 </div>
-                                
-                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                                    <span class="text-gray-600 text-sm">Jumlah Pembayaran</span>
-                                    <span class="font-bold text-green-600 text-sm">
-                                        Rp <%='500.000' %>
-                                    </span>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Payment Breakdown -->
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Rincian Biaya</h3>
+                            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                                <!-- Biaya Asrama -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Biaya Asrama</span>
+                                        <p class="text-xs text-gray-500">Per semester</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 2.500.000</span>
+                                </div>
+
+                                <!-- Fasilitas Kamar -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Fasilitas Kamar</span>
+                                        <p class="text-xs text-gray-500">AC, Kasur, Lemari, Meja</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 800.000</span>
+                                </div>
+
+                                <!-- Fasilitas Umum -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Fasilitas Umum</span>
+                                        <p class="text-xs text-gray-500">WiFi, Laundry, Ruang Belajar</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 600.000</span>
+                                </div>
+
+                                <!-- Listrik & Air -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Listrik & Air</span>
+                                        <p class="text-xs text-gray-500">Biaya utilitas bulanan</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 400.000</span>
+                                </div>
+
+                                <!-- Keamanan -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Keamanan</span>
+                                        <p class="text-xs text-gray-500">Security 24 jam</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 300.000</span>
+                                </div>
+
+                                <!-- Pemeliharaan -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Pemeliharaan</span>
+                                        <p class="text-xs text-gray-500">Maintenance fasilitas</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 200.000</span>
+                                </div>
+
+                                <!-- Administrasi -->
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Biaya Administrasi</span>
+                                        <p class="text-xs text-gray-500">Pengurusan dokumen</p>
+                                    </div>
+                                    <span class="font-medium text-gray-900">Rp 200.000</span>
+                                </div>
+
+                                <!-- Total -->
+                                <div class="flex justify-between items-center pt-3 border-t-2 border-purple-200">
+                                    <span class="text-base font-bold text-gray-900">Total Pembayaran</span>
+                                    <span class="text-lg font-bold text-green-600">Rp 5.000.000</span>
+                                </div>
+                            </div>
+
+                            <!-- Payment Period Info -->
+                            <div class="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-calendar-alt text-blue-600 mt-1"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-900">Periode Pembayaran</p>
+                                        <p class="text-xs text-blue-700">Semester Ganjil 2025/2026</p>
+                                        <p class="text-xs text-blue-700">Jatuh Tempo: 31 Oktober 2025</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -62,22 +142,11 @@
                                 </div>
                             </div>
                             <p class="text-sm text-blue-700 text-center mt-2">a.n. Asrama Universitas Andalas</p>
+                            <div class="mt-3 text-center">
+                                <p class="text-xs text-blue-600">Kode Virtual Account (Opsional):</p>
+                                <p class="font-mono text-sm font-bold text-blue-900"><%= user?.nim || '1234567890' %>5000</p>
+                            </div>
                         </div>
-                        <!-- Form Actions -->
-                        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 text-sm">
-                            <button type="button" onclick="window.history.back()" 
-                                class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                                <i class="fas fa-ban text-red-500 mr-2"></i>
-                                Batal
-                            </button>
-                            
-                            <button type="submit" 
-                                class="flex-1 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                id="submit-btn">
-                                <i class="fas fa-check mr-2"></i>
-                                Kirim
-                            </button>
-                        </div> 
                     </div>
 
                     <!-- Right Column - Upload Form -->
@@ -133,7 +202,9 @@
                                         <div>
                                             <h3 class="text-sm font-semibold text-yellow-900">Informasi Penting:</h3>
                                             <ul class="mt-2 text-sm text-yellow-800 space-y-1">
-                                                <li>• Pastikan bukti transfer yang diunggah jelas dan terbaca</li>
+                                                <li>• Pastikan nominal transfer sesuai dengan total pembayaran (Rp 5.000.000)</li>
+                                                <li>• Sertakan kode virtual account jika menggunakan transfer online</li>
+                                                <li>• Bukti transfer harus jelas menampilkan tanggal dan nominal</li>
                                                 <li>• Konfirmasi pembayaran akan diproses dalam 1x24 jam</li>
                                                 <li>• Hubungi admin jika ada kendala dalam proses pembayaran</li>
                                                 <li>• Simpan bukti pembayaran sebagai arsip pribadi</li>
@@ -141,10 +212,37 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Contact Info -->
+                                <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-900 mb-2">Kontak Admin:</h4>
+                                    <div class="space-y-1 text-sm text-gray-600">
+                                        <p><i class="fas fa-phone mr-2"></i>+62 751 71181 (ext. 205)</p>
+                                        <p><i class="fas fa-envelope mr-2"></i>asrama@unand.ac.id</p>
+                                        <p><i class="fab fa-whatsapp mr-2"></i>+62 812 3456 7890</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                   
                 </div>
+                
+                 <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 text-sm">
+                    <button type="button" onclick="window.history.back()" 
+                        class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-ban text-red-500 mr-2"></i>
+                        Batal
+                    </button>
+                    
+                    <button type="submit" 
+                        class="flex-1 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        id="submit-btn">
+                        <i class="fas fa-check mr-2"></i>
+                        Kirim Konfirmasi
+                    </button>
+                </div> 
             </form>
         </div>
         
@@ -172,14 +270,14 @@
             </div>
             <h3 class="text-sm font-semibold text-gray-900 mb-2">Berhasil!</h3>
             <p class="text-gray-600 mb-6">Konfirmasi pembayaran Anda telah dikirim dan akan diproses oleh admin.</p>
-            <button onclick="redirectToDashboard()" 
+            <button onclick="redirectToBebasAsrama()" 
                     class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                Kembali ke Dashboard
+                Kembali ke Halaman Surat Bebas Asrama
             </button>
         </div>
     </div>
 </div>
-</body>
+
 <script>
 // File upload functionality
 const fileInput = document.getElementById('file-upload');
@@ -302,11 +400,12 @@ document.getElementById('payment-form').addEventListener('submit', function(e) {
 });
 
 // Redirect function
-function redirectToDashboard() {
-    window.location.href = '/dashboard';
+function redirectToBebasAsrama() {
+    window.location.href = '/mahasiswa/bebas-asrama';
 }
 
 // Initialize submit button as disabled
 submitBtn.disabled = true;
 submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 </script>
+</body>
