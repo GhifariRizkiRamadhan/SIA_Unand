@@ -24,8 +24,8 @@ router.get("/logout", controller1.authController.logout);
 
 //mahasiswa
 const controller3 = require("../controller/conDshMhs");
-const controller5 = require("../controller/conPbyr.js");
-const controller6 = require("../controller/conBbsAsr.js");
+const controller5 = require("../controller/conPbyr");
+const controller6 = require("../controller/conBbsAsr");
 router.get("/mahasiswa/dashboard", authMiddleware, controller3.showDashboard);  
 router.get("/mahasiswa/pembayaran", authMiddleware, controller5.showPembayaran);
 router.get("/mahasiswa/bebas-asrama", authMiddleware, controller6.showBebasAsrama);
@@ -33,6 +33,8 @@ router.get("/mahasiswa/bebas-asrama", authMiddleware, controller6.showBebasAsram
 
 //pengelola
 const controller4 = require("../controller/conDhsPnl");
+const controller7 = require("../controller/conBbsAsrPnl");
 router.get("/pengelola/dashboard", authMiddleware, controller4.showDashboard);
+router.get("/pengelola/pengelola-bebas-asrama", authMiddleware, controller7.showBebasAsramaPengelola);
 
 module.exports = router;

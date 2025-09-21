@@ -12,45 +12,88 @@
     <!-- Navigation Menu -->
     <nav class="mt-6 px-3">
         <ul class="space-y-2">
-            <!-- Dashboard -->
-            <li>
-                <a href="/mahasiswa/dashboard" class="flex items-center px-3 py-3 <%= activeMenu === 'dashboard' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
-                    <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
-                    <span class="sidebar-text font-medium text-sm">Dashboard</span>
-                </a>
-            </li>
             
-            <!-- Data Penghuni -->
-            <li>
-                <a href="/penghuni" class="flex items-center px-3 py-3 <%= activeMenu === 'penghuni' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
-                    <i class="fas fa-users w-5 h-5 mr-3"></i>
-                    <span class="sidebar-text font-medium text-sm">Data Penghuni</span>
-                </a>
-            </li>
-            
-            <!-- Pemberitahuan -->
-            <li>
-                <a href="/pemberitahuan" class="flex items-center px-3 py-3 <%= activeMenu === 'pemberitahuan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
-                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
-                    <span class="sidebar-text font-medium text-sm">Pemberitahuan</span>
-                </a>
-            </li>
-            
-            <!-- Perizinan -->
-            <li>
-                <a href="/perizinan" class="flex items-center px-3 py-3 <%= activeMenu === 'perizinan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
-                    <i class="fas fa-file-alt w-5 h-5 mr-3"></i>
-                    <span class="sidebar-text font-medium text-sm">Perizinan</span>
-                </a>
-            </li>
-            
-            <!-- Surat Bebas Asrama -->
-            <li>
-                <a href="/mahasiswa/bebas-asrama" class="flex items-center px-3 py-3 <%= activeMenu === 'bebas-asrama' || activeMenu === 'pembayaran'  ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
-                    <i class="fas fa-certificate w-5 h-5 mr-3"></i>
-                    <span class="sidebar-text font-medium text-sm">Surat Bebas Asrama</span>
-                </a>
-            </li>
+             <% if (user.role === 'mahasiswa') { %>
+                <li>
+                    <a href="/mahasiswa/dashboard" class="flex items-center px-3 py-3 <%= activeMenu === 'dashboard' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Dashboard</span>
+                    </a>
+                </li>
+                
+                <!-- Pengajuan surat izin -->
+                <li>
+                    <a href="/pengajuan-surat-izin" class="flex items-center px-3 py-3 <%= activeMenu === 'pengajuan-surat-izin' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-file-alt w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Pengajuan Surat Izin</span>
+                    </a>
+                </li>
+                
+                <!-- Pelaporan -->
+                <li>
+                    <a href="/pelaporan" class="flex items-center px-3 py-3 <%= activeMenu === 'pelaporan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-clipboard-list w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Pelaporan</span>
+                    </a>
+                </li>
+                
+                <!-- Surat Bebas Asrama -->
+                <li>
+                    <a href="/mahasiswa/bebas-asrama" class="flex items-center px-3 py-3 <%= activeMenu === 'bebas-asrama' || activeMenu === 'pembayaran'  ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-file-contract w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Surat Bebas Asrama</span>
+                    </a>
+                </li>
+
+                <!-- Riwayat -->
+                <li>
+                    <a href="/riwayat" class="flex items-center px-3 py-3 <%= activeMenu === 'riwayat' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-history w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Riwayat</span>
+                    </a>
+                </li>
+            <% } %>
+
+            <% if (user.role === 'pengelola') { %>
+                <li>
+                    <a href="/pengelola/dashboard" class="flex items-center px-3 py-3 <%= activeMenu === 'dashboard' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Dashboard</span>
+                    </a>
+                </li>
+                
+                <!-- Data Penghuni -->
+                <li>
+                    <a href="/penghuni" class="flex items-center px-3 py-3 <%= activeMenu === 'penghuni' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-users w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Data Penghuni</span>
+                    </a>
+                </li>
+                
+                <!-- Pemberitahuan -->
+                <li>
+                    <a href="/pemberitahuan" class="flex items-center px-3 py-3 <%= activeMenu === 'pemberitahuan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Pemberitahuan</span>
+                    </a>
+                </li>
+                
+                <!-- Perizinan -->
+                <li>
+                    <a href="/perizinan" class="flex items-center px-3 py-3 <%= activeMenu === 'perizinan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-file-alt w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Perizinan</span>
+                    </a>
+                </li>
+                
+                <!-- Surat Bebas Asrama -->
+                <li>
+                    <a href="/pengelola/pengelola-bebas-asrama" class="flex items-center px-3 py-3 <%= activeMenu === 'pengelola-bebas-asrama' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-certificate w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Surat Bebas Asrama</span>
+                    </a>
+                </li>
+            <% } %>
         </ul>
 
     </nav>

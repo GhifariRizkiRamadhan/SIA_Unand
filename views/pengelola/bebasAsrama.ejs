@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Bebas Asrama - Pengelola</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="lg:ml-52 bg-gray-50">
+    <div class="bg-white rounded-lg shadow-sm border">
+        <div class="px-6 py-4 border-b">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-800">Daftar Pengajuan Surat Bebas Asrama</h2>
+                    </div>
+                </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Pengajuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIM</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pengajuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Pengajuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fasilitas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bukti Pembayaran</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Update</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="submissionTable" class="bg-white divide-y divide-gray-200">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">1</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">001</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Ahmad Rizki</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">2110101001</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Kelulusan</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">15 September 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                <i class="fas fa-check-double mr-1"></i>Proses Verifikasi
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Belum Lengkap</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            <span class="flex items-center justify-center text-gray-600 font-medium">
+                                <i class="fas fa-minus mr-1"></i>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">15 September 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex space-x-2">
+                                <button onclick="openVerificationModal(1, 'Ahmad Rizki')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                                    <i class="fas fa-check mr-1"></i>Verifikasi
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">002</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Siti Nurhaliza</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">2110101002</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Pindah Asrama</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">10 September 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+                                <i class="fas fa-clock mr-1"></i>Menunggu Pembayaran
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Lengkap (Rp 150.000)</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Belum Upload</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">12 September 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex space-x-2">
+                                <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
+                                    <i class="fas fa-clock mr-1"></i>Menunggu Upload
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">003</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Budi Santoso</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">2110101003</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Kelulusan</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">5 September 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+                                <i class="fas fa-clock mr-1"></i>Menunggu Pembayaran
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">Lengkap (Rp 200.000)</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                            <a href="#" onclick="viewPaymentProof(3)" class="hover:text-blue-800">
+                                <i class="fas fa-eye mr-1"></i>Lihat Bukti
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">8 September 2025</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex space-x-2">
+                                <button onclick="openPaymentVerificationModal(3, 'Budi Santoso')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                                    <i class="fas fa-check-circle mr-1"></i>Lunas
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Verifikasi -->
+    <div id="verificationModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="px-6 py-4 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Verifikasi Pengajuan</h3>
+                        <button onclick="closeModal('verificationModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <p class="mb-4"><strong>Nama:</strong> <span id="verificationStudentName"></span></p>
+                    <p class="mb-4"><strong>Status Kelengkapan:</strong></p>
+                    
+                    <div class="space-y-3 mb-4">
+                        <label class="flex items-center">
+                            <input type="radio" id="complete" name="completeness" value="complete" onchange="toggleFacilityForm()" class="mr-2">
+                            <span class="text-sm">Lengkap</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="radio" id="incomplete" name="completeness" value="incomplete" onchange="toggleFacilityForm()" class="mr-2">
+                            <span class="text-sm">Tidak Lengkap</span>
+                        </label>
+                    </div>
+                    
+                    <div id="facilityForm" class="hidden">
+                        <h4 class="font-medium text-gray-800 mb-3">Daftar Fasilitas yang Perlu Dibayar:</h4>
+                        <div id="facilityList" class="space-y-2 mb-3">
+                            <div class="flex gap-2 items-center facility-item">
+                                <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" onchange="calculateTotal()">
+                                <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addFacility()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium mb-4">
+                            <i class="fas fa-plus mr-1"></i>Tambah Fasilitas
+                        </button>
+                        
+                        <div class="border-t pt-3">
+                            <div class="text-right font-semibold text-gray-800">
+                                Total: Rp <span id="totalAmount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-2">
+                    <button onclick="closeModal('verificationModal')" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button onclick="submitVerification()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Verifikasi Pembayaran -->
+    <div id="paymentVerificationModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="px-6 py-4 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">Verifikasi Pembayaran</h3>
+                        <button onclick="closeModal('paymentVerificationModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4">
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <p class="mb-2"><strong>Nama:</strong> <span id="paymentStudentName"></span></p>
+                        <p class="mb-2"><strong>Total Tagihan:</strong> <span class="text-green-600 font-semibold" id="paymentAmount"></span></p>
+                        <p><strong>Status Bukti:</strong> <span class="text-blue-600">Sudah Upload</span></p>
+                    </div>
+                    
+                    <p class="text-gray-700">Apakah bukti pembayaran sudah sesuai dan dapat diverifikasi?</p>
+                </div>
+                
+                <div class="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-2">
+                    <button onclick="rejectPayment()" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
+                        Tidak, Tolak
+                    </button>
+                    <button onclick="approvePayment()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors">
+                        Ya, Verifikasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVerificationId = null;
+        let currentPaymentId = null;
+
+        // Data simulasi
+        let submissions = [
+            {
+                id: 1,
+                name: 'Ahmad Rizki',
+                nim: '2110101001',
+                category: 'Kelulusan',
+                status: 'Proses Verifikasi',
+                facilities: 'Belum Lengkap',
+                totalAmount: 0,
+                paymentProof: false
+            },
+            {
+                id: 2,
+                name: 'Siti Nurhaliza',
+                nim: '2110101002',
+                category: 'Pindah Asrama',
+                status: 'Menunggu Pembayaran',
+                facilities: 'Lengkap',
+                totalAmount: 150000,
+                paymentProof: false
+            },
+            {
+                id: 3,
+                name: 'Budi Santoso',
+                nim: '2110101003',
+                category: 'Kelulusan',
+                status: 'Menunggu Pembayaran',
+                facilities: 'Lengkap',
+                totalAmount: 200000,
+                paymentProof: true
+            }
+        ];
+
+        function openVerificationModal(id, studentName) {
+            currentVerificationId = id;
+            document.getElementById('verificationStudentName').textContent = studentName;
+            document.getElementById('verificationModal').classList.remove('hidden');
+        }
+
+        function openPaymentVerificationModal(id, studentName) {
+            currentPaymentId = id;
+            const submission = submissions.find(s => s.id === id);
+            document.getElementById('paymentStudentName').textContent = studentName;
+            document.getElementById('paymentAmount').textContent = `Rp ${submission.totalAmount.toLocaleString('id-ID')}`;
+            document.getElementById('paymentVerificationModal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            if (modalId === 'verificationModal') {
+                document.querySelectorAll('input[name="completeness"]').forEach(radio => radio.checked = false);
+                toggleFacilityForm();
+                resetFacilityForm();
+            }
+        }
+
+        function toggleFacilityForm() {
+            const incomplete = document.getElementById('incomplete').checked;
+            const facilityForm = document.getElementById('facilityForm');
+            
+            if (incomplete) {
+                facilityForm.classList.remove('hidden');
+            } else {
+                facilityForm.classList.add('hidden');
+                resetFacilityForm();
+            }
+        }
+
+        function resetFacilityForm() {
+            const facilityList = document.getElementById('facilityList');
+            facilityList.innerHTML = `
+                <div class="flex gap-2 items-center facility-item">
+                    <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" onchange="calculateTotal()">
+                    <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            calculateTotal();
+        }
+
+        function addFacility() {
+            const facilityList = document.getElementById('facilityList');
+            const newFacility = document.createElement('div');
+            newFacility.className = 'flex gap-2 items-center facility-item';
+            newFacility.innerHTML = `
+                <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" onchange="calculateTotal()">
+                <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            facilityList.appendChild(newFacility);
+        }
+
+        function removeFacility(button) {
+            const facilityList = document.getElementById('facilityList');
+            if (facilityList.children.length > 1) {
+                button.parentElement.remove();
+                calculateTotal();
+            }
+        }
+
+        function calculateTotal() {
+            const prices = document.querySelectorAll('.facility-price');
+            let total = 0;
+            
+            prices.forEach(price => {
+                if (price.value && !isNaN(price.value)) {
+                    total += parseInt(price.value);
+                }
+            });
+            
+            document.getElementById('totalAmount').textContent = total.toLocaleString('id-ID');
+        }
+
+        function submitVerification() {
+            const complete = document.getElementById('complete').checked;
+            const incomplete = document.getElementById('incomplete').checked;
+            
+            if (!complete && !incomplete) {
+                alert('Silakan pilih status kelengkapan terlebih dahulu');
+                return;
+            }
+
+            const submission = submissions.find(s => s.id === currentVerificationId);
+            
+            if (complete) {
+                submission.status = 'Menunggu Pembayaran';
+                submission.facilities = 'Lengkap';
+                submission.totalAmount = 50000;
+                alert('Verifikasi berhasil! Status diubah menjadi "Menunggu Pembayaran"');
+            } else {
+                const facilityItems = document.querySelectorAll('.facility-item');
+                let totalAmount = 0;
+                let hasValidFacilities = false;
+                
+                facilityItems.forEach(item => {
+                    const name = item.querySelector('input[type="text"]').value;
+                    const price = item.querySelector('input[type="number"]').value;
+                    
+                    if (name && price && !isNaN(price)) {
+                        totalAmount += parseInt(price);
+                        hasValidFacilities = true;
+                    }
+                });
+                
+                if (!hasValidFacilities) {
+                    alert('Silakan tambahkan minimal satu fasilitas dengan nama dan harga');
+                    return;
+                }
+                
+                submission.status = 'Menunggu Pembayaran';
+                submission.facilities = 'Lengkap';
+                submission.totalAmount = totalAmount;
+                alert(`Fasilitas ditambahkan! Total tagihan: Rp ${totalAmount.toLocaleString('id-ID')}`);
+            }
+            
+            updateTable();
+            closeModal('verificationModal');
+        }
+
+        function approvePayment() {
+            const submission = submissions.find(s => s.id === currentPaymentId);
+            submission.status = 'Lunas';
+            
+            alert('Pembayaran berhasil diverifikasi! Status diubah menjadi "Lunas"');
+            updateTable();
+            closeModal('paymentVerificationModal');
+        }
+
+        function rejectPayment() {
+            const submission = submissions.find(s => s.id === currentPaymentId);
+            submission.paymentProof = false;
+            
+            alert('Bukti pembayaran ditolak. Mahasiswa perlu mengupload ulang bukti pembayaran');
+            updateTable();
+            closeModal('paymentVerificationModal');
+        }
+
+        function updateTable() {
+            const tableBody = document.getElementById('submissionTable');
+            tableBody.innerHTML = '';
+            
+            submissions.forEach((submission, index) => {
+                let statusBadge, statusClass;
+                if (submission.status === 'Lunas') {
+                    statusBadge = '<i class="fas fa-check mr-1"></i>Lunas';
+                    statusClass = 'bg-blue-100 text-blue-800';
+                } else if (submission.status === 'Menunggu Pembayaran') {
+                    statusBadge = '<i class="fas fa-clock mr-1"></i>Menunggu Pembayaran';
+                    statusClass = 'bg-amber-100 text-amber-800';
+                } else {
+                    statusBadge = '<i class="fas fa-check-double mr-1"></i>Proses Verifikasi';
+                    statusClass = 'bg-green-100 text-green-800';
+                }
+                
+                const facilityText = submission.facilities === 'Lengkap' && submission.totalAmount > 0 ? 
+                                   `Lengkap (Rp ${submission.totalAmount.toLocaleString('id-ID')})` : 
+                                   submission.facilities;
+                
+                const paymentProofText = submission.status === 'Lunas' ? 'Terverifikasi' :
+                                       submission.paymentProof ? '<a href="#" onclick="viewPaymentProof(' + submission.id + ')" class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye mr-1"></i>Lihat Bukti</a>' :
+                                       submission.status === 'Menunggu Pembayaran' ? 'Belum Upload' : '<span class="flex items-center justify-center text-gray-600 font-medium"><i class="fas fa-minus mr-1"></i></span>';
+                
+                let actionButtons = '';
+                if (submission.status === 'Proses Verifikasi') {
+                    actionButtons = `<button onclick="openVerificationModal(${submission.id}, '${submission.name}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                        <i class="fas fa-check mr-1"></i>Verifikasi
+                    </button>`;
+                } else if (submission.status === 'Menunggu Pembayaran' && submission.paymentProof) {
+                    actionButtons = `<button onclick="openPaymentVerificationModal(${submission.id}, '${submission.name}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                        <i class="fas fa-check-circle mr-1"></i>Lunas
+                    </button>`;
+                } else if (submission.status === 'Menunggu Pembayaran' && !submission.paymentProof) {
+                    actionButtons = `<button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
+                        <i class="fas fa-clock mr-1"></i>Menunggu Upload
+                    </button>`;
+                } else if (submission.status === 'Lunas') {
+                    actionButtons = `<button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
+                        <i class="fas fa-check-circle mr-1"></i>Selesai
+                    </button>`;
+                }
+                
+                const row = `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${String(index + 1).padStart(3, '0')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submission.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submission.nim}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submission.category}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${getCurrentDate()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                                ${statusBadge}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${facilityText}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${paymentProofText}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${getCurrentDate()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex space-x-2">${actionButtons}</div>
+                        </td>
+                    </tr>
+                `;
+                
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function getCurrentDate() {
+            const now = new Date();
+            const day = now.getDate();
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            return `${day} ${month} ${year}`;
+        }
+
+        function viewPaymentProof(id) {
+            alert('Menampilkan bukti pembayaran untuk pengajuan ID: ' + id);
+        }
+
+        function openNewSubmissionModal() {
+            alert('Fitur untuk membuat pengajuan baru akan dibuka di modal terpisah');
+        }
+
+        // Add event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effects for table rows
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.classList.add('bg-blue-50');
+                });
+                row.addEventListener('mouseleave', function() {
+                    this.classList.remove('bg-blue-50');
+                });
+            });
+
+            // Close modal when clicking outside
+            const modals = document.querySelectorAll('[id$="Modal"]');
+            modals.forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
