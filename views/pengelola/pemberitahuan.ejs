@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelola Pemberitahuan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="lg:ml-52 bg-gray-50">
+  <div class="bg-white rounded-lg shadow-sm border mt-6">
+    <div class="px-6 py-4 border-b flex justify-between items-center">
+      <h2 class="text-lg font-semibold text-gray-800">Daftar Pemberitahuan</h2>
+      <button onclick="openAddModal()"
+              class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
+        <i class="fas fa-plus mr-1"></i>Tambah
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gambar</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Opsi</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if (typeof pemberitahuanList === 'undefined' || pemberitahuanList.length === 0) { %>
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Belum ada pemberitahuan</td>
+            </tr>
+          <% } else { %>
+            <% pemberitahuanList.forEach((p, index) => { %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm font-medium text-gray-900"><%= index + 1 %></td>
+                <td class="px-6 py-4 text-sm text-blue-600">
+                  <div class="max-w-xs truncate" title="<%= p.title %>">
+                    <%= p.title %>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600">
+                  <%= new Date(p.date).toLocaleDateString('id-ID', { 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                  }) %>
+                </td>
+                <td class="px-6 py-4">
+                  <% if (p.image) { %>
+                    <img src="<%= p.image %>" 
+                         class="h-12 w-12 object-cover rounded border shadow-sm" 
+                         alt="Gambar pemberitahuan" />
+                  <% } else { %>
+                    <div class="h-12 w-12 bg-gray-200 rounded border flex items-center justify-center">
+                      <i class="fas fa-image text-gray-400"></i>
+                    </div>
+                  <% } %>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <div class="flex justify-center space-x-2">
+                    <button onclick="openDetailModal('<%= p.pemberitahuan_id %>')"
+                            class="text-green-600 hover:text-green-800 p-1 rounded"
+                            title="Lihat Detail">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="openEditModal('<%= p.pemberitahuan_id %>')"
+                            class="text-blue-600 hover:text-blue-800 p-1 rounded"
+                            title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deletePemberitahuan('<%= p.pemberitahuan_id %>')"
+                            class="text-red-600 hover:text-red-800 p-1 rounded"
+                            title="Hapus">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit -->
+  <div id="pemberitahuanModal" class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl p-8 mx-4 max-h-screen overflow-y-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-purple-700" id="modalTitle">Tambah Pemberitahuan</h2>
+        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 p-1">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <form id="pemberitahuanForm" enctype="multipart/form-data">
+        <input type="hidden" id="pemberitahuanId">
+        
+        <div class="mb-4">
+          <label class="block text-gray-700 font-medium mb-2" for="title">Judul *</label>
+          <input type="text" id="title" name="title" required
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                 placeholder="Masukkan judul pemberitahuan" />
+          <div id="titleError" class="text-red-500 text-sm mt-1 hidden"></div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-gray-700 font-medium mb-2" for="content">Isi Pemberitahuan *</label>
+          <textarea id="content" name="content" rows="6" required
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical" 
+                    placeholder="Masukkan isi pemberitahuan..."></textarea>
+          <div id="contentError" class="text-red-500 text-sm mt-1 hidden"></div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-gray-700 font-medium mb-2" for="image">Upload Gambar (Opsional)</label>
+          <input type="file" id="image" name="image" accept="image/*"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />
+          <div class="text-sm text-gray-500 mt-1">
+            Format yang didukung: JPG, JPEG, PNG, GIF. Maksimal 5MB
+          </div>
+          <div id="imageError" class="text-red-500 text-sm mt-1 hidden"></div>
+          
+          <!-- Preview Image -->
+          <div id="imagePreviewContainer" class="mt-3 hidden">
+            <img id="previewImage" class="max-h-40 w-auto rounded border shadow-sm" alt="Preview" />
+            <button type="button" onclick="removeImagePreview()" 
+                    class="ml-2 text-red-500 hover:text-red-700">
+              <i class="fas fa-times"></i> Hapus
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+          <button type="button" onclick="closeModal()"
+                  class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+            Batal
+          </button>
+          <button type="submit" id="saveButton"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg shadow transition-colors">
+            <i class="fas fa-save mr-1"></i>
+            <span id="saveButtonText">Simpan</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Detail -->
+  <div id="detailModal" class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 mx-4 max-h-screen overflow-y-auto">
+      <div class="flex justify-between items-start mb-4">
+        <h2 class="text-2xl font-bold text-purple-700" id="detailTitle"></h2>
+        <button onclick="closeDetailModal()" class="text-gray-500 hover:text-gray-700 p-1">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      
+      <div id="detailImageContainer" class="mb-4 hidden">
+        <img id="detailImage" class="w-full max-h-64 object-contain rounded border shadow-sm" alt="Gambar pemberitahuan" />
+      </div>
+      
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800 mb-2">Isi Pemberitahuan:</h3>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <p class="text-gray-800 whitespace-pre-line leading-relaxed" id="detailContent"></p>
+        </div>
+      </div>
+      
+      <div class="text-sm text-gray-500 italic border-t pt-4">
+        <i class="fas fa-calendar mr-1"></i>
+        <span id="detailDate"></span>
+      </div>
+      
+      <div class="mt-6 flex justify-end">
+        <button onclick="closeDetailModal()"
+                class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg shadow transition-colors">
+          <i class="fas fa-times mr-1"></i>Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 shadow-xl">
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-spinner fa-spin text-purple-600 text-xl"></i>
+        <span class="text-gray-700">Memproses...</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let currentEditId = null;
+    let isSubmitting = false;
+
+    // Utility Functions
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    function showError(elementId, message) {
+      const errorEl = document.getElementById(elementId);
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    }
+
+    function hideError(elementId) {
+      const errorEl = document.getElementById(elementId);
+      errorEl.classList.add('hidden');
+    }
+
+    function hideAllErrors() {
+      ['titleError', 'contentError', 'imageError'].forEach(hideError);
+    }
+
+    function validateForm() {
+      hideAllErrors();
+      let isValid = true;
+
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const imageFile = document.getElementById('image').files[0];
+
+      if (!title) {
+        showError('titleError', 'Judul harus diisi');
+        isValid = false;
+      }
+
+      if (!content) {
+        showError('contentError', 'Isi pemberitahuan harus diisi');
+        isValid = false;
+      }
+
+      if (imageFile) {
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!validTypes.includes(imageFile.type)) {
+          showError('imageError', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, atau GIF');
+          isValid = false;
+        } else if (imageFile.size > maxSize) {
+          showError('imageError', 'Ukuran gambar terlalu besar. Maksimal 5MB');
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    }
+
+    // Modal Functions
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = "Tambah Pemberitahuan";
+      document.getElementById('pemberitahuanId').value = "";
+      document.getElementById('title').value = "";
+      document.getElementById('content').value = "";
+      document.getElementById('image').value = "";
+      document.getElementById('saveButtonText').textContent = "Simpan";
+      hideImagePreview();
+      hideAllErrors();
+      currentEditId = null;
+      document.getElementById('pemberitahuanModal').classList.remove('hidden');
+    }
+
+    async function openEditModal(id) {
+      try {
+        showLoading();
+        const res = await fetch(`/api/pemberitahuan/${id}`);
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Gagal mengambil data');
+        }
+
+        document.getElementById('modalTitle').textContent = "Edit Pemberitahuan";
+        document.getElementById('pemberitahuanId').value = data.data.pemberitahuan_id;
+        document.getElementById('title').value = data.data.title;
+        document.getElementById('content').value = data.data.content;
+        document.getElementById('saveButtonText').textContent = "Update";
+        hideAllErrors();
+        currentEditId = id;
+
+        if (data.data.image) {
+          showImagePreview(data.data.image, false);
+        } else {
+          hideImagePreview();
+        }
+
+        document.getElementById('pemberitahuanModal').classList.remove('hidden');
+
+      } catch (err) {
+        console.error('Error openEditModal:', err);
+        alert('Kesalahan mengambil data: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('pemberitahuanModal').classList.add('hidden');
+      hideImagePreview();
+      hideAllErrors();
+      currentEditId = null;
+      isSubmitting = false;
+    }
+
+    // Image Preview Functions
+    function showImagePreview(src, isNew = true) {
+      const container = document.getElementById('imagePreviewContainer');
+      const img = document.getElementById('previewImage');
+      
+      img.src = src;
+      container.classList.remove('hidden');
+    }
+
+    function hideImagePreview() {
+      const container = document.getElementById('imagePreviewContainer');
+      container.classList.add('hidden');
+      document.getElementById('image').value = '';
+    }
+
+    function removeImagePreview() {
+      hideImagePreview();
+    }
+
+    // Image upload preview
+    document.getElementById('image')?.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!validTypes.includes(file.type)) {
+          showError('imageError', 'Format gambar tidak didukung');
+          this.value = '';
+          return;
+        }
+
+        if (file.size > maxSize) {
+          showError('imageError', 'Ukuran gambar terlalu besar');
+          this.value = '';
+          return;
+        }
+
+        hideError('imageError');
+        
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          showImagePreview(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        hideImagePreview();
+      }
+    });
+
+    // Form submission
+    document.getElementById('pemberitahuanForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (isSubmitting) return;
+      
+      if (!validateForm()) {
+        return;
+      }
+
+      isSubmitting = true;
+      const saveButton = document.getElementById('saveButton');
+      const originalText = saveButton.innerHTML;
+      
+      try {
+        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...';
+        saveButton.disabled = true;
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value.trim());
+        formData.append('content', document.getElementById('content').value.trim());
+        
+        const imageFile = document.getElementById('image').files[0];
+        if (imageFile) {
+          formData.append('image', imageFile);
+        }
+
+        const url = currentEditId ? `/api/pemberitahuan/${currentEditId}` : '/api/pemberitahuan';
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Gagal menyimpan data');
+        }
+
+        alert(result.message || 'Data berhasil disimpan');
+        closeModal();
+        location.reload();
+
+      } catch (error) {
+        console.error('Error saving:', error);
+        alert('Kesalahan menyimpan data: ' + error.message);
+      } finally {
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+        isSubmitting = false;
+      }
+    });
+
+    // Delete function
+    async function deletePemberitahuan(id) {
+      if (!confirm("Yakin ingin menghapus pemberitahuan ini?")) return;
+
+      try {
+        showLoading();
+        
+        const res = await fetch(`/api/pemberitahuan/${id}`, { 
+          method: "DELETE" 
+        });
+        
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Gagal menghapus data');
+        }
+
+        alert(data.message || 'Pemberitahuan berhasil dihapus');
+        location.reload();
+
+      } catch (err) {
+        console.error('Error delete:', err);
+        alert('Kesalahan menghapus data: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Detail Modal Functions
+    async function openDetailModal(id) {
+      try {
+        showLoading();
+        
+        const res = await fetch(`/api/pemberitahuan/${id}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Gagal mengambil detail');
+        }
+
+        document.getElementById('detailTitle').textContent = data.data.title;
+        document.getElementById('detailContent').textContent = data.data.content;
+        document.getElementById('detailDate').textContent = 
+          'Dipublikasikan pada ' + new Date(data.data.date).toLocaleDateString('id-ID', {
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+        const imageContainer = document.getElementById('detailImageContainer');
+        const imageEl = document.getElementById('detailImage');
+        
+        if (data.data.image) {
+          imageEl.src = data.data.image;
+          imageContainer.classList.remove('hidden');
+        } else {
+          imageContainer.classList.add('hidden');
+        }
+
+        document.getElementById('detailModal').classList.remove('hidden');
+
+      } catch (err) {
+        console.error('Error detail:', err);
+        alert('Kesalahan mengambil detail: ' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+      // Close modal when clicking outside
+      document.getElementById('pemberitahuanModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeModal();
+        }
+      });
+
+      document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeDetailModal();
+        }
+      });
+
+      // Close modal with Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeModal();
+          closeDetailModal();
+        }
+      });
+
+      // Prevent form submission on Enter in text inputs
+      document.getElementById('title').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('content').focus();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
