@@ -34,6 +34,9 @@ router.get("/mahasiswa/dashboard", authMiddleware, controller3.showDashboard);
 router.get("/mahasiswa/pembayaran", authMiddleware, controller5.showPembayaran);
 router.get("/mahasiswa/bebas-asrama", authMiddleware, controller6.showBebasAsrama);
 
+// API endpoint untuk detail pemberitahuan di dashboard mahasiswa
+router.get("/api/pemberitahuan-mahasiswa/:id", authMiddleware, controller3.getPemberitahuanDetail);
+
 // ===================
 // Pengelola
 // ===================

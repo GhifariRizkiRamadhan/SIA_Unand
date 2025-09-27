@@ -3,6 +3,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="lg:ml-52 ">
     <!-- Welcome Section -->
@@ -86,6 +88,201 @@
         </div>
        
     </div>
+
+    <!-- Pemberitahuan Section -->
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Pemberitahuan</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% if (typeof pemberitahuanList !== 'undefined' && pemberitahuanList.length > 0) { %>
+                <% pemberitahuanList.forEach(pemberitahuan => { %>
+                    <!-- Card Pemberitahuan -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
+                         onclick="openDetailModal('<%= pemberitahuan.pemberitahuan_id %>')">
+                        <% if (pemberitahuan.image) { %>
+                            <div class="aspect-video w-full overflow-hidden bg-gray-100">
+                                <img src="<%= pemberitahuan.image %>" 
+                                     alt="Thumbnail <%= pemberitahuan.title %>"
+                                     class="w-full h-full object-cover">
+                            </div>
+                        <% } else { %>
+                            <div class="aspect-video w-full bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center">
+                                <i class="fas fa-newspaper text-4xl text-purple-300"></i>
+                            </div>
+                        <% } %>
+                        
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">
+                                <%= pemberitahuan.title %>
+                            </h3>
+                            <p class="text-sm text-gray-500">
+                                <%= new Date(pemberitahuan.date).toLocaleDateString('id-ID', { 
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                }) %>
+                            </p>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-span-full text-center py-8">
+                    <div class="bg-purple-50 rounded-lg p-6 inline-block">
+                        <i class="fas fa-inbox text-4xl text-purple-300 mb-2"></i>
+                        <p class="text-gray-600">Belum ada pemberitahuan</p>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (typeof pagination !== 'undefined' && pagination.totalPages > 1) { %>
+        <div class="flex justify-center items-center space-x-2 mt-8">
+            <% if (pagination.hasPrev) { %>
+            <a href="?page=<%= pagination.page - 1 %>" 
+               class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-500 flex items-center">
+                <i class="fas fa-chevron-left mr-2"></i>
+                Sebelumnya
+            </a>
+            <% } %>
+
+            <div class="flex items-center space-x-1">
+                <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                    <% if (i === pagination.page) { %>
+                        <span class="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg">
+                            <%= i %>
+                        </span>
+                    <% } else { %>
+                        <a href="?page=<%= i %>" 
+                           class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">
+                            <%= i %>
+                        </a>
+                    <% } %>
+                <% } %>
+            </div>
+
+            <% if (pagination.hasNext) { %>
+            <a href="?page=<%= pagination.page + 1 %>" 
+               class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-500 flex items-center">
+                Selanjutnya
+                <i class="fas fa-chevron-right ml-2"></i>
+            </a>
+            <% } %>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Modal Detail Pemberitahuan -->
+    <div id="detailModal" class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-2xl font-bold text-purple-700" id="detailTitle"></h2>
+                <button onclick="closeDetailModal()" class="text-gray-500 hover:text-gray-700 p-1">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="detailImageContainer" class="mb-4 hidden">
+                <img id="detailImage" class="w-full max-h-64 object-contain rounded border shadow-sm" alt="Gambar pemberitahuan" />
+            </div>
+            
+            <div class="mb-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-gray-800 whitespace-pre-line leading-relaxed" id="detailContent"></p>
+                </div>
+            </div>
+            
+            <div class="text-sm text-gray-500 italic border-t pt-4">
+                <i class="fas fa-calendar mr-1"></i>
+                <span id="detailDate"></span>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeDetailModal()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg shadow transition-colors">
+                    <i class="fas fa-times mr-1"></i>Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 shadow-xl">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin text-purple-600 text-xl"></i>
+                <span class="text-gray-700">Memproses...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function openDetailModal(id) {
+            try {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                
+                const res = await fetch(`/api/pemberitahuan-mahasiswa/${id}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Gagal mengambil detail');
+                }
+
+                document.getElementById('detailTitle').textContent = data.data.title;
+                
+                // Handle content with proper formatting
+                const contentEl = document.getElementById('detailContent');
+                contentEl.style.whiteSpace = 'pre-wrap';
+                contentEl.style.wordBreak = 'break-word';
+                contentEl.textContent = data.data.content;
+                document.getElementById('detailDate').textContent = 
+                    'Dipublikasikan pada ' + new Date(data.data.date).toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                const imageContainer = document.getElementById('detailImageContainer');
+                const imageEl = document.getElementById('detailImage');
+                
+                if (data.data.image) {
+                    imageEl.src = data.data.image;
+                    imageContainer.classList.remove('hidden');
+                } else {
+                    imageContainer.classList.add('hidden');
+                }
+
+                document.getElementById('detailModal').classList.remove('hidden');
+
+            } catch (err) {
+                console.error('Error detail:', err);
+                alert('Kesalahan mengambil detail: ' + err.message);
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('detailModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDetailModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDetailModal();
+                }
+            });
+        });
+    </script>
 </body>
 
 

@@ -17,9 +17,20 @@ const showPemberitahuanPengelola = async (req, res) => {
       return res.status(403).render('error', { message: 'Akses ditolak' });
     }
 
-    // Ambil semua pemberitahuan dengan informasi pengelola
+    // Paginasi
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20; // 20 items per page
+    const skip = (page - 1) * limit;
+
+    // Hitung total items untuk paginasi
+    const totalItems = await prisma.pemberitahuan.count();
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Ambil pemberitahuan dengan paginasi
     const pemberitahuanList = await prisma.pemberitahuan.findMany({
       orderBy: { date: 'desc' },
+      skip: skip,
+      take: limit,
       include: {
         pengelolaasrama: {
           include: { 
@@ -33,7 +44,17 @@ const showPemberitahuanPengelola = async (req, res) => {
 
     const body = await ejs.renderFile(
       path.join(__dirname, '../views/pengelola/pemberitahuan.ejs'),
-      { user, pemberitahuanList }
+      { 
+        user, 
+        pemberitahuanList,
+        pagination: {
+          page,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+          totalItems
+        }
+      }
     );
 
     res.render('layouts/main', {
