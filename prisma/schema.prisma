@@ -52,18 +52,24 @@ model pelaporankerusakan {
   @@index([date_submitted], map: "idx_pelaporan_date")
   @@index([mahasiswa_id], map: "mahasiswa_id")
 }
-
 model pembayaran {
-  pembayaran_id Int       @id @default(autoincrement())
-  amount        Decimal   @db.Decimal(10, 2)
-  payment_date  DateTime  @db.Date
-  status        String?   @default("pending") @db.VarChar(50)
-  mahasiswa_id  Int
-  mahasiswa     mahasiswa @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "pembayaran_ibfk_1")
+  pembayaran_id     Int                   @id @default(autoincrement())
+  amount            Decimal               @db.Decimal(12, 2)         // jumlah dibayar
+  payment_date      DateTime              @default(now())            // tanggal bayar
+  bukti_pembayaran  String?               @db.VarChar(255)           // file bukti
+  status_bukti      StatusBuktiPembayaran @default(BELUM_DIVERIFIKASI)
 
-  @@index([payment_date], map: "idx_pembayaran_date")
+  mahasiswa_id      Int
+  surat_id          Int                   // foreign key ke suratbebasasrama
+
+  mahasiswa         mahasiswa             @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "pembayaran_ibfk_1")
+  suratbebasasrama  suratbebasasrama      @relation(fields: [surat_id], references: [Surat_id], onDelete: Cascade, map: "pembayaran_ibfk_2")
+
   @@index([mahasiswa_id], map: "mahasiswa_id")
+  @@index([payment_date], map: "idx_pembayaran_date")
+  @@index([surat_id], map: "surat_id")
 }
+
 
 model pemberitahuan {
   pemberitahuan_id Int      @id @default(autoincrement())
@@ -93,16 +99,26 @@ model pengelolaasrama {
 }
 
 model suratbebasasrama {
-  Surat_id        Int              @id @default(autoincrement())
-  status          String?          @default("pending") @db.VarChar(50)
-  file            String?          @db.VarChar(50)
-  mahasiswa_id    Int
-  Pengelola_id    Int?
-  mahasiswa       mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "suratbebasasrama_ibfk_1")
-  pengelolaasrama pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "suratbebasasrama_ibfk_2")
+  Surat_id          Int              @id @default(autoincrement())
+  nomor_pengajuan   String           @unique @db.VarChar(50)
+  tanggal_pengajuan DateTime         @default(now())
+  tanggal_update    DateTime?        @updatedAt
+  total_biaya       Decimal          @db.Decimal(12, 2)
+  status_pengajuan  StatusPengajuan  @default(VERIFIKASI_FASILITAS)
+  fasilitas_status  String?          @db.VarChar(100)
+  detail_fasilitas  String?          @db.Text
+  biaya_tambahan    Decimal?         @db.Decimal(12, 2)
+
+  mahasiswa_id      Int
+  Pengelola_id      Int?
+
+  mahasiswa         mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "suratbebasasrama_ibfk_1")
+  pengelolaasrama   pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "suratbebasasrama_ibfk_2")
+  pembayaran        pembayaran[]     // relasi ke tabel pembayaran
 
   @@index([Pengelola_id], map: "Pengelola_id")
   @@index([mahasiswa_id], map: "mahasiswa_id")
+  @@index([tanggal_pengajuan], map: "idx_surat_tanggal")
 }
 
 model user {
@@ -115,4 +131,19 @@ model user {
   pengelolaasrama pengelolaasrama[]
 
   @@index([email], map: "idx_user_email")
+}
+
+
+
+enum StatusPengajuan {
+  VERIFIKASI_FASILITAS
+  MENUNGGU_PEMBAYARAN
+  VERIFIKASI_PEMBAYARAN
+  SELESAI
+}
+
+enum StatusBuktiPembayaran {
+  BELUM_DIVERIFIKASI
+  VALID
+  TIDAK_VALID
 }
