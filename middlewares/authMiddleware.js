@@ -51,7 +51,36 @@ const redirectIfAuthenticated = (req, res, next) => {
   }
 };
 
+// Middleware untuk mengecek role pengelola
+const requirePengelola = (req, res, next) => {
+  if (!req.user) {
+    return res.redirect('/login');
+  }
+  
+  if (req.user.role !== 'pengelola') {
+    return res.redirect('/mahasiswa/dashboard');
+  }
+  
+  next();
+};
+
+// Middleware untuk mengecek role mahasiswa
+const requireMahasiswa = (req, res, next) => {
+  if (!req.user) {
+    return res.redirect('/login');
+  }
+  
+  if (req.user.role !== 'mahasiswa') {
+    return res.redirect('/pengelola/dashboard');
+  }
+  
+  next();
+};
+
+
 module.exports = {
   authMiddleware,
-  redirectIfAuthenticated
+  redirectIfAuthenticated,
+  requirePengelola,
+  requireMahasiswa
 };

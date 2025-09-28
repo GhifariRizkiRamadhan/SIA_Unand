@@ -7,6 +7,7 @@ const showDshPnl = require("./ruter")
 const showPembayaran = require("./ruter")
 const showBebasAsrama = require("./ruter")
 const showBebasAsramaPengelola = require("./ruter")
+const showDtPenghuni = require("./ruter")
 const server = {}
 
 server.showLogin = showLogin
@@ -18,5 +19,6 @@ server.showDshPnl = showDshPnl
 server.showPembayaran = showPembayaran
 server.showBebasAsrama = showBebasAsrama
 server.showBebasAsramaPengelola = showBebasAsramaPengelola
+server.showDtPenghuni = showDtPenghuni
 
 module.exports = server
