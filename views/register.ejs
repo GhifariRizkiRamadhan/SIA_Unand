@@ -7,6 +7,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Background body dengan gambar yang digelapkan */
+        .bg-body-image {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/image/unanddd.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* Background container dengan gambar */
+        .bg-container-image {
+            background-image: url('/image/unanddd.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Background untuk section image samping */
+        .bg-side-image {
+            background-image: url('/image/asrama2.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
         .bg-pattern {
             background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1" fill-rule="nonzero"><circle cx="36" cy="12" r="3"/><circle cx="6" cy="36" r="3"/><path d="M36 36c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3z"/></g></svg>');
         }
@@ -53,9 +78,51 @@
         .pulse-slow {
             animation: pulse 3s infinite;
         }
+
+        /* Overlay untuk memberikan efek gelap pada background container */
+        .bg-overlay {
+            position: relative;
+        }
+
+        .bg-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .bg-overlay > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Overlay khusus untuk section samping - hanya sedikit gelap untuk keterbacaan teks */
+        .bg-overlay-side {
+            position: relative;
+        }
+
+        .bg-overlay-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .bg-overlay-side > * {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 overflow-hidden">
+<body class="min-h-screen bg-body-image overflow-hidden">
     <!-- Background Pattern -->
     <div class="absolute inset-0 bg-pattern opacity-20"></div>
     
@@ -66,10 +133,10 @@
     <div class="absolute bottom-20 right-20 w-24 h-24 bg-white bg-opacity-10 rounded-full floating hidden lg:block" style="animation-delay: 0.5s;"></div>
 
     <div class="min-h-screen flex items-center justify-center p-4 relative z-10">
-        <div id="authContainer" class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[700px]">
+        <div id="authContainer" class="w-full max-w-6xl bg-container-image bg-overlay rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[700px]">
             
             <!-- Register Image Section - Posisi KIRI, animasi dari kanan -->
-            <div id="registerImageSection" class="w-full lg:w-1/2 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 flex items-center justify-center p-6 lg:p-12 slide-in-left order-2 lg:order-1">
+            <div id="registerImageSection" class="w-full lg:w-1/2 bg-side-image bg-overlay-side flex items-center justify-center p-6 lg:p-12 slide-in-left order-2 lg:order-1">
                 <div class="text-center text-white">
                     <div class="mb-6 lg:mb-8">
                         <div class="w-24 h-24 lg:w-32 lg:h-32 mx-auto bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 lg:mb-6 pulse-slow">
@@ -121,7 +188,7 @@
             </div>
 
             <!-- Register Form Section - Posisi KANAN, animasi dari kiri -->
-            <div id="registerSection" class="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col justify-center slide-in-right order-1 lg:order-2">
+            <div id="registerSection" class="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col justify-center slide-in-right order-1 lg:order-2 bg-white bg-opacity-95">
                 <div class="max-w-md mx-auto w-full">
                     <div class="text-center mb-6">
                         <h2 class="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Daftar Mahasiswa</h2>
@@ -217,7 +284,7 @@
                         </div>
 
                         <button type="submit" 
-                            class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 focus:ring-4 focus:ring-purple-300 transition-all duration-200 font-medium">
+                            class="w-full bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-4 rounded-lg hover:from-green-800 hover:to-green-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200 font-medium">
                             <i class="fas fa-user-plus mr-2"></i>Daftar Sebagai Mahasiswa
                         </button>
                     </form>
