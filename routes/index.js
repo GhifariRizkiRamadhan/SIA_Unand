@@ -7,6 +7,7 @@ const showDshPnl = require("./ruter")
 const showPembayaran = require("./ruter")
 const showBebasAsrama = require("./ruter")
 const showBebasAsramaPengelola = require("./ruter")
+const showDtPenghuni = require("./ruter")
 const ajukanBebasAsrama = require("./ruter")
 const getDetailPembayaran = require("./ruter")
 const getAllBebasAsrama = require("./ruter")
@@ -22,6 +23,7 @@ const verifikasiFasilitas = require("./ruter")
 
 const server = {}
 
+
 server.showLogin = showLogin
 server.showForgot = showForgot
 server.showWait = showWait
@@ -31,6 +33,7 @@ server.showDshPnl = showDshPnl
 server.showPembayaran = showPembayaran
 server.showBebasAsrama = showBebasAsrama
 server.showBebasAsramaPengelola = showBebasAsramaPengelola
+server.showDtPenghuni = showDtPenghuni
 server.ajukanBebasAsrama = ajukanBebasAsrama
 server.getDetailPembayaran = getDetailPembayaran
 server.getAllBebasAsrama = getAllBebasAsrama

@@ -7,18 +7,49 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Background body dengan gambar yang digelapkan */
+        .bg-body-image {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/image/unanddd.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* Background container dengan gambar */
+        .bg-container-image {
+            background-image: url('/image/asrama2.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Background untuk section image samping */
+        .bg-side-image {
+            background-image: url('/image/asrama2.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform: scaleX(-1); /* Mirror horizontal */
+        }
+
+        /* Membalikkan kembali konten di dalam bg-side-image agar teks tidak terbalik */
+        .bg-side-image > * {
+            transform: scaleX(-1);
+        }
+
         .bg-pattern {
             background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1" fill-rule="nonzero"><circle cx="36" cy="12" r="3"/><circle cx="6" cy="36" r="3"/><path d="M36 36c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3z"/></g></svg>');
         }
-        
+
         .slide-in-right {
             animation: slideInRight 0.6s ease-out;
         }
-        
+
         .slide-in-left {
             animation: slideInLeft 0.6s ease-out;
         }
-        
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100%);
@@ -29,7 +60,7 @@
                 opacity: 1;
             }
         }
-        
+
         @keyframes slideInLeft {
             from {
                 transform: translateX(-100%);
@@ -40,25 +71,67 @@
                 opacity: 1;
             }
         }
-        
+
         .floating {
             animation: floating 3s ease-in-out infinite;
         }
-        
+
         @keyframes floating {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
-        
+
         .pulse-slow {
             animation: pulse 3s infinite;
         }
+
+        /* Overlay untuk memberikan efek gelap pada background container */
+        .bg-overlay {
+            position: relative;
+        }
+
+        .bg-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .bg-overlay > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Overlay khusus untuk section samping - hanya sedikit gelap untuk keterbacaan teks */
+        .bg-overlay-side {
+            position: relative;
+        }
+
+        .bg-overlay-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .bg-overlay-side > * {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 overflow-hidden">
+<body class="min-h-screen bg-body-image overflow-hidden">
     <!-- Background Pattern -->
     <div class="absolute inset-0 bg-pattern opacity-20"></div>
-    
+
     <!-- Floating Elements (hidden on mobile) -->
     <div class="absolute top-20 left-20 w-20 h-20 bg-white bg-opacity-10 rounded-full floating hidden lg:block"></div>
     <div class="absolute top-40 right-32 w-16 h-16 bg-white bg-opacity-10 rounded-full floating hidden lg:block" style="animation-delay: 1s;"></div>
@@ -66,9 +139,9 @@
     <div class="absolute bottom-20 right-20 w-24 h-24 bg-white bg-opacity-10 rounded-full floating hidden lg:block" style="animation-delay: 0.5s;"></div>
 
     <div class="min-h-screen flex items-center justify-center p-4 relative z-10">
-        <div id="authContainer" class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[600px]">
-            <!-- Login Form Section - Animasi dari kanan seperti semula -->
-            <div id="loginSection" class="w-full lg:w-1/2 p-6 lg:p-12 flex flex-col justify-center slide-in-right order-2 lg:order-1">
+        <div id="authContainer" class="w-full max-w-6xl bg-container-image bg-overlay rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[600px]">
+            <!-- Login Form Section -->
+            <div id="loginSection" class="w-full lg:w-1/2 p-6 lg:p-12 flex flex-col justify-center slide-in-right order-2 lg:order-1 bg-white bg-opacity-95">
                 <div class="max-w-md mx-auto w-full">
                     <div class="text-center mb-6 lg:mb-8">
                         <h2 class="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Selamat Datang!</h2>
@@ -77,17 +150,17 @@
 
                     <!-- Error/Success Messages -->
                     <% if (typeof error !== 'undefined' && error) { %>
-                        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                            <i class="fas fa-exclamation-circle mr-2"></i>
-                            <%= error %>
-                        </div>
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <%= error %>
+                    </div>
                     <% } %>
-                    
+
                     <% if (typeof success !== 'undefined' && success) { %>
-                        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <%= success %>
-                        </div>
+                    <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <%= success %>
+                    </div>
                     <% } %>
 
                     <form id="loginForm" method="POST" action="/login" class="space-y-6">
@@ -108,7 +181,7 @@
                                 <input type="password" id="password" name="password" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 pr-12"
                                     placeholder="Masukkan password Anda">
-                                <button type="button" onclick="togglePassword('password')" 
+                                <button type="button" onclick="togglePassword('password')"
                                     class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
                                     <i class="fas fa-eye" id="password-eye"></i>
                                 </button>
@@ -117,7 +190,7 @@
 
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
-                                <input type="checkbox" id="remember" name="remember" 
+                                <input type="checkbox" id="remember" name="remember"
                                     class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
                                 <label for="remember" class="ml-2 block text-sm text-gray-700">
                                     Ingat saya
@@ -128,7 +201,7 @@
                             </a>
                         </div>
 
-                        <button type="submit" 
+                        <button type="submit"
                             class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 focus:ring-4 focus:ring-purple-300 transition-all duration-200 font-medium">
                             <i class="fas fa-sign-in-alt mr-2"></i>Masuk
                         </button>
@@ -136,7 +209,7 @@
 
                     <div class="text-center mt-6">
                         <p class="text-sm lg:text-base text-gray-600">
-                            Belum punya akun? 
+                            Belum punya akun?
                             <a href="/register" class="text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200">
                                 Daftar sekarang
                             </a>
@@ -145,8 +218,8 @@
                 </div>
             </div>
 
-            <!-- Login Image Section - Animasi dari kiri seperti semula -->
-            <div id="loginImageSection" class="w-full lg:w-1/2 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 flex items-center justify-center p-6 lg:p-12 slide-in-left order-1 lg:order-2">
+            <!-- Login Image Section dengan Background Image -->
+            <div id="loginImageSection" class="w-full lg:w-1/2 bg-side-image bg-overlay-side flex items-center justify-center p-6 lg:p-12 slide-in-left order-1 lg:order-2">
                 <div class="text-center text-white">
                     <div class="mb-6 lg:mb-8">
                         <div class="w-24 h-24 lg:w-32 lg:h-32 mx-auto bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-4 lg:mb-6 pulse-slow">
@@ -159,7 +232,7 @@
                             pengelolaan kehidupan asrama mahasiswa
                         </p>
                     </div>
-                    
+
                     <!-- Decorative Elements (hidden on mobile) -->
                     <div class="relative hidden lg:block">
                         <div class="absolute -top-8 -left-8 w-16 h-16 border-2 border-white border-opacity-30 rounded-full"></div>
@@ -175,7 +248,7 @@
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
             const eye = document.getElementById(fieldId + '-eye');
-            
+
             if (field.type === 'password') {
                 field.type = 'text';
                 eye.classList.remove('fa-eye');
