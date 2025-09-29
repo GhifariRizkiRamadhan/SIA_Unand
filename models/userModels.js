@@ -23,6 +23,8 @@ const User = {
           data: {
             nim: userData.nim,
             nama: userData.name,
+            jurusan: userData.jurusan || null,  // Tambahkan field jurusan
+            foto: userData.foto || null,         // Tambahkan field foto
             user_id: userData.user_id,
             status: 'aktif'
           }

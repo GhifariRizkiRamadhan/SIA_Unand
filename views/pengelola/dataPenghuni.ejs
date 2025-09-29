@@ -1,10 +1,581 @@
-<html lang="en">
+<!DOCTYPE html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Data Penghuni - SIA Asrama Unand</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    
+    <style>
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.75rem;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            margin-left: 0.5rem;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.25rem 0.75rem;
+            margin: 0 0.25rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #3b82f6;
+            color: white !important;
+            border-color: #3b82f6;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #3b82f6;
+            color: white !important;
+        }
+        
+        table.dataTable thead th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+        
+        table.dataTable tbody tr:hover {
+            background-color: #f9fafb;
+        }
+    </style>
 </head>
-<body>
-    ini data penghuni
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Data Penghuni</h1>
+                <p class="text-gray-600 mt-1">Kelola data penghuni asrama</p>
+            </div>
+            <button onclick="openModalTambah()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition duration-200 flex items-center">
+                <i class="fas fa-plus mr-2"></i>Tambah Penghuni
+            </button>
+        </div>
+
+        <!-- Alert Messages -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-md flex items-center justify-between" id="alertError">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
+                    <span><%= error %></span>
+                </div>
+                <button onclick="document.getElementById('alertError').remove()" class="text-red-700 hover:text-red-900">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-md flex items-center justify-between" id="alertSuccess">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-3 text-xl"></i>
+                    <span><%= success %></span>
+                </div>
+                <button onclick="document.getElementById('alertSuccess').remove()" class="text-green-700 hover:text-green-900">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        <% } %>
+
+        <!-- Tabel Penghuni Aktif -->
+        <div class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+            <div class="bg-green-600 text-white px-6 py-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-users mr-3"></i>Penghuni Aktif
+                    <span class="ml-3 bg-white text-green-600 px-3 py-1 rounded-full text-sm font-semibold"><%= penghuniAktif.length %></span>
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="tableAktif">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-3 px-4 w-16">No</th>
+                                <th class="text-center py-3 px-4 w-32">Foto</th>
+                                <th class="text-left py-3 px-4">Nama</th>
+                                <th class="text-left py-3 px-4">NIM</th>
+                                <th class="text-left py-3 px-4">Jurusan</th>
+                                <th class="text-center py-3 px-4 w-40">Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                            <% if (penghuniAktif.length === 0) { %>
+                                <tr>
+                                    <td colspan="6" class="text-center py-12 text-gray-400">
+                                        <i class="fas fa-inbox text-6xl mb-4 block"></i>
+                                        <p class="text-lg">Belum ada data penghuni aktif</p>
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% for(var i = 0; i < penghuniAktif.length; i++) { 
+                                    var penghuni = penghuniAktif[i];
+                                %>
+                                    <tr class="border-b hover:bg-gray-50 transition">
+                                        <td class="py-4 px-4 text-center"><%= i + 1 %></td>
+                                        <td class="py-4 px-4 text-center">
+                                            <% if (penghuni.foto) { %>
+                                                <img src="<%= penghuni.foto %>" alt="<%= penghuni.nama %>" 
+                                                     class="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-200 shadow-sm">
+                                            <% } else { %>
+                                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center mx-auto text-2xl font-bold shadow-sm">
+                                                    <%= penghuni.nama.charAt(0).toUpperCase() %>
+                                                </div>
+                                            <% } %>
+                                        </td>
+                                        <td class="py-4 px-4 font-medium"><%= penghuni.nama %></td>
+                                        <td class="py-4 px-4"><%= penghuni.nim %></td>
+                                        <td class="py-4 px-4"><%= penghuni.jurusan || '-' %></td>
+                                        <td class="py-4 px-4 text-center">
+                                            <button onclick="editPenghuni(<%= penghuni.mahasiswa_id %>)" 
+                                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg mr-2 transition"
+                                                    title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="toggleStatus(<%= penghuni.mahasiswa_id %>, 'tidak aktif')" 
+                                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition"
+                                                    title="Nonaktifkan">
+                                                <i class="fas fa-user-slash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Penghuni Tidak Aktif -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gray-600 text-white px-6 py-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-user-slash mr-3"></i>Penghuni Tidak Aktif
+                    <span class="ml-3 bg-white text-gray-600 px-3 py-1 rounded-full text-sm font-semibold"><%= penghuniTidakAktif.length %></span>
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="tableTidakAktif">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-3 px-4 w-16">No</th>
+                                <th class="text-center py-3 px-4 w-32">Foto</th>
+                                <th class="text-left py-3 px-4">Nama</th>
+                                <th class="text-left py-3 px-4">NIM</th>
+                                <th class="text-left py-3 px-4">Jurusan</th>
+                                <th class="text-center py-3 px-4 w-40">Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                            <% if (penghuniTidakAktif.length === 0) { %>
+                                <tr>
+                                    <td colspan="6" class="text-center py-12 text-gray-400">
+                                        <i class="fas fa-inbox text-6xl mb-4 block"></i>
+                                        <p class="text-lg">Belum ada data penghuni tidak aktif</p>
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% for(var i = 0; i < penghuniTidakAktif.length; i++) { 
+                                    var penghuni = penghuniTidakAktif[i];
+                                %>
+                                    <tr class="border-b hover:bg-gray-50 transition">
+                                        <td class="py-4 px-4 text-center"><%= i + 1 %></td>
+                                        <td class="py-4 px-4 text-center">
+                                            <% if (penghuni.foto) { %>
+                                                <img src="<%= penghuni.foto %>" alt="<%= penghuni.nama %>" 
+                                                     class="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-200 shadow-sm opacity-60">
+                                            <% } else { %>
+                                                <div class="w-16 h-16 rounded-full bg-gray-400 text-white flex items-center justify-center mx-auto text-2xl font-bold shadow-sm opacity-60">
+                                                    <%= penghuni.nama.charAt(0).toUpperCase() %>
+                                                </div>
+                                            <% } %>
+                                        </td>
+                                        <td class="py-4 px-4 font-medium opacity-70"><%= penghuni.nama %></td>
+                                        <td class="py-4 px-4 opacity-70"><%= penghuni.nim %></td>
+                                        <td class="py-4 px-4 opacity-70"><%= penghuni.jurusan || '-' %></td>
+                                        <td class="py-4 px-4 text-center">
+                                            <button onclick="editPenghuni(<%= penghuni.mahasiswa_id %>)" 
+                                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg mr-2 transition"
+                                                    title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="toggleStatus(<%= penghuni.mahasiswa_id %>, 'aktif')" 
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg transition"
+                                                    title="Aktifkan">
+                                                <i class="fas fa-user-check"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah -->
+    <div id="modalTambah" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <form action="/pengelola/dataPenghuni/tambah" method="POST" enctype="multipart/form-data" id="formTambah">
+                <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-plus mr-3"></i>Tambah Data Penghuni
+                    </h3>
+                    <button type="button" onclick="closeModalTambah()" class="text-white hover:text-gray-200 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            Nama Lengkap <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="nama" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Masukkan nama lengkap">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            NIM <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="nim" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Nomor Induk Mahasiswa">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            Jurusan <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="jurusan" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Contoh: Teknik Informatika">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            Status <span class="text-red-500">*</span>
+                        </label>
+                        <select name="status" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="aktif">Aktif</option>
+                            <option value="tidak aktif">Tidak Aktif</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Foto</label>
+                        <input type="file" name="foto" accept="image/jpeg,image/jpg,image/png"
+                               onchange="previewImageTambah(event)"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Format: JPG, JPEG, PNG (Maks. 2MB)</p>
+                        
+                        <div id="previewTambah" class="mt-3 hidden">
+                            <img id="imgPreviewTambah" src="" alt="Preview" 
+                                 class="w-40 h-40 object-cover rounded-lg border-2 border-gray-300 mx-auto">
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <p class="text-sm text-gray-700">
+                            <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                            <strong>Informasi:</strong><br>
+                            • Email default: [NIM]@student.unand.ac.id<br>
+                            • Password default: [NIM]
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
+                    <button type="button" onclick="closeModalTambah()" 
+                            class="px-5 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition">
+                        <i class="fas fa-times mr-2"></i>Batal
+                    </button>
+                    <button type="submit" 
+                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit -->
+    <div id="modalEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <form action="/pengelola/dataPenghuni/edit" method="POST" enctype="multipart/form-data" id="formEdit">
+                <div class="bg-blue-500 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
+                    <h3 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-edit mr-3"></i>Edit Data Penghuni
+                    </h3>
+                    <button type="button" onclick="closeModalEdit()" class="text-white hover:text-gray-200 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="edit_mahasiswa_id" name="mahasiswa_id">
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            Nama Lengkap <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="edit_nama" name="nama" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            NIM <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="edit_nim" name="nim" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            Jurusan <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="edit_jurusan" name="jurusan" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            Status <span class="text-red-500">*</span>
+                        </label>
+                        <select id="edit_status" name="status" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="aktif">Aktif</option>
+                            <option value="tidak aktif">Tidak Aktif</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Foto</label>
+                        <input type="file" id="edit_foto" name="foto" accept="image/jpeg,image/jpg,image/png"
+                               onchange="previewImageEdit(event)"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah foto</p>
+                        
+                        <div id="currentPhoto" class="mt-3 hidden">
+                            <label class="block text-sm text-gray-600 mb-2">Foto Saat Ini:</label>
+                            <img id="imgCurrentPhoto" src="" alt="Current" 
+                                 class="w-40 h-40 object-cover rounded-lg border-2 border-gray-300 mx-auto">
+                        </div>
+                        
+                        <div id="previewEdit" class="mt-3 hidden">
+                            <label class="block text-sm text-gray-600 mb-2">Preview Foto Baru:</label>
+                            <img id="imgPreviewEdit" src="" alt="Preview" 
+                                 class="w-40 h-40 object-cover rounded-lg border-2 border-blue-500 mx-auto">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
+                    <button type="button" onclick="closeModalEdit()" 
+                            class="px-5 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition">
+                        <i class="fas fa-times mr-2"></i>Batal
+                    </button>
+                    <button type="submit" 
+                            class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
+                        <i class="fas fa-save mr-2"></i>Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#tableAktif').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
+                pageLength: 10,
+                order: [[2, 'asc']]
+            });
+
+            $('#tableTidakAktif').DataTable({
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
+                pageLength: 10,
+                order: [[2, 'asc']]
+            });
+
+            setTimeout(function() {
+                $('#alertError, #alertSuccess').fadeOut('slow');
+            }, 5000);
+        });
+
+        function openModalTambah() {
+            document.getElementById('modalTambah').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModalTambah() {
+            document.getElementById('modalTambah').classList.add('hidden');
+            document.getElementById('formTambah').reset();
+            document.getElementById('previewTambah').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openModalEdit() {
+            document.getElementById('modalEdit').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModalEdit() {
+            document.getElementById('modalEdit').classList.add('hidden');
+            document.getElementById('formEdit').reset();
+            document.getElementById('previewEdit').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function previewImageTambah(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imgPreviewTambah');
+            const previewContainer = document.getElementById('previewTambah');
+            
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file terlalu besar! Maksimal 2MB');
+                    event.target.value = '';
+                    previewContainer.classList.add('hidden');
+                    return;
+                }
+                
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Format file tidak didukung! Gunakan JPG, JPEG, atau PNG');
+                    event.target.value = '';
+                    previewContainer.classList.add('hidden');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        function previewImageEdit(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imgPreviewEdit');
+            const previewContainer = document.getElementById('previewEdit');
+            
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file terlalu besar! Maksimal 2MB');
+                    event.target.value = '';
+                    previewContainer.classList.add('hidden');
+                    return;
+                }
+                
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Format file tidak didukung! Gunakan JPG, JPEG, atau PNG');
+                    event.target.value = '';
+                    previewContainer.classList.add('hidden');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        async function editPenghuni(id) {
+            try {
+                const response = await fetch('/pengelola/dataPenghuni/get/' + id);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    
+                    document.getElementById('edit_mahasiswa_id').value = data.mahasiswa_id;
+                    document.getElementById('edit_nama').value = data.nama;
+                    document.getElementById('edit_nim').value = data.nim;
+                    document.getElementById('edit_jurusan').value = data.jurusan || '';
+                    document.getElementById('edit_status').value = data.status;
+                    
+                    const currentPhoto = document.getElementById('currentPhoto');
+                    const imgCurrent = document.getElementById('imgCurrentPhoto');
+                    if (data.foto) {
+                        imgCurrent.src = data.foto;
+                        currentPhoto.classList.remove('hidden');
+                    } else {
+                        currentPhoto.classList.add('hidden');
+                    }
+                    
+                    document.getElementById('previewEdit').classList.add('hidden');
+                    document.getElementById('edit_foto').value = '';
+                    
+                    openModalEdit();
+                } else {
+                    alert('Gagal mengambil data: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengambil data');
+            }
+        }
+
+        function toggleStatus(id, newStatus) {
+            const message = newStatus === 'aktif' 
+                ? 'Apakah Anda yakin ingin mengaktifkan penghuni ini?' 
+                : 'Apakah Anda yakin ingin menonaktifkan penghuni ini?';
+            
+            if (confirm(message)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/pengelola/dataPenghuni/toggle/' + id;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        document.getElementById('modalTambah').addEventListener('click', function(e) {
+            if (e.target === this) closeModalTambah();
+        });
+
+        document.getElementById('modalEdit').addEventListener('click', function(e) {
+            if (e.target === this) closeModalEdit();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModalTambah();
+                closeModalEdit();
+            }
+        });
+    </script>
 </body>
 </html>
