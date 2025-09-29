@@ -3,28 +3,73 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
+const prisma = new PrismaClient();
+
 async function main() {
-  // Gunakan import() dinamis di dalam fungsi async
   const { v4: uuidv4 } = await import('uuid');
 
-  const hashedPassword = bcrypt.hashSync('pengelola123', 10);
-  const userId = uuidv4();
-
-  // Lanjutkan dengan kode Prisma Anda
-  await prisma.user.create({
-    data: {
-      user_id: userId,
+  // Data user yang mau di-seed
+  const users = [
+    {
       name: 'Admin Pengelola',
-      email: 'pengelola@example.com',
-      password: hashedPassword,
+      email: 'adminpengelola@example.com',
+      password: 'pengelola123',
       role: 'pengelola',
     },
-  });
+    {
+      name: 'Mahasiswa A',
+      email: 'mahasiswa@example.com',
+      password: 'mahasiswa123',
+      role: 'mahasiswa',
+      nim: '20250001',
+    },
+  ];
 
-  console.log('Seeding selesai! ✅');
+  for (const u of users) {
+    const hashedPassword = bcrypt.hashSync(u.password, 10);
+    const userId = uuidv4();
+
+    if (u.role === 'pengelola') {
+      // create user + pengelolaasrama
+      await prisma.user.create({
+        data: {
+          user_id: userId,
+          name: u.name,
+          email: u.email,
+          password: hashedPassword,
+          role: u.role,
+          pengelolaasrama: {
+            create: {}, // row kosong karena relasi hanya butuh user_id
+          },
+        },
+      });
+      console.log(`✅ User pengelola "${u.name}" berhasil ditambahkan`);
+    } else if (u.role === 'mahasiswa') {
+      // create user + mahasiswa
+      await prisma.user.create({
+        data: {
+          user_id: userId,
+          name: u.name,
+          email: u.email,
+          password: hashedPassword,
+          role: u.role,
+          mahasiswa: {
+            create: {
+              nim: u.nim,
+              nama: u.name,
+            },
+          },
+        },
+      });
+      console.log(`✅ User mahasiswa "${u.name}" berhasil ditambahkan`);
+    } else {
+      console.warn(`⚠️ Role "${u.role}" tidak dikenali, user "${u.name}" dilewati`);
+    }
+  }
+
+  console.log('🌱 Seeding selesai!');
 }
 
-const prisma = new PrismaClient();
 main()
   .catch((e) => {
     console.error(e);

@@ -16,6 +16,17 @@ const showLogin = async (req, res) => {
   }
 };
 
+// Helper function untuk redirect berdasarkan role
+const redirectByRole = (res, user) => {
+  if (user.role === 'mahasiswa') {
+    return res.redirect('/mahasiswa/dashboard');
+  } else if (user.role === 'pengelola') {
+    return res.redirect('/pengelola/dashboard');
+  } else {
+    return res.redirect('/'); // Fallback redirect
+  }
+};
+
 const authController = {
   async login(req, res) {
     try {
@@ -70,14 +81,18 @@ const authController = {
 
       res.cookie('token', token, cookieOptions);
 
-      // Redirect based on role
-      if (user.role === 'mahasiswa') {
-        res.redirect('/mahasiswa/dashboard');
-      } else if (user.role === 'pengelola') {
-        res.redirect('/pengelola/dashboard');
-      } else {
-        res.redirect('/dashboard');
-      }
+      // --- Bedakan response ---
+    if (req.headers['accept'] && req.headers['accept'].includes('application/json')) {
+      // Kalau request dari Postman / API
+      return res.status(200).json({
+        message: "Login berhasil",
+        token,
+        role: user.role
+      });
+    } else {
+      return redirectByRole(res, user);
+    }
+
 
     } catch (error) {
       console.error('Login error:', error);
@@ -102,5 +117,6 @@ const authController = {
 
 module.exports = {
   showLogin,
-  authController
+  authController,
+  redirectByRole
 };

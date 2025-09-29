@@ -99,22 +99,24 @@ model pengelolaasrama {
 }
 
 model suratbebasasrama {
-  Surat_id          Int              @id @default(autoincrement())
-  nomor_pengajuan   String           @unique @db.VarChar(50)
-  tanggal_pengajuan DateTime         @default(now())
-  tanggal_update    DateTime?        @updatedAt
-  total_biaya       Decimal          @db.Decimal(12, 2)
-  status_pengajuan  StatusPengajuan  @default(VERIFIKASI_FASILITAS)
-  fasilitas_status  String?          @db.VarChar(100)
-  detail_fasilitas  String?          @db.Text
-  biaya_tambahan    Decimal?         @db.Decimal(12, 2)
+  Surat_id           Int      @id @default(autoincrement())
+  nomor_pengajuan    String   @unique @db.VarChar(50)
+  tanggal_pengajuan DateTime @default(now())
+  tanggal_update     DateTime? @updatedAt
+  total_biaya        Decimal  @db.Decimal(12, 2)
+  status_pengajuan   StatusPengajuan @default(VERIFIKASI_FASILITAS)
+  fasilitas_status   String?  @db.VarChar(100)
+  biaya_tambahan     Decimal? @db.Decimal(12, 2)
 
-  mahasiswa_id      Int
-  Pengelola_id      Int?
+  mahasiswa_id       Int
+  Pengelola_id       Int?
 
-  mahasiswa         mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "suratbebasasrama_ibfk_1")
-  pengelolaasrama   pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "suratbebasasrama_ibfk_2")
-  pembayaran        pembayaran[]     // relasi ke tabel pembayaran
+  mahasiswa          mahasiswa @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "suratbebasasrama_ibfk_1")
+  pengelolaasrama    pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "suratbebasasrama_ibfk_2")
+  pembayaran         pembayaran[]
+
+  // TAMBAHKAN RELASI BARU DI BAWAH INI
+  kerusakanFasilitas KerusakanFasilitas[]
 
   @@index([Pengelola_id], map: "Pengelola_id")
   @@index([mahasiswa_id], map: "mahasiswa_id")
@@ -133,7 +135,17 @@ model user {
   @@index([email], map: "idx_user_email")
 }
 
+model KerusakanFasilitas {
+  id               Int      @id @default(autoincrement())
+  nama_fasilitas   String   @db.VarChar(255)
+  biaya_kerusakan  Decimal  @db.Decimal(12, 2)
+  
+  // Kunci asing untuk menghubungkan ke suratbebasasrama
+  surat_id          Int
+  suratbebasasrama  suratbebasasrama @relation(fields: [surat_id], references: [Surat_id], onDelete: Cascade)
 
+  @@index([surat_id])
+}
 
 enum StatusPengajuan {
   VERIFIKASI_FASILITAS
