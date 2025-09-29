@@ -161,7 +161,48 @@ const uploadImageWithErrorHandling = (req, res, next) => {
   });
 };
 
+
+// Storage & Filter Bukti Pembayaran
+// =======================
+const buktiStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = 'uploads/bukti';
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const nameWithoutExt = path.parse(sanitizedName).name;
+    
+    cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
+  }
+});
+
+const buktiFilter = (req, file, cb) => {
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+  const allowedExtensions = /\.(jpg|jpeg|png)$/i;
+
+  const extname = allowedExtensions.test(file.originalname);
+  const mimetype = allowedMimeTypes.includes(file.mimetype);
+
+  if (extname && mimetype) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Only JPG and PNG images are allowed for bukti pembayaran'));
+  }
+};
+
+const uploadBukti = multer({
+  storage: buktiStorage,
+  fileFilter: buktiFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // max 5MB
+}).single('bukti'); // field name = "bukti"
+
+
 module.exports = {
   upload,
-  uploadImage: uploadImageWithErrorHandling
+  uploadImage: uploadImageWithErrorHandling,
+  uploadBukti
 };
