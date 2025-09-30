@@ -20,6 +20,8 @@ const uploadBuktiPembayaran = require("./ruter")
 const deleteBebasAsrama = require("./ruter") 
 const rejectPembayaran = require("./ruter") 
 const verifikasiFasilitas = require("./ruter")  
+const getBuktiPembayaran = require("./ruter")
+const reuploadBuktiPembayaran = require("./ruter")
 
 const server = {}
 
@@ -46,6 +48,8 @@ server.uploadBuktiPembayaran = uploadBuktiPembayaran
 server.deleteBebasAsrama = deleteBebasAsrama
 server.rejectPembayaran = rejectPembayaran
 server.verifikasiFasilitas = verifikasiFasilitas
+server.getBuktiPembayaran = getBuktiPembayaran
+server.reuploadBuktiPembayaran = reuploadBuktiPembayaran
 
 
 module.exports = server

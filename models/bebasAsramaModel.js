@@ -1,8 +1,6 @@
 const { prisma } = require('../config/database');
 
 const BebasAsrama = {
-  // Create pengajuan baru
-  // Di file models/bebasAsramaModel.js
 
 async create(data) {
   try {
@@ -45,58 +43,73 @@ async findById(id) {
         pembayaran: true
       }
     });
+
+    // DEBUG LOG
+    // console.log(`[DEBUG] Pembayaran untuk surat ${numericId}:`, result?.pembayaran);
+    
   } catch (error) {
     throw error;
+
   }
 },
 
   // Get all pengajuan
   async findAll() {
-    try {
-      return await prisma.suratbebasasrama.findMany({
-        include: {
-          mahasiswa: {
-            include: {
-              user: true
-            }
-          },
-          pengelolaasrama: true,
-          pembayaran: true
-        }
-      });
-    } catch (error) {
-      throw error;
-    }
-  },
+  try {
+    return await prisma.suratbebasasrama.findMany({
 
-  // Update status pengajuan (approve/reject)
-  async updateStatus(id, status_pengajuan) {
-    try {
-      return await prisma.suratbebasasrama.update({
-        where: { Surat_id: id },
-        data: { status_pengajuan }
-      });
-    } catch (error) {
-      throw error;
+      include: {
+        mahasiswa: {
+          include: {
+            user: true
+          }
+        },
+        pengelolaasrama: true,
+        pembayaran: true
+    
+      },
+  
+      orderBy: {
+        tanggal_pengajuan: 'asc'
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+},
+
+async updateStatus(id, status_pengajuan) {
+  try {
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      throw new Error("ID harus berupa angka yang valid.");
     }
-  },
+
+
+    return await prisma.suratbebasasrama.update({
+      where: { Surat_id: numericId },
+      data: { status_pengajuan }
+    });
+  } catch (error) {
+    throw error;
+  }
+},
+
   async findByIdAndDelete(id) {
     try {
-      // 1. Konversi ID dari string ke integer, karena ID dari URL selalu string
+  
       const numericId = parseInt(id, 10);
       if (isNaN(numericId)) {
         throw new Error("ID pengajuan harus berupa angka yang valid.");
       }
 
-      // 2. Gunakan prisma.delete untuk menghapus data berdasarkan ID unik
       return await prisma.suratbebasasrama.delete({
         where: {
-          // Pastikan 'Surat_id' adalah nama primary key di skema Anda
           Surat_id: numericId 
         }
       });
     } catch (error) {
-      // Lempar error agar bisa ditangkap oleh controller
+  
       throw error;
     }
   },
@@ -112,7 +125,7 @@ async findById(id) {
         where: {
           Surat_id: numericId 
         },
-        data: dataToUpdate // dataToUpdate adalah objek berisi semua field baru
+        data: dataToUpdate 
       });
 
 
@@ -122,7 +135,6 @@ async findById(id) {
       throw error;
     }
   },
-  // Di dalam objek model BebasAsrama
 
 async findByIdWithMahasiswa(id) {
   try {
@@ -131,12 +143,10 @@ async findByIdWithMahasiswa(id) {
       throw new Error("ID harus berupa angka yang valid.");
     }
 
-    // Gunakan findUnique dengan 'include' untuk mengambil relasi
     return await prisma.suratbebasasrama.findUnique({
       where: {
         Surat_id: numericId
       },
-      // 'include' akan mengambil semua data dari model mahasiswa yang terhubung
       include: {
         mahasiswa: true 
       }
@@ -145,6 +155,43 @@ async findByIdWithMahasiswa(id) {
     throw error;
   }
 },
+async findByMahasiswaId(id) {
+  try {
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      throw new Error("ID Mahasiswa harus berupa angka.");
+    }
+
+    return await prisma.suratbebasasrama.findMany({
+      where: {
+        mahasiswa_id: numericId
+      },
+
+      orderBy: {
+        tanggal_pengajuan: 'desc'
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+},
+ async findByIdWithPembayaran(id) {
+    try {
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error("ID harus berupa angka yang valid.");
+      }
+      
+      return await prisma.suratbebasasrama.findUnique({
+        where: { Surat_id: numericId },
+        include: {
+          pembayaran: true 
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 module.exports = BebasAsrama;

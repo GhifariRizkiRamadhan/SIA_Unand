@@ -67,8 +67,7 @@ const getDetailBebasAsrama = async (req, res) => {
 const verifikasiFasilitas = async (req, res) => {
   try {
     const { id } = req.params;
-    // Mengharapkan 'fasilitas_status' dan 'kerusakan' (array) dari body
-    const { fasilitas_status, kerusakan } = req.body; 
+    const { fasilitas_status, kerusakan } = req.body;
 
     // Validasi input
     if (!fasilitas_status || !['LENGKAP', 'TIDAK_LENGKAP'].includes(fasilitas_status)) {
@@ -89,43 +88,92 @@ const verifikasiFasilitas = async (req, res) => {
         return res.status(400).json({ success: false, message: "ID pengajuan tidak valid." });
     }
 
-    // Gunakan Transaksi Prisma untuk memastikan semua operasi database berhasil atau gagal bersamaan
+    // Gunakan Transaksi Prisma dengan logging di setiap langkah
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Hapus data kerusakan lama untuk menghindari duplikasi jika ada edit ulang
+      console.log('--- [TRANSAKSI DIMULAI] ---');
+
       await tx.kerusakanFasilitas.deleteMany({
         where: { surat_id: numericId }
       });
-      
-      // 2. Update surat bebas asrama dengan status dan total biaya baru
+      console.log('1. Data kerusakan lama berhasil dihapus.');
+
       const updatedSurat = await tx.suratbebasasrama.update({
         where: { Surat_id: numericId },
         data: {
           fasilitas_status: fasilitas_status,
           biaya_tambahan: totalBiayaTambahan,
-          total_biaya: 2000000 + totalBiayaTambahan, // Asumsi biaya dasar 2 juta
+          total_biaya: 2000000 + totalBiayaTambahan,
           status_pengajuan: "MENUNGGU_PEMBAYARAN",
           tanggal_update: new Date()
         }
       });
-      
-      // 3. Jika ada kerusakan, buat entri baru untuk setiap item di tabel KerusakanFasilitas
+      console.log('2. Data surat utama berhasil diupdate.');
+
+      await tx.pembayaran.create({
+        data: {
+          amount: updatedSurat.total_biaya,
+          mahasiswa_id: updatedSurat.mahasiswa_id,
+          surat_id: updatedSurat.Surat_id,
+          status_bukti: 'BELUM_DIVERIFIKASI'
+        }
+      });
+      console.log('3. Record pembayaran BERHASIL DIBUAT di dalam transaksi.');
+
       if (fasilitas_status === 'TIDAK_LENGKAP' && Array.isArray(kerusakan) && kerusakan.length > 0) {
         await tx.kerusakanFasilitas.createMany({
           data: kerusakan.map(item => ({
             nama_fasilitas: item.nama_fasilitas,
             biaya_kerusakan: item.biaya_kerusakan,
-            surat_id: numericId // Hubungkan ke surat pengajuan yang sedang diupdate
+            surat_id: numericId
           }))
         });
+        console.log('4. Data kerusakan baru berhasil dibuat.');
       }
       
+      console.log('--- [TRANSAKSI SELESAI SUKSES] ---');
       return updatedSurat;
     });
 
     res.json({ success: true, message: "Verifikasi fasilitas berhasil diperbarui", data: result });
   } catch (err) {
-    console.error("Gagal verifikasi fasilitas:", err);
+    // LOG PALING PENTING ADA DI SINI
+    // console.error("!!! TRANSAKSI GAGAL, SEMUA DIBATALKAN (ROLLBACK) !!!");
+    // console.error("Penyebab Error:", err);
+    
     res.status(500).json({ success: false, message: "Gagal verifikasi fasilitas" });
+  }
+};
+
+
+const getBuktiPembayaran = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Panggil fungsi dari model, bukan 'prisma' langsung
+    const pengajuan = await BebasAsrama.findByIdWithPembayaran(id);
+
+    if (!pengajuan) {
+      return res.status(404).json({ success: false, message: "Pengajuan tidak ditemukan." });
+    }
+
+    const pembayaran = pengajuan.pembayaran[0];
+    if (!pembayaran || !pembayaran.bukti_pembayaran) {
+      return res.status(404).json({ success: false, message: "Bukti pembayaran untuk pengajuan ini tidak ditemukan." });
+    }
+
+    const filePath = pembayaran.bukti_pembayaran;
+    const absolutePath = path.join(process.cwd(), filePath);
+    
+    res.sendFile(absolutePath, (err) => {
+      if (err) {
+        console.error("File tidak ditemukan di server:", err);
+        res.status(404).json({ success: false, message: "File fisik tidak ditemukan di server." });
+      }
+    });
+
+  } catch (err) {
+    console.error("Gagal mengambil bukti pembayaran:", err);
+    res.status(500).json({ success: false, message: "Gagal mengambil bukti pembayaran." });
   }
 };
 
@@ -133,5 +181,6 @@ module.exports = {
   showBebasAsramaPengelola,
   getAllBebasAsrama,
   getDetailBebasAsrama,
-  verifikasiFasilitas
+  verifikasiFasilitas,
+  getBuktiPembayaran
 };

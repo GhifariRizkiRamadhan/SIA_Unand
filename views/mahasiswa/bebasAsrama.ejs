@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="lg:ml-52 bg-gray-50">
+<body class="lg:ml-52 bg-gray-50" data-mahasiswa-id="<%= mahasiswaId %>">
     <!-- Modal Konfirmasi Hapus -->
     <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border">
+    <div id ="bebas-asrama-container" class="bg-white rounded-lg shadow-sm border">
         <div class="px-6 py-4 border-b">
             <div class="flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-gray-800">Daftar Pengajuan Surat Bebas Asrama</h2>
@@ -62,7 +62,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="riwayat-table-body" class="bg-white divide-y divide-gray-200">
                     <!-- Row 1: Menunggu Pembayaran -->
                     <tr class="hover:bg-gray-50" data-status="menunggu_pembayaran" data-id="001">
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -196,269 +196,279 @@
         </div> -->
     </div>
 
-    <script>
-       document.addEventListener('DOMContentLoaded', function() {
-    // Variables untuk modal
-    const deleteModal = document.getElementById('deleteModal');
-    const cancelDelete = document.getElementById('cancelDelete');
-    const confirmDelete = document.getElementById('confirmDelete');
-    let currentRowToDelete = null;
-
-    // Event listeners untuk semua tombol
-    initializeEventListeners();
-
-    function initializeEventListeners() {
-        // Tombol Buat Pengajuan Baru
-        const createButton = document.querySelector('button:has(.fa-plus)');
-        if (createButton) {
-            createButton.addEventListener('click', function() {
-                alert('Mengarahkan ke form pengajuan baru...');
-            });
-        }
-
-        // Tombol Bayar
-        const bayarButtons = document.querySelectorAll('.bayar-btn');
-        bayarButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                if (confirm('Apakah Anda yakin ingin melanjutkan ke halaman pembayaran?')) {
-                    alert('Mengarahkan ke halaman pembayaran...');
-                    // window.location.href = '/mahasiswa/pembayaran';
-                }
-            });
-        });
-
-        // Tombol Unduh
-        const unduhButtons = document.querySelectorAll('.unduh-btn');
-        unduhButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                alert('Mengunduh surat bebas asrama...');
-                setTimeout(() => {
-                    alert('Surat berhasil diunduh!');
-                }, 500);
-            });
-        });
-
-        // Tombol Hapus
-        const hapusButtons = document.querySelectorAll('.hapus-btn:not([disabled])');
-        hapusButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const row = this.closest('tr');
-                const pengajuanId = row.getAttribute('data-id');
-                showDeleteModal(row, pengajuanId);
-            });
-        });
-    }
-
-    // Fungsi untuk menampilkan modal konfirmasi hapus
-    function showDeleteModal(row, pengajuanId) {
-        currentRowToDelete = row;
-        deleteModal.classList.remove('hidden');
-        deleteModal.classList.add('flex');
-        
-        // Update modal content
-        const modalTitle = deleteModal.querySelector('h3');
-        modalTitle.textContent = `Hapus Pengajuan #${pengajuanId}`;
-    }
-
-    // Event listener untuk tombol Cancel di modal
-    cancelDelete.addEventListener('click', function() {
-        hideDeleteModal();
-    });
-
-    // Event listener untuk tombol Confirm di modal
-    confirmDelete.addEventListener('click', function() {
-        if (currentRowToDelete) {
-            deleteRow(currentRowToDelete);
-        }
-        hideDeleteModal();
-    });
-
-    // Event listener untuk menutup modal dengan klik di luar
-    deleteModal.addEventListener('click', function(e) {
-        if (e.target === deleteModal) {
-            hideDeleteModal();
-        }
-    });
-
-    // Fungsi untuk menyembunyikan modal
-    function hideDeleteModal() {
-        deleteModal.classList.add('hidden');
-        deleteModal.classList.remove('flex');
-        currentRowToDelete = null;
-    }
-
-    // Fungsi untuk menghapus baris
-    function deleteRow(row) {
-        const pengajuanId = row.getAttribute('data-id');
-        
-        // Animasi fade out
-        row.style.transition = 'opacity 0.3s ease';
-        row.style.opacity = '0';
-        
-        setTimeout(() => {
-            row.remove();
-            showSuccessNotification(`Pengajuan #${pengajuanId} berhasil dihapus`);
-            
-            // Cek apakah tabel kosong
-            checkEmptyTable();
-        }, 300);
-    }
-
-    // Fungsi untuk menampilkan notifikasi sukses
-    function showSuccessNotification(message) {
-        // Buat elemen notifikasi
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
-                <span>${message}</span>
+    <div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+        <div class="flex items-center mb-4">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                <i class="fas fa-paper-plane text-blue-600"></i>
             </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Animasi masuk
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-        }, 100);
-        
-        // Hapus notifikasi setelah 3 detik
-        setTimeout(() => {
-            notification.classList.add('translate-x-full');
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, 3000);
-    }
-
-    // Fungsi untuk mengecek apakah tabel kosong
-    function checkEmptyTable() {
-        const tbody = document.querySelector('tbody');
-        const rows = tbody.querySelectorAll('tr');
-        
-        if (rows.length === 0) {
-            // Tampilkan empty state
-            showEmptyState();
-        }
-    }
-
-    // Fungsi untuk menampilkan empty state
-    function showEmptyState() {
-        const tableContainer = document.querySelector('.overflow-x-auto');
-        tableContainer.innerHTML = `
-            <div class="text-center py-12">
-                <i class="fas fa-file-alt text-gray-400 text-4xl mb-4"></i>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada pengajuan</h3>
-                <p class="text-gray-500 mb-4">Anda belum memiliki pengajuan surat bebas asrama.</p>
-                <button class="create-new-btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Buat Pengajuan Pertama
+        </div>
+        <div class="text-center">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Buat Pengajuan Baru</h3>
+            <p class="text-sm text-gray-500 mb-4">Anda akan membuat pengajuan bebas asrama. Lanjutkan?</p>
+            <div class="flex space-x-3 justify-center">
+                <button id="cancelCreate" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Batal
+                </button>
+                <button id="confirmCreate" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                    Ya, Lanjutkan
                 </button>
             </div>
-        `;
-        
-        // Tambah event listener untuk tombol baru
-        const createNewBtn = document.querySelector('.create-new-btn');
-        if (createNewBtn) {
-            createNewBtn.addEventListener('click', function() {
-                alert('Mengarahkan ke form pengajuan baru...');
+        </div>
+    </div>
+</div>
+
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Variabel Global untuk Elemen UI ---
+        const deleteModal = document.getElementById('deleteModal');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const createModal = document.getElementById('createModal');
+        const cancelCreate = document.getElementById('cancelCreate');
+        const confirmCreate = document.getElementById('confirmCreate');
+        const container = document.getElementById('bebas-asrama-container'); 
+        let pengajuanIdToDelete = null;
+
+        // --- Inisialisasi ---
+        fetchRiwayatPengajuan(); // Ambil data saat halaman dimuat
+        initializeEventListeners(); // Pasang semua event listener satu kali
+
+        // =================================================================
+        // BAGIAN PENGAMBILAN & PENAMPILAN DATA (FETCH & RENDER)
+        // =================================================================
+
+        async function fetchRiwayatPengajuan() {
+            const mahasiswaId = document.body.dataset.mahasiswaId;
+            if (!mahasiswaId) {
+                console.error("ID Mahasiswa tidak ditemukan.");
+                showEmptyState();
+                return;
+            }
+            try {
+                const response = await fetch(`/api/bebas-asrama/mahasiswa/${mahasiswaId}`);
+                if (!response.ok) {
+                    throw new Error('Gagal memuat data riwayat.');
+                }
+                const result = await response.json();
+                renderTable(result.data);
+            } catch (error) {
+                console.error("Gagal mengambil data riwayat:", error);
+                showEmptyState();
+            }
+        }
+
+
+        function renderTable(data) {
+            const tbody = document.getElementById('riwayat-table-body');
+            tbody.innerHTML = ''; // Cukup kosongkan isinya
+
+            if (!data || data.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            data.forEach(pengajuan => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.setAttribute('data-id', pengajuan.Surat_id);
+                row.innerHTML = generateRowHTML(pengajuan);
+                tbody.appendChild(row);
             });
         }
-    }
+        // =================================================================
+        // BAGIAN EVENT HANDLING (EVENT DELEGATION)
+        // =================================================================
+        
+        function initializeEventListeners() {
+            if (container) {
+                container.addEventListener('click', function(event) {
+                    const button = event.target.closest('button');
+                    if (!button || button.disabled) return;
 
-    // Hover effects untuk table rows
-    const tableRows = document.querySelectorAll('tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            if (!this.classList.contains('bg-blue-50')) {
-                this.style.backgroundColor = '#f8fafc';
+                    if (button.matches('button:has(.fa-plus), .create-new-btn')) {
+                        showCreateModal();
+                        return;
+                    }
+
+                    const row = button.closest('tr');
+                    if (!row) return;
+                    
+                    const pengajuanId = row.getAttribute('data-id');
+                    if (button.classList.contains('hapus-btn')) {
+                        showDeleteModal(pengajuanId);
+                    } else if (button.classList.contains('bayar-btn')) {
+                        window.location.href = `/mahasiswa/pembayaran/${pengajuanId}`;
+                    } else if (button.classList.contains('unduh-btn')) {
+                        window.location.href = `/api/bebas-asrama/${pengajuanId}/surat`;
+                    }
+                });
             }
-        });
-        
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
+
+            cancelDelete.addEventListener('click', hideDeleteModal);
+            confirmDelete.addEventListener('click', () => {
+                if (pengajuanIdToDelete) deletePengajuan(pengajuanIdToDelete);
+            });
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal) hideDeleteModal();
+            });
+
+            cancelCreate.addEventListener('click', hideCreateModal);
+            confirmCreate.addEventListener('click', executeCreatePengajuan);
+            createModal.addEventListener('click', (e) => {
+                if (e.target === createModal) hideCreateModal();
+            });
+        }
+
+        // =================================================================
+        // BAGIAN FUNGSI AKSI (CREATE, DELETE)
+        // =================================================================
+
+        async function executeCreatePengajuan() {
+            hideCreateModal();
+            try {
+                const response = await fetch('/api/bebas-asrama', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Gagal membuat pengajuan.');
+                
+                showSuccessNotification('Pengajuan baru berhasil dibuat!');
+                fetchRiwayatPengajuan();
+            } catch (error) {
+                console.error('Error saat membuat pengajuan:', error);
+                alert(`Terjadi kesalahan: ${error.message}`);
+            }
+        }
+
+        async function deletePengajuan(pengajuanId) {
+            hideDeleteModal();
+            try {
+
+                const response = await fetch(`/api/bebas-asrama/${pengajuanId}`, { method: 'DELETE' });
+
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.message || 'Gagal menghapus pengajuan.');
+                }
+
+                showSuccessNotification(`Pengajuan #${pengajuanId} berhasil dihapus.`);
+                fetchRiwayatPengajuan();
+
+            } catch (error) {
+                console.error('Error saat menghapus:', error);
+                alert(`Gagal menghapus: ${error.message}`);
+            }
+        }
+        function checkEmptyTable() {
+            // Ambil referensi tbody yang ada saat ini
+            const currentTableBody = document.getElementById('riwayat-table-body');
+            // Jika tbody tidak ada atau tidak punya anak, tampilkan empty state
+            if (!currentTableBody || currentTableBody.children.length === 0) {
+                showEmptyState();
+            }
+        }
+
+        // =================================================================
+        // FUNGSI HELPER (UI & FORMATTING)
+        // =================================================================
+
+        function generateRowHTML(pengajuan) {
+            const formatDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const formatCurrency = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a);
+            let statusBadge = '', paymentStatus = '', actionButtons = '';
+
+            switch (pengajuan.status_pengajuan) {
+                case 'VERIFIKASI_FASILITAS':
+                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800"><i class="fas fa-clipboard-check mr-1"></i>Verifikasi Fasilitas</span>`;
+                    paymentStatus = `<span class="text-sm text-gray-600">Belum Ditentukan</span>`;
+                    actionButtons = `<button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-trash mr-1"></i>Hapus</button>`;
+                    break;
+                case 'MENUNGGU_PEMBAYARAN':
+                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800"><i class="fas fa-clock mr-1"></i>Menunggu Pembayaran</span>`;
+                    paymentStatus = `<span class="text-sm text-gray-600">${formatCurrency(pengajuan.total_biaya)}</span>`;
+                    actionButtons = `<button class="bayar-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-credit-card mr-1"></i>Bayar</button> <button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-trash mr-1"></i>Hapus</button>`;
+                    break;
+                case 'VERIFIKASI_PEMBAYARAN':
+                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-search mr-1"></i>Verifikasi Pembayaran</span>`;
+                    paymentStatus = `<span class="text-sm text-blue-600 font-medium"><i class="fas fa-clock mr-1"></i>Verifikasi</span>`;
+                    actionButtons = `<button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed"><i class="fas fa-trash mr-1"></i>Hapus</button>`;
+                    break;
+                case 'SELESAI':
+                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Selesai</span>`;
+                    paymentStatus = `<span class="text-sm text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>Lunas</span>`;
+                    actionButtons = `<button class="unduh-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-download mr-1"></i>Unduh Surat</button>`;
+                    break;
+                default:
+                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Tidak Diketahui</span>`;
+                    break;
+            }
+            return `
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${pengajuan.nomor_pengajuan}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(pengajuan.tanggal_pengajuan)}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${paymentStatus}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="flex space-x-2">${actionButtons}</div></td>
+            `;
+        }
+
+        function showDeleteModal(id) {
+            pengajuanIdToDelete = id;
+            deleteModal.querySelector('h3').textContent = `Hapus Pengajuan #${id}`;
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        }
+
+        function hideDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            pengajuanIdToDelete = null;
+        }
+
+        function showCreateModal() {
+            createModal.classList.remove('hidden');
+            createModal.classList.add('flex');
+        }
+
+        function hideCreateModal() {
+            createModal.classList.add('hidden');
+            createModal.classList.remove('flex');
+        }
+
+        function showSuccessNotification(message) {
+            const el = document.createElement('div');
+            el.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+            el.innerHTML = `<div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>${message}</span></div>`;
+            document.body.appendChild(el);
+            setTimeout(() => el.classList.remove('translate-x-full'), 100);
+            setTimeout(() => {
+                el.classList.add('translate-x-full');
+                setTimeout(() => document.body.removeChild(el), 300);
+            }, 3000);
+        }
+
+        function checkEmptyTable() {
+            if (tableBody.children.length === 0) showEmptyState();
+        }
+
+        function showEmptyState() {
+            const tableBody = document.getElementById('riwayat-table-body');
+            if (tableBody) {
+                // Buat satu baris tabel yang berisi pesan
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-10 text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-file-alt text-3xl mb-2"></i>
+                                <span>Belum ada pengajuan</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
     });
-
-    // Fungsi helper untuk mengupdate tampilan status
-    function updateRowStatus(rowElement, newStatus) {
-        const statusCell = rowElement.querySelector('td:nth-child(4) span');
-        const paymentCell = rowElement.querySelector('td:nth-child(3)');
-        const actionCell = rowElement.querySelector('td:nth-child(5) div');
-        
-        // Update data attribute
-        rowElement.setAttribute('data-status', newStatus);
-        
-        // Clear existing content
-        actionCell.innerHTML = '';
-        
-        switch(newStatus) {
-            case 'menunggu_pembayaran':
-                statusCell.className = 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800';
-                statusCell.innerHTML = '<i class="fas fa-clock mr-1"></i>Menunggu Pembayaran';
-                paymentCell.innerHTML = '<span class="text-sm text-gray-600">Rp 50.000</span>';
-                actionCell.innerHTML = `
-                    <button class="bayar-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                        <i class="fas fa-credit-card mr-1"></i>Bayar
-                    </button>
-                    <button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                        <i class="fas fa-trash mr-1"></i>Hapus
-                    </button>
-                `;
-                break;
-                
-            case 'verifikasi_pembayaran':
-                statusCell.className = 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800';
-                statusCell.innerHTML = '<i class="fas fa-search mr-1"></i>Verifikasi Pembayaran';
-                paymentCell.innerHTML = '<span class="text-sm text-blue-600 font-medium"><i class="fas fa-clock mr-1"></i>Verifikasi</span>';
-                actionCell.innerHTML = `
-                    <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                        <i class="fas fa-credit-card mr-1"></i>Bayar
-                    </button>
-                    <button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                        <i class="fas fa-trash mr-1"></i>Hapus
-                    </button>
-                `;
-                break;
-                
-            case 'verifikasi_fasilitas':
-                statusCell.className = 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800';
-                statusCell.innerHTML = '<i class="fas fa-clipboard-check mr-1"></i>Verifikasi Fasilitas';
-                paymentCell.innerHTML = '<span class="text-sm text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>Lunas</span>';
-                actionCell.innerHTML = `
-                    <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                        <i class="fas fa-credit-card mr-1"></i>Bayar
-                    </button>
-                    <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                        <i class="fas fa-trash mr-1"></i>Hapus
-                    </button>
-                `;
-                break;
-                
-            case 'selesai':
-                statusCell.className = 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800';
-                statusCell.innerHTML = '<i class="fas fa-check mr-1"></i>Selesai';
-                paymentCell.innerHTML = '<span class="text-sm text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>Lunas</span>';
-                actionCell.innerHTML = `
-                    <button class="unduh-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                        <i class="fas fa-download mr-1"></i>Unduh Surat
-                    </button>
-                `;
-                break;
-        }
-        
-        // Re-initialize event listeners for new buttons
-        initializeEventListeners();
-    }
-
-    // Fungsi demo untuk mengubah status (opsional, untuk testing)
-    window.demoChangeStatus = function(rowId, newStatus) {
-        const row = document.querySelector(`tr[data-id="${rowId}"]`);
-        if (row) {
-            updateRowStatus(row, newStatus);
-        }
-    };
-});
-    </script>
+</script>
 </body>
 </html>
