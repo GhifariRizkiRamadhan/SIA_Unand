@@ -4,6 +4,7 @@ const { authMiddleware, redirectIfAuthenticated,requireMahasiswa,requirePengelol
 const { upload, uploadImage,uploadBukti } = require('../middlewares/uploadMiddleware');
 const validateEmail = require("../middlewares/validateEmail");
 const forgotPasswordLimiter = require("../middlewares/rateLimiter");
+const { uploadMahasiswaFoto } = require('../config/multerConfig');
 
 // Redirect root to login
 router.get("/", (req, res) => {
@@ -20,7 +21,7 @@ const controller2 = require("../controller/conRegis");
 router.get("/login", redirectIfAuthenticated, controller1.showLogin);
 router.post('/login', redirectIfAuthenticated, controller1.authController.login);
 router.get("/register", redirectIfAuthenticated, controller2.regcon.showRegis);
-router.post("/register", redirectIfAuthenticated, controller2.regcon.register);
+router.post("/register", redirectIfAuthenticated, uploadMahasiswaFoto.single('foto'), controller2.regcon.register);
 router.get("/logout", controller1.authController.logout);
 
 // ===================
@@ -82,9 +83,14 @@ router.post("/api/pengelola/bebas-asrama/:id/verifikasi-fasilitas", authMiddlewa
 
 // ====================== PEMBERITAHUAN (Pengelola) ======================
 router.get("/pengelola/pemberitahuan", authMiddleware, requirePengelola, controller8.showPemberitahuanPengelola);
-
 router.get("/api/pemberitahuan/:id", authMiddleware, controller8.getPemberitahuan);
 router.delete("/api/pemberitahuan/:id", authMiddleware, controller8.hapusPemberitahuan);
+
+router.get("/pengelola/dataPenghuni", authMiddleware, requirePengelola, controller9.showDtPenghuni);
+router.post("/pengelola/dataPenghuni/tambah", authMiddleware, requirePengelola, uploadMahasiswaFoto.single('foto'), controller9.tambahPenghuni);
+router.post("/pengelola/dataPenghuni/edit", authMiddleware, requirePengelola, uploadMahasiswaFoto.single('foto'), controller9.editPenghuni);
+router.post("/pengelola/dataPenghuni/toggle/:mahasiswa_id", authMiddleware, requirePengelola, controller9.toggleStatusPenghuni);
+router.get("/pengelola/dataPenghuni/get/:id", authMiddleware, requirePengelola, controller9.getPenghuniById);
 
 // API routes untuk pemberitahuan dengan error handling
 router.post("/api/pemberitahuan", authMiddleware, (req, res, next) => {
