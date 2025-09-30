@@ -4,23 +4,22 @@ const Pembayaran = {
   // Create new pembayaran
   async create(data) {
     try {
-      const pembayaran = await prisma.pembayaran.create({
-        data: {
-          user_id: data.user_id,
-          amount: data.amount,
-          bukti: data.bukti,
-          status: data.status || 'pending',
-          surat_id: data.surat_id
-        }
-      });
-      return pembayaran;
+        return await prisma.pembayaran.create({
+                data: {
+                    amount: data.amount,
+                    bukti_pembayaran: data.bukti_pembayaran,
+                    status_bukti: data.status_bukti || 'BELUM_DIVERIFIKASI',
+                    mahasiswa_id: data.mahasiswa_id,
+                    surat_id: data.surat_id
+                }
+            });
     } catch (error) {
       throw error;
     }
   },
 async findById(id) {
   try {
-    const pembayaranId = parseInt(id, 10); // pastikan menjadi integer
+    const pembayaranId = parseInt(id, 10); 
     return await prisma.pembayaran.findUnique({
       where: { pembayaran_id: pembayaranId },
       include: {
@@ -48,29 +47,30 @@ async findById(id) {
  },
 
 
-  // Update status pembayaran (approve/reject)
-  async updateStatus(id, status) {
-    try {
-      return await prisma.pembayaran.update({
-        where: { pembayaran_id: id },
-        data: { status }
-      });
-    } catch (error) {
-      throw error;
-    }
-  }, 
+  async updateStatus(id, status_bukti) {
+        try {
+
+            const numericId = parseInt(id, 10);
+            if (isNaN(numericId)) throw new Error("ID harus berupa angka.");
+
+            return await prisma.pembayaran.update({
+                where: { pembayaran_id: numericId },
+                data: { status_bukti } 
+            });
+        } catch (error) {
+            throw error;
+        }
+    },
 
 async findByMahasiswaId(id) {
     try {
-      // 1. Konversi ID dari string ke integer
       const numericId = parseInt(id, 10);
 
-      // 2. Validasi jika ID bukan angka
       if (isNaN(numericId)) {
         throw new Error("ID Mahasiswa harus berupa angka yang valid.");
       }
 
-      // 3. Cari data menggunakan ID yang sudah menjadi angka
+
       return await prisma.pembayaran.findMany({
         where: {
           mahasiswa_id: numericId
@@ -86,18 +86,15 @@ async findByMahasiswaId(id) {
 
   async findByIdAndUpdate(id, dataToUpdate) {
     try {
-      // Konversi ID ke integer, karena ID dari parameter bisa berupa string
       const numericId = parseInt(id, 10);
       if (isNaN(numericId)) {
         throw new Error("ID pembayaran harus berupa angka yang valid.");
       }
-
-      // Gunakan prisma.pembayaran.update untuk mengubah data
       return await prisma.pembayaran.update({
         where: {
-          pembayaran_id: numericId // Pastikan 'pembayaran_id' adalah nama primary key di skema Anda
+          pembayaran_id: numericId 
         },
-        data: dataToUpdate // 'dataToUpdate' adalah objek berisi field yang ingin diubah
+        data: dataToUpdate 
       });
     } catch (error) {
       throw error;
@@ -111,13 +108,55 @@ async findByMahasiswaId(id) {
     return await prisma.pembayaran.findUnique({
       where: { pembayaran_id: numericId },
       include: {
-        suratbebasasrama: true // <-- Ini akan mengambil data surat terkait
+        suratbebasasrama: true 
       }
     });
   } catch (error) {
     throw error;
   }
-}
+},
+async updateStatusBySuratId(suratId, newStatus) {
+    try {
+        const numericSuratId = parseInt(suratId, 10);
+        if (isNaN(numericSuratId)) {
+            throw new Error("ID Surat harus berupa angka.");
+        }
+
+    
+        return await prisma.pembayaran.updateMany({
+            where: {
+                surat_id: numericSuratId
+            },
+            data: {
+                status_bukti: newStatus 
+            }
+        });
+    } catch (error) {
+        throw error;
+    }
+},
+
+async resetPaymentStatusBySuratId(suratId) {
+    try {
+        const numericSuratId = parseInt(suratId, 10);
+        if (isNaN(numericSuratId)) {
+            throw new Error("ID Surat harus berupa angka.");
+        }
+
+
+        return await prisma.pembayaran.updateMany({
+            where: {
+                surat_id: numericSuratId
+            },
+            data: {
+                status_bukti: 'TIDAK_VALID',
+                bukti_pembayaran: null 
+            }
+        });
+    } catch (error) {
+        throw error;
+    }
+},
 };
 
 

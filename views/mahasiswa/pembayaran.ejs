@@ -1,137 +1,68 @@
-<body class="lg:ml-52">
-<div class="max-w-4xl mx-auto ">
-    <!-- Payment Confirmation Form -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <!-- Form Header -->
-        <div class="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 px-6 py-4">
-            <h2 class="text-lg font-semibold text-white">Konfirmasi Pembayaran</h2>
-        </div>
+<body class="lg:ml-52 bg-gray-50">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 px-6 py-4">
+                <h2 class="text-lg font-semibold text-white">Konfirmasi Pembayaran</h2>
+                <p class="text-sm text-purple-200">Untuk Pengajuan: <%= pengajuan.nomor_pengajuan %></p>
+            </div>
 
-        <!-- Form Content -->
-        <div class="p-6">
-            <form id="payment-form" action="/konfirmasi-pembayaran" method="POST" enctype="multipart/form-data">
-                <!-- Payment Details Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-1">
-                    <!-- Left Column - Payment Info -->
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Detail Pembayaran</h3>
+            <div class="p-6">
+                <form id="payment-form" enctype="multipart/form-data">
+                    <input type="hidden" id="pembayaran-id" name="id" value="<%= pengajuan.pembayaran[0]?.pembayaran_id %>">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900 mb-4">Detail Mahasiswa</h3>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-600 text-sm">Nama</span>
+                                        <span class="font-medium text-gray-900"><%= user.name %></span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-600 text-sm">NIM</span>
+                                        <span class="font-medium text-gray-900"><%= pengajuan.mahasiswa?.nim || 'N/A' %></span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-600 text-sm">Status Pengajuan</span>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <%= pengajuan.status_pengajuan.replace('_', ' ') %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900 mb-4">Rincian Biaya</h3>
+                                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                        <span class="text-sm font-medium text-gray-900">Biaya Pokok Bebas Asrama</span>
+                                        <span class="font-medium text-gray-900"><%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(pengajuan.total_biaya - (pengajuan.biaya_tambahan || 0)) %></span>
+                                    </div>
+                                    <% if (pengajuan.biaya_tambahan > 0) { %>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                        <span class="text-sm font-medium text-gray-900">Biaya Tambahan (Kerusakan)</span>
+                                        <span class="font-medium text-red-600">+ <%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(pengajuan.biaya_tambahan) %></span>
+                                    </div>
+                                    <% } %>
+                                    <div class="flex justify-between items-center pt-3 border-t-2 border-purple-200">
+                                        <span class="text-base font-bold text-gray-900">Total Pembayaran</span>
+                                        <span class="text-lg font-bold text-green-600"><%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(pengajuan.total_biaya) %></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+
                             
-                            <!-- Detail Items -->
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                                    <span class="text-gray-600 text-sm">Nama</span>
-                                    <span class="font-medium text-gray-900"><%= user.name %></span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                                    <span class="text-gray-600 text-sm">NIM</span>
-                                    <span class="font-medium text-gray-900"><%= user?.nim || '' %></span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                                    <span class="text-gray-600 text-sm">Status</span>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        <%= user?.status || 'Menunggu Pembayaran' %>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Detailed Payment Breakdown -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Rincian Biaya</h3>
-                            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                                <!-- Biaya Asrama -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Biaya Asrama</span>
-                                        <p class="text-xs text-gray-500">Per semester</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 2.500.000</span>
-                                </div>
-
-                                <!-- Fasilitas Kamar -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Fasilitas Kamar</span>
-                                        <p class="text-xs text-gray-500">AC, Kasur, Lemari, Meja</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 800.000</span>
-                                </div>
-
-                                <!-- Fasilitas Umum -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Fasilitas Umum</span>
-                                        <p class="text-xs text-gray-500">WiFi, Laundry, Ruang Belajar</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 600.000</span>
-                                </div>
-
-                                <!-- Listrik & Air -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Listrik & Air</span>
-                                        <p class="text-xs text-gray-500">Biaya utilitas bulanan</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 400.000</span>
-                                </div>
-
-                                <!-- Keamanan -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Keamanan</span>
-                                        <p class="text-xs text-gray-500">Security 24 jam</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 300.000</span>
-                                </div>
-
-                                <!-- Pemeliharaan -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Pemeliharaan</span>
-                                        <p class="text-xs text-gray-500">Maintenance fasilitas</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 200.000</span>
-                                </div>
-
-                                <!-- Administrasi -->
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-900">Biaya Administrasi</span>
-                                        <p class="text-xs text-gray-500">Pengurusan dokumen</p>
-                                    </div>
-                                    <span class="font-medium text-gray-900">Rp 200.000</span>
-                                </div>
-
-                                <!-- Total -->
-                                <div class="flex justify-between items-center pt-3 border-t-2 border-purple-200">
-                                    <span class="text-base font-bold text-gray-900">Total Pembayaran</span>
-                                    <span class="text-lg font-bold text-green-600">Rp 5.000.000</span>
-                                </div>
-                            </div>
-
-                            <!-- Payment Period Info -->
-                            <div class="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-calendar-alt text-blue-600 mt-1"></i>
-                                    <div>
-                                        <p class="text-sm font-medium text-blue-900">Periode Pembayaran</p>
-                                        <p class="text-xs text-blue-700">Semester Ganjil 2025/2026</p>
-                                        <p class="text-xs text-blue-700">Jatuh Tempo: 31 Oktober 2025</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bank Transfer Info -->
+                                        <!-- Bank Transfer Info -->
                         <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                            <h4 class="font-semibold text-blue-900 mb-2">Transfer ke rekening Asrama:</h4>
+                            <h4 class="font-semibold text-blue-900 mb-2 text-sm">Transfer ke rekening Asrama:</h4>
                             <div class="text-center">
                                 <div class="inline-flex items-center space-x-2 bg-white rounded-lg px-4 py-3 border border-blue-300">
                                     <i class="fab fa-cc-mastercard text-blue-700 text-2xl mr-2"></i>
-                                        <span class="font-bold text-blue-900">BRI</span>
+                                        <span class="font-bold text-blue-900 ">BRI</span>
                                     <span class="font-mono text-xl font-bold text-gray-900 tracking-wider">
                                         <%= '5201 9258 3647 021' %>
                                     </span>
@@ -147,265 +78,213 @@
                                 <p class="font-mono text-sm font-bold text-blue-900"><%= user?.nim || '1234567890' %>5000</p>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Right Column - Upload Form -->
-                    <div class="space-y-6">
                         <div>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Bukti Pembayaran</h3>
-                            
-                            <!-- File Upload Area -->
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Pilih File <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-400 transition-colors">
-                                        <div class="space-y-1 text-center">
-                                            <div id="upload-icon" class="mx-auto h-12 w-12 text-gray-400">
-                                                <i class="fas fa-cloud-upload-alt text-4xl"></i>
+                                <h3 class="text-sm font-semibold text-gray-900 mb-4">Unggah Bukti Pembayaran</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih File <span class="text-red-500">*</span></label>
+                                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-400 transition-colors">
+                                            <div class="space-y-1 text-center">
+                                                <div id="upload-icon" class="mx-auto h-12 w-12 text-gray-400"><i class="fas fa-cloud-upload-alt text-4xl"></i></div>
+                                                <div class="flex text-sm text-gray-600">
+                                                    <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500">
+                                                        <span>Upload bukti transfer</span>
+                                                        <input id="file-upload" name="bukti" type="file" accept="image/jpeg,image/png,application/pdf" class="sr-only" required>
+                                                    </label>
+                                                    <p class="pl-1">atau drag and drop</p>
+                                                </div>
+                                                <p class="text-xs text-gray-500">PNG, JPG, PDF hingga 5MB</p>
                                             </div>
-                                            <div class="flex text-sm text-gray-600">
-                                                <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
-                                                    <span>Upload bukti transfer</span>
-                                                    <input id="file-upload" name="bukti-pembayaran" type="file" accept="image/*,.pdf" class="sr-only" required>
-                                                </label>
-                                                <p class="pl-1">atau drag and drop</p>
-                                            </div>
-                                            <p class="text-xs text-gray-500">PNG, JPG, PDF up to 5MB</p>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- File Preview -->
-                                <div id="file-preview" class="hidden">
-                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                        <div class="flex items-center space-x-3">
-                                            <i class="fas fa-file-image text-purple-600 text-xl"></i>
-                                            <div class="flex-1">
-                                                <p id="file-name" class="text-sm font-medium text-gray-900"></p>
-                                                <p id="file-size" class="text-xs text-gray-500"></p>
-                                            </div>
-                                            <button type="button" onclick="removeFile()" class="text-red-500 hover:text-red-700">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                    <div id="file-preview" class="hidden">
                                         </div>
-                                    </div>
-                                </div>
-
-                                <!-- Information Card -->
-                                <div class=" bg-yellow-50 border border-yellow-200 p-6 rounded-xl">
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex-shrink-0">
-                                            <i class="fas fa-info-circle text-yellow-600 text-xl"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="text-sm font-semibold text-yellow-900">Informasi Penting:</h3>
-                                            <ul class="mt-2 text-sm text-yellow-800 space-y-1">
-                                                <li>• Pastikan nominal transfer sesuai dengan total pembayaran (Rp 5.000.000)</li>
-                                                <li>• Sertakan kode virtual account jika menggunakan transfer online</li>
-                                                <li>• Bukti transfer harus jelas menampilkan tanggal dan nominal</li>
-                                                <li>• Konfirmasi pembayaran akan diproses dalam 1x24 jam</li>
-                                                <li>• Hubungi admin jika ada kendala dalam proses pembayaran</li>
-                                                <li>• Simpan bukti pembayaran sebagai arsip pribadi</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Contact Info -->
-                                <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                                    <h4 class="font-semibold text-gray-900 mb-2">Kontak Admin:</h4>
-                                    <div class="space-y-1 text-sm text-gray-600">
-                                        <p><i class="fas fa-phone mr-2"></i>+62 751 71181 (ext. 205)</p>
-                                        <p><i class="fas fa-envelope mr-2"></i>asrama@unand.ac.id</p>
-                                        <p><i class="fab fa-whatsapp mr-2"></i>+62 812 3456 7890</p>
-                                    </div>
                                 </div>
                             </div>
-                        </div>
                     </div>
-                   
-                </div>
-                
-                 <!-- Form Actions -->
-                <div class="flex flex-col sm:flex-row gap-4 pt-6 text-sm">
-                    <button type="button" onclick="window.history.back()" 
-                        class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                        <i class="fas fa-ban text-red-500 mr-2"></i>
-                        Batal
-                    </button>
                     
-                    <button type="submit" 
-                        class="flex-1 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        id="submit-btn">
-                        <i class="fas fa-check mr-2"></i>
-                        Kirim Konfirmasi
-                    </button>
-                </div> 
-            </form>
-        </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                        <button type="button" onclick="window.history.back()" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">Batal</button>
+                        <button type="submit" id="submit-btn" class="flex-1 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700">Kirim Konfirmasi</button>
+                    </div> 
+                    </div>
         
+                    
+                </form>
+            </div>
+        </div>
     </div>
-
-</div>
-
-<!-- Loading Modal -->
 <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
     <div class="bg-white rounded-xl p-8 max-w-sm w-full mx-4">
         <div class="text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Mengunggah Bukti Pembayaran</h3>
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Mengunggah Bukti Pembayaran...</h3>
             <p class="text-gray-600">Mohon tunggu sebentar...</p>
         </div>
     </div>
 </div>
 
-<!-- Success Modal -->
 <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
     <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
         <div class="text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-check text-green-600 text-2xl"></i>
             </div>
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Berhasil!</h3>
-            <p class="text-gray-600 mb-6">Konfirmasi pembayaran Anda telah dikirim dan akan diproses oleh admin.</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Berhasil!</h3>
+            <p class="text-gray-600 mb-6">Konfirmasi pembayaran Anda telah dikirim dan akan segera diproses oleh admin.</p>
             <button onclick="redirectToBebasAsrama()" 
                     class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                Kembali ke Halaman Surat Bebas Asrama
+                Kembali ke Halaman Riwayat
             </button>
         </div>
     </div>
 </div>
 
 <script>
-// File upload functionality
+
+const paymentForm = document.getElementById('payment-form');
 const fileInput = document.getElementById('file-upload');
 const filePreview = document.getElementById('file-preview');
 const uploadIcon = document.getElementById('upload-icon');
 const submitBtn = document.getElementById('submit-btn');
+const loadingModal = document.getElementById('loading-modal');
+const successModal = document.getElementById('success-modal');
+const uploadArea = document.querySelector('.border-dashed');
 
-fileInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        // Validate file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar. Maksimal 5MB.');
-            e.target.value = '';
-            return;
+paymentForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const pembayaranId = document.getElementById('pembayaran-id').value;
+    
+    if (!pembayaranId || pembayaranId === 'undefined' || pembayaranId === '') {
+        alert('Data pembayaran tidak valid. Silakan refresh halaman atau hubungi administrator.');
+        return;
+    }
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Silakan pilih file bukti pembayaran terlebih dahulu.');
+        return;
+    }
+    
+    loadingModal.classList.remove('hidden');
+    submitBtn.disabled = true;
+
+    const formData = new FormData(paymentForm);
+
+    try {
+
+        const response = await fetch(`/api/pembayaran/${pembayaranId}/reupload`, {
+            method: 'PUT',
+            body: formData,
+        });
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server mengembalikan response yang tidak valid. Silakan coba lagi.');
+        }
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || 'Gagal mengunggah bukti pembayaran.');
+        }
+
+        // Berhasil upload
+        loadingModal.classList.add('hidden');
+        successModal.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Submission error:', error);
+        loadingModal.classList.add('hidden');
+        
+        let errorMessage = error.message;
+        if (errorMessage.includes('not valid JSON')) {
+            errorMessage = 'Terjadi kesalahan server. Pastikan endpoint API sudah benar.';
         }
         
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-        if (!allowedTypes.includes(file.type)) {
-            alert('Tipe file tidak didukung. Gunakan PNG, JPG, atau PDF.');
-            e.target.value = '';
-            return;
-        }
-        
-        // Show file preview
-        document.getElementById('file-name').textContent = file.name;
-        document.getElementById('file-size').textContent = formatFileSize(file.size);
-        filePreview.classList.remove('hidden');
-        uploadIcon.innerHTML = '<i class="fas fa-check-circle text-green-500 text-4xl"></i>';
-        
-        // Enable submit button
+        alert(`Terjadi kesalahan: ${errorMessage}`);
         submitBtn.disabled = false;
-        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 });
 
-// Drag and drop functionality
-const uploadArea = document.querySelector('.border-dashed');
+    // --- FUNGSI UI: FILE UPLOAD & PREVIEW ---
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Ukuran file terlalu besar. Maksimal 5MB.');
+                e.target.value = ''; return;
+            }
+            const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Tipe file tidak didukung. Gunakan PNG, JPG, atau PDF.');
+                e.target.value = ''; return;
+            }
+            
+            // Tampilkan pratinjau
+            filePreview.innerHTML = `
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-file-image text-purple-600 text-xl"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">${file.name}</p>
+                            <p class="text-xs text-gray-500">${formatFileSize(file.size)}</p>
+                        </div>
+                        <button type="button" onclick="removeFile()" class="text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+            `;
+            filePreview.classList.remove('hidden');
+            uploadIcon.innerHTML = '<i class="fas fa-check-circle text-green-500 text-4xl"></i>';
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    });
 
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    uploadArea.addEventListener(eventName, preventDefaults, false);
-});
+    function removeFile() {
+        fileInput.value = '';
+        filePreview.classList.add('hidden');
+        uploadIcon.innerHTML = '<i class="fas fa-cloud-upload-alt text-4xl"></i>';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
 
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
+    // --- FUNGSI UI: DRAG & DROP ---
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => uploadArea.addEventListener(eName, e => { e.preventDefault(); e.stopPropagation(); }, false));
+    ['dragenter', 'dragover'].forEach(eName => uploadArea.addEventListener(eName, () => uploadArea.classList.add('border-purple-400', 'bg-purple-50'), false));
+    ['dragleave', 'drop'].forEach(eName => uploadArea.addEventListener(eName, () => uploadArea.classList.remove('border-purple-400', 'bg-purple-50'), false));
+    uploadArea.addEventListener('drop', e => {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+    }, false);
 
-['dragenter', 'dragover'].forEach(eventName => {
-    uploadArea.addEventListener(eventName, highlight, false);
-});
+    // --- FUNGSI HELPER LAINNYA ---
+    function formatFileSize(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            toast.textContent = 'Nomor rekening disalin!';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        });
+    }
+    
+    function redirectToBebasAsrama() {
+        window.location.href = '/mahasiswa/bebas-asrama';
+    }
 
-['dragleave', 'drop'].forEach(eventName => {
-    uploadArea.addEventListener(eventName, unhighlight, false);
-});
-
-function highlight(e) {
-    uploadArea.classList.add('border-purple-400', 'bg-purple-50');
-}
-
-function unhighlight(e) {
-    uploadArea.classList.remove('border-purple-400', 'bg-purple-50');
-}
-
-uploadArea.addEventListener('drop', handleDrop, false);
-
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    fileInput.files = files;
-    fileInput.dispatchEvent(new Event('change'));
-}
-
-// Remove file function
-function removeFile() {
-    fileInput.value = '';
-    filePreview.classList.add('hidden');
-    uploadIcon.innerHTML = '<i class="fas fa-cloud-upload-alt text-4xl"></i>';
+    // --- Inisialisasi Tombol ---
     submitBtn.disabled = true;
     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-}
-
-// Format file size
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-// Copy to clipboard function
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        // Show toast notification
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-        toast.textContent = 'Nomor rekening disalin!';
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    });
-}
-
-// Form submission
-document.getElementById('payment-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Show loading modal
-    document.getElementById('loading-modal').classList.remove('hidden');
-    
-    // Simulate upload process
-    setTimeout(() => {
-        document.getElementById('loading-modal').classList.add('hidden');
-        document.getElementById('success-modal').classList.remove('hidden');
-    }, 2000);
-});
-
-// Redirect function
-function redirectToBebasAsrama() {
-    window.location.href = '/mahasiswa/bebas-asrama';
-}
-
-// Initialize submit button as disabled
-submitBtn.disabled = true;
-submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 </script>
 </body>

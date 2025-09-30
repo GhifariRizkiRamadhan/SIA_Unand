@@ -7,6 +7,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
+<style>
+    #proofImage {
+        cursor: zoom-in;
+        transition: transform 0.2s ease-in-out;
+    }
+    #proofImage.zoomed-in {
+        transform: scale(1.5); /* Anda bisa ubah angka ini untuk perbesaran yang berbeda */
+        cursor: zoom-out;
+    }
+</style>
+
 <body class="lg:ml-52 bg-gray-50">
     <div class="bg-white rounded-lg shadow-sm border">
         <div class="px-6 py-4 border-b">
@@ -34,107 +46,132 @@
         </div>
     </div>
 
-    <!-- Modal Detail -->
-    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="px-6 py-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-800">Detail Pengajuan Surat Bebas Asrama</h3>
-                        <button onclick="closeModal('detailModal')" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
+
+            <!-- Modal Detail -->
+            <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        
+                        <!-- Header Modal -->
+                        <div class="px-6 py-4 border-b">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-800">Detail Pengajuan Surat Bebas Asrama</h3>
+                                <button onclick="closeModal('detailModal')" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Konten Modal -->
+                        <div class="px-6 py-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                
+                                <!-- Informasi Mahasiswa -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-user mr-2 text-blue-600"></i>
+                                        Informasi Mahasiswa
+                                    </h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Nama:</span>
+                                            <span class="font-medium" id="detailName">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">NIM:</span>
+                                            <span class="font-medium" id="detailNim">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Kategori:</span>
+                                            <span class="font-medium" id="detailCategory">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status Pengajuan -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-clipboard-check mr-2 text-green-600"></i>
+                                        Status Pengajuan
+                                    </h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Nomor Pengajuan:</span>
+                                            <span class="font-medium" id="detailSubmissionNumber">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Status:</span>
+                                            <span class="font-medium" id="detailStatus">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Tanggal Pengajuan:</span>
+                                            <span class="font-medium" id="detailSubmissionDate">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Tanggal Update:</span>
+                                            <span class="font-medium" id="detailUpdateDate">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Informasi Fasilitas -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-home mr-2 text-purple-600"></i>
+                                        Informasi Fasilitas
+                                    </h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Status Fasilitas:</span>
+                                            <span class="font-medium" id="detailFacilities">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Total Tagihan:</span>
+                                            <span class="font-medium text-red-600" id="detailTotalAmount">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Informasi Pembayaran -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-credit-card mr-2 text-yellow-600"></i>
+                                        Informasi Pembayaran
+                                    </h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Status Bukti:</span>
+                                            <span class="font-medium" id="detailPaymentProof">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            
+                            <!-- Daftar Fasilitas yang Perlu Dibayar -->
+                            <div id="facilityListDetail" class="mt-6 hidden">
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-list mr-2 text-blue-600"></i>
+                                        Daftar Fasilitas yang Perlu Dibayar
+                                    </h4>
+                                    <div id="facilityItems" class="space-y-2">
+                                        <!-- Fasilitas akan ditampilkan di sini -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer Modal -->
+                        <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                            <button onclick="closeModal('detailModal')" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
+                                Tutup
+                            </button>
+                        </div>
+
                     </div>
                 </div>
-                
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Informasi Mahasiswa -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-user mr-2 text-blue-600"></i>
-                                Informasi Mahasiswa
-                            </h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Nama:</span>
-                                    <span class="font-medium" id="detailName">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">NIM:</span>
-                                    <span class="font-medium" id="detailNim">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Kategori:</span>
-                                    <span class="font-medium" id="detailCategory">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Status Pengajuan -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-clipboard-check mr-2 text-green-600"></i>
-                                Status Pengajuan
-                            </h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Nomor Pengajuan:</span>
-                                    <span class="font-medium" id="detailSubmissionNumber">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Status:</span>
-                                    <span class="font-medium" id="detailStatus">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Tanggal Pengajuan:</span>
-                                    <span class="font-medium" id="detailSubmissionDate">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Tanggal Update:</span>
-                                    <span class="font-medium" id="detailUpdateDate">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Informasi Fasilitas -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-home mr-2 text-purple-600"></i>
-                                Informasi Fasilitas
-                            </h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Status Fasilitas:</span>
-                                    <span class="font-medium" id="detailFacilities">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Total Tagihan:</span>
-                                    <span class="font-medium text-red-600" id="detailTotalAmount">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Informasi Pembayaran -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                <i class="fas fa-credit-card mr-2 text-yellow-600"></i>
-                                Informasi Pembayaran
-                            </h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Status Bukti:</span>
-                                    <span class="font-medium" id="detailPaymentProof">-</span>
-                                </div>
-                                <div id="paymentProofAction" class="hidden">
-                                    <button onclick="viewPaymentProof(currentDetailId)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                        <i class="fas fa-eye mr-1"></i>Lihat Bukti Pembayaran
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+            </div>
                     <!-- Daftar Fasilitas yang Perlu Dibayar -->
                     <div id="facilityListDetail" class="mt-6 hidden">
                         <div class="bg-blue-50 rounded-lg p-4">
@@ -148,12 +185,7 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
-                    <button onclick="closeModal('detailModal')" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
-                        Tutup
-                    </button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -222,549 +254,416 @@
         </div>
     </div>
 
-    <!-- Modal Verifikasi Pembayaran -->
     <div id="paymentVerificationModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                <div class="px-6 py-4 border-b">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-800">Verifikasi Pembayaran</h3>
-                        <button onclick="closeModal('paymentVerificationModal')" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
-                    </div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">Verifikasi Pembayaran</h3>
+                    <button onclick="closeModal('paymentVerificationModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
                 </div>
-                
-                <div class="px-6 py-4">
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <div class="bg-gray-100 rounded-lg flex items-center justify-center p-4 mb-4">
+                    <img id="proofImage" src="" alt="Bukti Pembayaran" class="max-w-full max-h-full object-contain">
+                    <p id="proofPlaceholder" class="text-gray-500 hidden">Bukti pembayaran tidak tersedia.</p>
+                </div>
+
+                <div>
                     <div class="bg-gray-50 rounded-lg p-4 mb-4">
                         <p class="mb-2"><strong>Nama:</strong> <span id="paymentStudentName"></span></p>
                         <p class="mb-2"><strong>Total Tagihan:</strong> <span class="text-green-600 font-semibold" id="paymentAmount"></span></p>
-                        <p><strong>Status Bukti:</strong> <span class="text-blue-600">Sudah Upload</span></p>
                     </div>
+                    <p class="text-gray-700 mb-4">Apakah bukti pembayaran sudah sesuai dan dapat diverifikasi?</p>
                     
-                    <p class="text-gray-700">Apakah bukti pembayaran sudah sesuai dan dapat diverifikasi?</p>
-                </div>
-                
-                <div class="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-2">
-                    <button onclick="rejectPayment()" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
-                        Tidak, Tolak
-                    </button>
-                    <button onclick="approvePayment()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors">
-                        Ya, Verifikasi
-                    </button>
+                    <div class="flex justify-end space-x-2">
+                        <button onclick="rejectPayment()" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium">
+                            <i class="fas fa-times mr-1"></i> Tidak, Tolak
+                        </button>
+                        <button onclick="approvePayment()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+                            <i class="fas fa-check mr-1"></i> Ya, Verifikasi
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 </body>
 </html>
 <script>
-    // Global variables
-let currentFacilityVerificationId = null;
-let currentPaymentId = null;
-let currentDetailId = null;
+document.addEventListener('DOMContentLoaded', function() {
+    // --- State & Variabel Global ---
+    let allSubmissions = []; // Menyimpan data asli dari server
+    let currentSubmissionId = null; // Menyimpan ID pengajuan yang sedang aktif di modal
 
-// Data simulasi dengan 4 status baru
-let submissions = [
-    {
-        id: 1,
-        name: 'Ahmad Rizki',
-        nim: '2110101001',
-        category: 'Kelulusan',
-        status: 'verifikasi_fasilitas',
-        facilities: 'Belum Diverifikasi',
-        totalAmount: 0,
-        paymentProof: false,
-        submissionDate: '2025-09-15',
-        updateDate: '2025-09-15',
-        facilityList: []
-    },
-    {
-        id: 2,
-        name: 'Siti Nurhaliza',
-        nim: '2110101002',
-        category: 'Pindah Asrama',
-        status: 'menunggu_pembayaran',
-        facilities: 'Terverifikasi',
-        totalAmount: 150000,
-        paymentProof: false,
-        submissionDate: '2025-09-10',
-        updateDate: '2025-09-12',
-        facilityList: [
-            { name: 'Biaya Administrasi', price: 50000 },
-            { name: 'Biaya Kebersihan', price: 100000 }
-        ]
-    },
-    {
-        id: 3,
-        name: 'Budi Santoso',
-        nim: '2110101003',
-        category: 'Kelulusan',
-        status: 'verifikasi_pembayaran',
-        facilities: 'Terverifikasi',
-        totalAmount: 200000,
-        paymentProof: true,
-        submissionDate: '2025-09-05',
-        updateDate: '2025-09-08',
-        facilityList: [
-            { name: 'Biaya Administrasi', price: 50000 },
-            { name: 'Biaya Kebersihan', price: 150000 }
-        ]
-    },
-    {
-        id: 4,
-        name: 'Maya Dewi',
-        nim: '2110101004',
-        category: 'Kelulusan',
-        status: 'selesai',
-        facilities: 'Terverifikasi',
-        totalAmount: 50000,
-        paymentProof: true,
-        submissionDate: '2025-08-25',
-        updateDate: '2025-09-01',
-        facilityList: [
-            { name: 'Biaya Administrasi', price: 50000 }
-        ]
-    }
-];
+    // --- Elemen DOM ---
+    const tableBody = document.getElementById('submissionTable');
+    const modals = {
+        detail: document.getElementById('detailModal'),
+        facility: document.getElementById('facilityVerificationModal'),
+        payment: document.getElementById('paymentVerificationModal')
+    };
 
-// Utility functions
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-}
+    // =================================================================
+    // INISIALISASI
+    // =================================================================
+    fetchSubmissions();
+    initializeEventListeners();
 
-function getStatusBadge(status) {
-    switch(status) {
-        case 'verifikasi_fasilitas':
-            return {
-                badge: '<i class="fas fa-clipboard-check mr-1"></i>Verifikasi Fasilitas',
-                class: 'bg-purple-100 text-purple-800'
-            };
-        case 'menunggu_pembayaran':
-            return {
-                badge: '<i class="fas fa-clock mr-1"></i>Menunggu Pembayaran',
-                class: 'bg-amber-100 text-amber-800'
-            };
-        case 'verifikasi_pembayaran':
-            return {
-                badge: '<i class="fas fa-search mr-1"></i>Verifikasi Pembayaran',
-                class: 'bg-blue-100 text-blue-800'
-            };
-        case 'selesai':
-            return {
-                badge: '<i class="fas fa-check mr-1"></i>Selesai',
-                class: 'bg-green-100 text-green-800'
-            };
-        default:
-            return {
-                badge: '<i class="fas fa-clock mr-1"></i>Unknown',
-                class: 'bg-gray-100 text-gray-800'
-            };
-    }
-}
+    // =================================================================
+    // BAGIAN PENGAMBILAN & PENAMPILAN DATA (FETCH & RENDER)
+    // =================================================================
 
-// Modal functions
-function openDetailModal(id) {
-    currentDetailId = id;
-    const submission = submissions.find(s => s.id === id);
-    
-    if (submission) {
-        document.getElementById('detailName').textContent = submission.name;
-        document.getElementById('detailNim').textContent = submission.nim;
-        document.getElementById('detailCategory').textContent = submission.category;
-        document.getElementById('detailSubmissionNumber').textContent = String(id).padStart(3, '0');
-        document.getElementById('detailSubmissionDate').textContent = formatDate(submission.submissionDate);
-        document.getElementById('detailUpdateDate').textContent = formatDate(submission.updateDate);
-        document.getElementById('detailFacilities').textContent = submission.facilities;
-        
-        // Set status dengan format yang sesuai
-        const statusInfo = getStatusBadge(submission.status);
-        document.getElementById('detailStatus').innerHTML = statusInfo.badge;
-        
-        // Set total amount
-        if (submission.totalAmount > 0) {
-            document.getElementById('detailTotalAmount').textContent = `Rp ${submission.totalAmount.toLocaleString('id-ID')}`;
-        } else {
-            document.getElementById('detailTotalAmount').textContent = '-';
-        }
-        
-        // Status bukti pembayaran
-        let paymentStatus = '';
-        if (submission.status === 'selesai') {
-            paymentStatus = 'Terverifikasi';
-        } else if (submission.paymentProof) {
-            paymentStatus = 'Sudah Upload';
-            document.getElementById('paymentProofAction').classList.remove('hidden');
-        } else if (submission.status === 'menunggu_pembayaran') {
-            paymentStatus = 'Belum Upload';
-            document.getElementById('paymentProofAction').classList.add('hidden');
-        } else {
-            paymentStatus = '-';
-            document.getElementById('paymentProofAction').classList.add('hidden');
-        }
-        document.getElementById('detailPaymentProof').textContent = paymentStatus;
-        
-        // Tampilkan daftar fasilitas jika ada
-        if (submission.facilityList && submission.facilityList.length > 0) {
-            const facilityItems = document.getElementById('facilityItems');
-            facilityItems.innerHTML = '';
+    async function fetchSubmissions() {
+        try {
+            const response = await fetch('/api/pengelola/bebas-asrama');
+            if (!response.ok) throw new Error('Gagal memuat data pengajuan.');
             
-            submission.facilityList.forEach(facility => {
-                const facilityItem = document.createElement('div');
-                facilityItem.className = 'flex justify-between items-center p-2 bg-white rounded border';
-                facilityItem.innerHTML = `
-                    <span class="text-sm text-gray-700">${facility.name}</span>
-                    <span class="text-sm font-semibold text-red-600">Rp ${facility.price.toLocaleString('id-ID')}</span>
-                `;
-                facilityItems.appendChild(facilityItem);
+            const result = await response.json();
+            allSubmissions = result.data || [];
+            renderTable(allSubmissions);
+        } catch (error) {
+            console.error('Fetch error:', error);
+            renderTable([]); // Tampilkan status kosong jika error
+        }
+    }
+
+    function renderTable(submissions) {
+        tableBody.innerHTML = '';
+        if (submissions.length === 0) {
+            tableBody.innerHTML = `
+                <tr><td colspan="7" class="text-center py-10 text-gray-500">
+                    <i class="fas fa-file-alt text-3xl mb-2"></i><p>Belum ada pengajuan dari mahasiswa.</p>
+                </td></tr>`;
+            return;
+        }
+        submissions.forEach((submission, index) => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            row.setAttribute('data-id', submission.Surat_id);
+            row.innerHTML = generateRowHTML(submission, index);
+            tableBody.appendChild(row);
+        });
+    }
+
+    // =================================================================
+    // BAGIAN EVENT HANDLING (Menggunakan Event Delegation)
+    // =================================================================
+
+    function initializeEventListeners() {
+        // Event listener utama pada tabel untuk semua tombol aksi
+        tableBody.addEventListener('click', (event) => {
+            const button = event.target.closest('button');
+            if (!button || button.disabled) return;
+
+            const row = button.closest('tr');
+            const id = Number(row.dataset.id);
+
+            if (button.dataset.action === 'detail') openDetailModal(id);
+            if (button.dataset.action === 'verify-facility') openFacilityVerificationModal(id);
+            if (button.dataset.action === 'verify-payment') openPaymentVerificationModal(id);
+        });
+    }
+
+    // =================================================================
+    // FUNGSI AKSI (SUBMIT MODAL)
+    // =================================================================
+
+    window.submitFacilityVerification = async function() {
+        const isLengkap = document.getElementById('complete').checked;
+        const status = isLengkap ? "LENGKAP" : "TIDAK_LENGKAP";
+        let kerusakan = [];
+
+        if (!isLengkap) {
+            document.querySelectorAll('#facilityList .facility-item').forEach(item => {
+                const nama = item.querySelector('input[type="text"]').value;
+                const biaya = item.querySelector('input[type="number"]').value;
+                if (nama && biaya) {
+                    kerusakan.push({ nama_fasilitas: nama, biaya_kerusakan: Number(biaya) });
+                }
             });
-            
-            document.getElementById('facilityListDetail').classList.remove('hidden');
-        } else {
-            document.getElementById('facilityListDetail').classList.add('hidden');
         }
+        
+        try {
+            const response = await fetch(`/api/pengelola/bebas-asrama/${currentSubmissionId}/verifikasi-fasilitas`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fasilitas_status: status, kerusakan: kerusakan })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            showNotification('Verifikasi fasilitas berhasil disimpan.', 'success');
+            fetchSubmissions(); // Muat ulang data tabel
+            closeModal('facilityVerificationModal');
+        } catch (error) {
+            showNotification(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    window.approvePayment = async function() {
+        try {
+            const response = await fetch(`/api/pengelola/pembayaran/${currentSubmissionId}/approve`, { method: 'POST' });
+            if (!response.ok) throw new Error('Gagal menyetujui pembayaran.');
+            
+            showNotification('Pembayaran berhasil diverifikasi.', 'success');
+            fetchSubmissions();
+            closeModal('paymentVerificationModal');
+        } catch(error) {
+            showNotification(error.message, 'error');
+        }
+    }
+    
+    window.rejectPayment = async function() {
+        try {
+            const response = await fetch(`/api/pengelola/pembayaran/${currentSubmissionId}/reject`, { method: 'POST' });
+            if (!response.ok) throw new Error('Gagal menolak pembayaran.');
+            
+            showNotification('Pembayaran berhasil ditolak.', 'warning');
+            fetchSubmissions();
+            closeModal('paymentVerificationModal');
+        } catch(error) {
+            showNotification(error.message, 'error');
+        }
+    }
+
+// =================================================================
+// FUNGSI MODAL (OPEN, CLOSE, & HELPERS)
+// =================================================================
+
+// --- Variabel Helper ---
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+const formatCurrency = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a);
+
+window.closeModal = function(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// --- Modal Detail ---
+window.openDetailModal = function(id) {
+    const submission = allSubmissions.find(s => s.Surat_id === id);
+    if (!submission) return;
+    
+    document.getElementById('detailName').textContent = submission.mahasiswa.nama;
+    document.getElementById('detailNim').textContent = submission.mahasiswa.nim;
+    document.getElementById('detailCategory').textContent = submission.kategori || '-';
+    document.getElementById('detailSubmissionNumber').textContent = submission.nomor_pengajuan;
+    document.getElementById('detailStatus').innerHTML = getStatusBadge(submission.status_pengajuan).badge;
+    document.getElementById('detailSubmissionDate').textContent = formatDate(submission.tanggal_pengajuan);
+    document.getElementById('detailUpdateDate').textContent = formatDate(submission.tanggal_update);
+    
+    // Informasi Fasilitas
+    document.getElementById('detailFacilities').textContent = submission.fasilitas_status ? submission.fasilitas_status.replace('_', ' ') : 'Belum Diverifikasi';
+    document.getElementById('detailTotalAmount').textContent = formatCurrency(submission.total_biaya);
+    
+    // Informasi Pembayaran
+    const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
+    const paymentProofStatusEl = document.getElementById('detailPaymentProof');
+
+    if (payment && payment.bukti_pembayaran) {
+        paymentProofStatusEl.textContent = payment.status_bukti.replace('_', ' ');
+    } else {
+        paymentProofStatusEl.textContent = 'Belum Upload';
+    }
+    
+    // Menampilkan daftar fasilitas yang rusak
+    const facilityListDetailEl = document.getElementById('facilityListDetail');
+    const facilityItemsEl = document.getElementById('facilityItems');
+    
+    if (submission.kerusakanFasilitas && submission.kerusakanFasilitas.length > 0) {
+        facilityItemsEl.innerHTML = '';
+        submission.kerusakanFasilitas.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex justify-between items-center p-2 bg-white rounded border';
+            itemDiv.innerHTML = `
+                <span class="text-sm text-gray-700">${item.nama_fasilitas}</span>
+                <span class="text-sm font-semibold text-red-600">${formatCurrency(item.biaya_kerusakan)}</span>
+            `;
+            facilityItemsEl.appendChild(itemDiv);
+        });
+        facilityListDetailEl.classList.remove('hidden');
+    } else {
+        facilityListDetailEl.classList.add('hidden');
     }
     
     document.getElementById('detailModal').classList.remove('hidden');
 }
 
-function openFacilityVerificationModal(id, studentName) {
-    currentFacilityVerificationId = id;
-    document.getElementById('facilityStudentName').textContent = studentName;
-    document.getElementById('facilityVerificationModal').classList.remove('hidden');
-}
-
-function openPaymentVerificationModal(id, studentName) {
-    currentPaymentId = id;
-    const submission = submissions.find(s => s.id === id);
-    document.getElementById('paymentStudentName').textContent = studentName;
-    document.getElementById('paymentAmount').textContent = `Rp ${submission.totalAmount.toLocaleString('id-ID')}`;
-    document.getElementById('paymentVerificationModal').classList.remove('hidden');
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
-    if (modalId === 'facilityVerificationModal') {
-        document.querySelectorAll('input[name="completeness"]').forEach(radio => radio.checked = false);
-        toggleFacilityForm();
-        resetFacilityForm();
-    }
-}
-
-// Facility verification functions
-function toggleFacilityForm() {
-    const incomplete = document.getElementById('incomplete').checked;
-    const facilityForm = document.getElementById('facilityForm');
+// --- Modal Verifikasi Fasilitas ---
+window.openFacilityVerificationModal = function(id) {
+    currentSubmissionId = id;
+    const submission = allSubmissions.find(s => s.Surat_id === id);
+    if (!submission) return;
     
-    if (incomplete) {
-        facilityForm.classList.remove('hidden');
-    } else {
-        facilityForm.classList.add('hidden');
-        resetFacilityForm();
-    }
+    document.getElementById('facilityStudentName').textContent = submission.mahasiswa.nama;
+    
+    // Reset form
+    document.getElementById('complete').checked = false;
+    document.getElementById('incomplete').checked = false;
+    document.getElementById('facilityForm').classList.add('hidden');
+    resetFacilityForm();
+    
+    modals.facility.classList.remove('hidden');
 }
 
-function resetFacilityForm() {
-    const facilityList = document.getElementById('facilityList');
-    facilityList.innerHTML = `
-        <div class="flex gap-2 items-center facility-item">
+// --- Modal Verifikasi Pembayaran ---
+window.openPaymentVerificationModal = function(id) {
+    currentSubmissionId = id;
+    const submission = allSubmissions.find(s => s.Surat_id === id);
+    if (!submission) return;
+
+    // Ambil elemen gambar dan placeholder
+    const proofImage = document.getElementById('proofImage');
+    const proofPlaceholder = document.getElementById('proofPlaceholder');
+    
+    // Reset status zoom
+    proofImage.classList.remove('zoomed-in');
+
+    // Mengisi data nama dan jumlah
+    document.getElementById('paymentStudentName').textContent = submission.mahasiswa.nama;
+    document.getElementById('paymentAmount').textContent = formatCurrency(submission.total_biaya);
+
+    // Cek apakah ada bukti pembayaran
+    const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
+    if (payment && payment.bukti_pembayaran) {
+        // Jika ada, set sumber gambar dan tampilkan elemen gambar
+        proofImage.src = `/api/pengelola/surat/${id}/bukti-pembayaran`;
+        proofImage.classList.remove('hidden');
+        proofPlaceholder.classList.add('hidden');
+    } else {
+        // Jika tidak ada, sembunyikan elemen gambar dan tampilkan placeholder
+        proofImage.classList.add('hidden');
+        proofPlaceholder.classList.remove('hidden');
+    }
+
+    // Tambahkan event listener untuk zoom on-click
+    proofImage.onclick = function() {
+        this.classList.toggle('zoomed-in');
+    };
+    
+    // Tampilkan modal
+    modals.payment.classList.remove('hidden');
+} 
+    // --- FUNGSI HELPER UNTUK FORM VERIFIKASI FASILITAS ---
+
+    window.toggleFacilityForm = function() {
+        const incomplete = document.getElementById('incomplete').checked;
+        const facilityForm = document.getElementById('facilityForm');
+        
+        if (incomplete) {
+            facilityForm.classList.remove('hidden');
+        } else {
+            facilityForm.classList.add('hidden');
+            resetFacilityForm();
+        }
+    }
+
+    function resetFacilityForm() {
+        const facilityList = document.getElementById('facilityList');
+        facilityList.innerHTML = `
+            <div class="flex gap-2 items-center facility-item">
+                <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" oninput="calculateTotal()">
+                <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        calculateTotal();
+    }
+
+    window.addFacility = function() {
+        const facilityList = document.getElementById('facilityList');
+        const newFacility = document.createElement('div');
+        newFacility.className = 'flex gap-2 items-center facility-item';
+        newFacility.innerHTML = `
             <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" onchange="calculateTotal()">
+            <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" oninput="calculateTotal()">
             <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
                 <i class="fas fa-times"></i>
             </button>
-        </div>
-    `;
-    calculateTotal();
-}
-
-function addFacility() {
-    const facilityList = document.getElementById('facilityList');
-    const newFacility = document.createElement('div');
-    newFacility.className = 'flex gap-2 items-center facility-item';
-    newFacility.innerHTML = `
-        <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" onchange="calculateTotal()">
-        <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    facilityList.appendChild(newFacility);
-}
-
-function removeFacility(button) {
-    const facilityList = document.getElementById('facilityList');
-    if (facilityList.children.length > 1) {
-        button.parentElement.remove();
-        calculateTotal();
-    }
-}
-
-function calculateTotal() {
-    const prices = document.querySelectorAll('.facility-price');
-    let total = 0;
-    
-    prices.forEach(price => {
-        if (price.value && !isNaN(price.value)) {
-            total += parseInt(price.value);
-        }
-    });
-    
-    document.getElementById('totalAmount').textContent = total.toLocaleString('id-ID');
-}
-
-function submitFacilityVerification() {
-    const complete = document.getElementById('complete').checked;
-    const incomplete = document.getElementById('incomplete').checked;
-    
-    if (!complete && !incomplete) {
-        alert('Silakan pilih status kelengkapan terlebih dahulu');
-        return;
-    }
-
-    const submission = submissions.find(s => s.id === currentFacilityVerificationId);
-    
-    if (complete) {
-        submission.status = 'menunggu_pembayaran';
-        submission.facilities = 'Terverifikasi';
-        submission.totalAmount = 50000;
-        submission.facilityList = [
-            { name: 'Biaya Administrasi', price: 50000 }
-        ];
-        showNotification('Verifikasi berhasil! Status diubah menjadi "Menunggu Pembayaran"', 'success');
-    } else {
-        const facilityItems = document.querySelectorAll('.facility-item');
-        let totalAmount = 0;
-        let hasValidFacilities = false;
-        let facilityList = [];
-        
-        facilityItems.forEach(item => {
-            const name = item.querySelector('input[type="text"]').value;
-            const price = item.querySelector('input[type="number"]').value;
-            
-            if (name && price && !isNaN(price)) {
-                totalAmount += parseInt(price);
-                hasValidFacilities = true;
-                facilityList.push({ name: name, price: parseInt(price) });
-            }
-        });
-        
-        if (!hasValidFacilities) {
-            alert('Silakan tambahkan minimal satu fasilitas dengan nama dan harga');
-            return;
-        }
-        
-        submission.status = 'menunggu_pembayaran';
-        submission.facilities = 'Terverifikasi';
-        submission.totalAmount = totalAmount;
-        submission.facilityList = facilityList;
-        showNotification(`Fasilitas ditambahkan! Total tagihan: Rp ${totalAmount.toLocaleString('id-ID')}`, 'success');
-    }
-    
-    submission.updateDate = new Date().toISOString().split('T')[0];
-    updateTable();
-    closeModal('facilityVerificationModal');
-}
-
-// Payment verification functions
-function approvePayment() {
-    const submission = submissions.find(s => s.id === currentPaymentId);
-    submission.status = 'selesai';
-    submission.updateDate = new Date().toISOString().split('T')[0];
-    
-    showNotification('Pembayaran berhasil diverifikasi! Status diubah menjadi "Selesai"', 'success');
-    updateTable();
-    closeModal('paymentVerificationModal');
-}
-
-function rejectPayment() {
-    const submission = submissions.find(s => s.id === currentPaymentId);
-    submission.paymentProof = false;
-    submission.updateDate = new Date().toISOString().split('T')[0];
-    
-    showNotification('Bukti pembayaran ditolak. Mahasiswa perlu mengupload ulang bukti pembayaran', 'warning');
-    updateTable();
-    closeModal('paymentVerificationModal');
-}
-
-// Notification function
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    let bgColor = 'bg-blue-500';
-    let icon = 'fas fa-info-circle';
-    
-    switch(type) {
-        case 'success':
-            bgColor = 'bg-green-500';
-            icon = 'fas fa-check-circle';
-            break;
-        case 'warning':
-            bgColor = 'bg-yellow-500';
-            icon = 'fas fa-exclamation-triangle';
-            break;
-        case 'error':
-            bgColor = 'bg-red-500';
-            icon = 'fas fa-times-circle';
-            break;
-    }
-    
-    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
-    notification.innerHTML = `
-        <div class="flex items-center">
-            <i class="${icon} mr-2"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Animasi masuk
-    setTimeout(() => {
-        notification.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Hapus notifikasi setelah 4 detik
-    setTimeout(() => {
-        notification.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (document.body.contains(notification)) {
-                document.body.removeChild(notification);
-            }
-        }, 300);
-    }, 4000);
-}
-
-// Table update function
-function updateTable() {
-    const tableBody = document.getElementById('submissionTable');
-    tableBody.innerHTML = '';
-    
-    submissions.forEach((submission, index) => {
-        const statusInfo = getStatusBadge(submission.status);
-        
-        let actionButtons = `<button onclick="openDetailModal(${submission.id})" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-            <i class="fas fa-eye mr-1"></i>Detail
-        </button>`;
-        
-        // Tentukan tombol aksi berdasarkan status
-        switch(submission.status) {
-            case 'verifikasi_fasilitas':
-                actionButtons += ` <button onclick="openFacilityVerificationModal(${submission.id}, '${submission.name}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                    <i class="fas fa-clipboard-check mr-1"></i>Verifikasi Fasilitas
-                </button>`;
-                break;
-                
-            case 'menunggu_pembayaran':
-                if (submission.paymentProof) {
-                    actionButtons += ` <button onclick="openPaymentVerificationModal(${submission.id}, '${submission.name}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                        <i class="fas fa-check-circle mr-1"></i>Verifikasi Bayar
-                    </button>`;
-                } else {
-                    actionButtons += ` <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                        <i class="fas fa-clock mr-1"></i>Menunggu Upload
-                    </button>`;
-                }
-                break;
-                
-            case 'verifikasi_pembayaran':
-                actionButtons += ` <button onclick="openPaymentVerificationModal(${submission.id}, '${submission.name}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                    <i class="fas fa-search mr-1"></i>Verifikasi Bayar
-                </button>`;
-                break;
-                
-            case 'selesai':
-                actionButtons += ` <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                    <i class="fas fa-check-circle mr-1"></i>Selesai
-                </button>`;
-                break;
-        }
-        
-        const row = `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${index + 1}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submission.name}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${submission.nim}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(submission.submissionDate)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.class}">
-                        ${statusInfo.badge}
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(submission.updateDate)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex space-x-2">${actionButtons}</div>
-                </td>
-            </tr>
         `;
-        
-        tableBody.innerHTML += row;
-    });
-}
-
-function viewPaymentProof(id) {
-    showNotification(`Menampilkan bukti pembayaran untuk pengajuan ID: ${id}`, 'info');
-}
-
-// Initialize page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Load initial table data
-    updateTable();
-    
-    // Add hover effects for table rows
-    const observeTableRows = () => {
-        const tableRows = document.querySelectorAll('tbody tr');
-        tableRows.forEach(row => {
-            row.addEventListener('mouseenter', function() {
-                this.classList.add('bg-blue-50');
-            });
-            row.addEventListener('mouseleave', function() {
-                this.classList.remove('bg-blue-50');
-            });
-        });
-    };
-    
-    // Observe table changes and reapply hover effects
-    const tableBody = document.getElementById('submissionTable');
-    const observer = new MutationObserver(observeTableRows);
-    observer.observe(tableBody, { childList: true });
-    
-    // Initial hover effects
-    observeTableRows();
-
-    // Close modal when clicking outside
-    const modals = document.querySelectorAll('[id$="Modal"]');
-    modals.forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
-            }
-        });
-    });
-    
-    // Add keyboard support for closing modals
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const visibleModal = document.querySelector('[id$="Modal"]:not(.hidden)');
-            if (visibleModal) {
-                visibleModal.classList.add('hidden');
-            }
-        }
-    });
-});
-
-// Demo function untuk testing perubahan status
-window.demoChangeStatus = function(id, newStatus) {
-    const submission = submissions.find(s => s.id === id);
-    if (submission) {
-        submission.status = newStatus;
-        submission.updateDate = new Date().toISOString().split('T')[0];
-        updateTable();
-        showNotification(`Status pengajuan ID ${id} diubah menjadi ${newStatus}`, 'info');
+        facilityList.appendChild(newFacility);
     }
-};
+
+    window.removeFacility = function(button) {
+        const facilityList = document.getElementById('facilityList');
+        if (facilityList.children.length > 1) {
+            button.parentElement.remove();
+            calculateTotal();
+        }
+    }
+
+    window.calculateTotal = function() {
+        const prices = document.querySelectorAll('.facility-price');
+        let total = 0;
+        prices.forEach(price => {
+            total += Number(price.value) || 0;
+        });
+        document.getElementById('totalAmount').textContent = total.toLocaleString('id-ID');
+    }
+
+    window.viewPaymentProof = function() {
+        const submission = allSubmissions.find(s => s.Surat_id === currentSubmissionId);
+        if (submission && submission.pembayaran.length > 0 && submission.pembayaran[0].bukti_pembayaran) {
+            // Membuka path bukti di tab baru
+            window.open(`/${submission.pembayaran[0].bukti_pembayaran}`, '_blank');
+        } else {
+            alert('Bukti pembayaran tidak ditemukan.');
+        }
+    }
+    // =================================================================
+    // FUNGSI HELPER (UI & FORMATTING)
+    // =================================================================
+
+    function generateRowHTML(submission, index) {
+        const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+        const statusInfo = getStatusBadge(submission.status_pengajuan);
+        let actionButtons = `<button data-action="detail" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs font-medium">Detail</button>`;
+
+        if (submission.status_pengajuan === 'VERIFIKASI_FASILITAS') {
+            actionButtons += ` <button data-action="verify-facility" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-medium">Verifikasi Fasilitas</button>`;
+        } else if (submission.status_pengajuan === 'VERIFIKASI_PEMBAYARAN') {
+            actionButtons += ` <button data-action="verify-payment" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium">Verifikasi Bayar</button>`;
+        }
+
+        return `
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">${index + 1}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${submission.mahasiswa.nama}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${submission.mahasiswa.nim}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${formatDate(submission.tanggal_pengajuan)}</td>
+            <td class="px-6 py-4"><span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.class}">${statusInfo.badge}</span></td>
+            <td class="px-6 py-4 text-sm text-gray-600">${formatDate(submission.tanggal_update)}</td>
+            <td class="px-6 py-4"><div class="flex space-x-2">${actionButtons}</div></td>
+        `;
+    }
+
+    function getStatusBadge(status) {
+        const statuses = {
+            'VERIFIKASI_FASILITAS': { badge: '<i class="fas fa-clipboard-check mr-1"></i>Verifikasi Fasilitas', class: 'bg-purple-100 text-purple-800' },
+            'MENUNGGU_PEMBAYARAN': { badge: '<i class="fas fa-clock mr-1"></i>Menunggu Pembayaran', class: 'bg-amber-100 text-amber-800' },
+            'VERIFIKASI_PEMBAYARAN': { badge: '<i class="fas fa-search mr-1"></i>Verifikasi Pembayaran', class: 'bg-blue-100 text-blue-800' },
+            'SELESAI': { badge: '<i class="fas fa-check mr-1"></i>Selesai', class: 'bg-green-100 text-green-800' }
+        };
+        return statuses[status] || { badge: 'Unknown', class: 'bg-gray-100 text-gray-800' };
+    }
+
+    function showNotification(message, type = 'info') {
+        const colors = { success: 'bg-green-500', warning: 'bg-yellow-500', error: 'bg-red-500', info: 'bg-blue-500' };
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+        notification.innerHTML = `<div class="flex items-center"><span>${message}</span></div>`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.classList.remove('translate-x-full'), 100);
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => document.body.removeChild(notification), 300);
+        }, 4000);
+    }
+});
 </script>

@@ -8,6 +8,7 @@ const BebasAsrama = require('../models/bebasAsramaModel');
 const Pembayaran = require('../models/pembayaranModel');
 const PDFDocument = require('pdfkit');
 
+
 const showBebasAsrama = async (req, res) => {
   try {
     const userId = req.session?.user_id || req.user?.user_id;
@@ -17,7 +18,9 @@ const showBebasAsrama = async (req, res) => {
 
     const body = await ejs.renderFile(
       path.join(__dirname, '../views/mahasiswa/bebasAsrama.ejs'),
-      { user }
+      { user: user,
+        mahasiswaId: req.user.mahasiswa_id
+       }
     );
 
     res.render('layouts/main', {
@@ -93,26 +96,22 @@ const deleteBebasAsrama = async (req, res) => {
 // Unduh surat bebas asrama (sementara dummy file)
 const downloadSurat = async (req, res) => {
   try {
-    const { id } = req.params; // Ambil ID surat dari URL
+    const { id } = req.params; 
 
-    // 1. Ambil data pengajuan dari database, termasuk data mahasiswa terkait
-    const pengajuan = await BebasAsrama.findByIdWithMahasiswa(id); // Anda perlu buat fungsi ini
+    const pengajuan = await BebasAsrama.findByIdWithMahasiswa(id); 
 
     if (!pengajuan) {
       return res.status(404).json({ success: false, message: "Data pengajuan tidak ditemukan." });
     }
 
-    // 2. Buat dokumen PDF baru
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
-    // 3. Atur header respons agar browser mengunduh file
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="surat_bebas_asrama_${pengajuan.mahasiswa.nim}.pdf"`);
 
-    // 4. "Salurkan" output PDF langsung ke respons
     doc.pipe(res);
 
-    // 5. Mulai tulis konten PDF
     // Header
     doc.fontSize(16).text('ASRAMA MAHASISWA UNIVERSITAS ABC', { align: 'center', underline: true });
     doc.moveDown();
@@ -129,7 +128,7 @@ const downloadSurat = async (req, res) => {
     // Data Mahasiswa (diambil dari database)
     doc.text(`    Nama Lengkap       : ${pengajuan.mahasiswa.nama}`);
     doc.text(`    NIM                : ${pengajuan.mahasiswa.nim}`);
-    doc.text(`    Fakultas / Jurusan : -`); // Tambahkan ini jika ada datanya
+    doc.text(`    Fakultas / Jurusan : -`); 
     doc.moveDown();
 
     doc.text('Telah menyelesaikan seluruh kewajiban dan administrasi terkait hunian di Asrama Mahasiswa dan dinyatakan telah BEBAS ASRAMA.');
@@ -145,7 +144,6 @@ const downloadSurat = async (req, res) => {
     doc.text('(Nama Lengkap Anda)');
     doc.text('NIP. 19801234 200501 1 001');
 
-    // 6. Finalisasi PDF
     doc.end();
 
   } catch (err) {
@@ -161,12 +159,8 @@ const getTagihanMahasiswa = async (req, res) => {
     console.log("Tipe data ID dari URL:", typeof req.params.id);
 
     const mahasiswaId = req.params.id;
-
-    // 2. Panggil fungsi model yang mencari berdasarkan ID
-    //    Kita akan membuat fungsi findByMahasiswaId di langkah berikutnya
     const data = await Pembayaran.findByMahasiswaId(mahasiswaId);
 
-    // 3. (Opsional tapi disarankan) Cek jika data tidak ditemukan
     if (!data || data.length === 0) {
       return res.status(404).json({ success: false, message: "Tagihan untuk mahasiswa ini tidak ditemukan." });
     }
@@ -178,11 +172,29 @@ const getTagihanMahasiswa = async (req, res) => {
   }
 };
 
+const getRiwayatPengajuan = async (req, res) => {
+  try {
+    const mahasiswaId = req.params.id;
+    
+    const riwayat = await BebasAsrama.findByMahasiswaId(mahasiswaId);
+
+    if (!riwayat || riwayat.length === 0) {
+      return res.status(404).json({ success: false, message: "Tidak ada riwayat pengajuan yang ditemukan." });
+    }
+
+    res.json({ success: true, data: riwayat });
+  } catch (err) {
+    console.error("Gagal ambil riwayat pengajuan:", err);
+    res.status(500).json({ success: false, message: "Gagal mengambil riwayat pengajuan." });
+  }
+};
+
 module.exports = {
   showBebasAsrama,
   ajukanBebasAsrama,
   getStatusBebasAsrama,
   deleteBebasAsrama,
   downloadSurat,
-  getTagihanMahasiswa
+  getTagihanMahasiswa,
+  getRiwayatPengajuan
 };
