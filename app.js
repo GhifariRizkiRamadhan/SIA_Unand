@@ -5,10 +5,26 @@ const logger = require('morgan');
 const dotenv = require('dotenv');
 const createError = require('http-errors');
 const router = require('./routes/ruter');
+const http = require('http');
+const socketIo = require('socket.io');
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Socket.IO setup
+io.on('connection', (socket) => {
+  socket.on('join', (userId) => {
+    if (userId) {
+      socket.join(userId.toString());
+    }
+  });
+});
+
+// Make io available globally
+global.io = io;
 
 // Set view engine
 app.set('views', path.join(__dirname, 'views'));
@@ -40,4 +56,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+module.exports = { app, server };

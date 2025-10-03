@@ -55,12 +55,35 @@ const ajukanBebasAsrama = async (req, res) => {
       });
     }
 
+    // Dapatkan data mahasiswa
+    const mahasiswa = await prisma.mahasiswa.findUnique({
+      where: { mahasiswa_id: mahasiswaId },
+      include: { user: true }
+    });
+
     const pengajuan = await BebasAsrama.create({
       mahasiswa_id: mahasiswaId,
       nomor_pengajuan: `SB-${Date.now()}`,
       total_biaya: req.body.total_biaya || 2000000,
       status_pengajuan: "VERIFIKASI_FASILITAS"
     });
+
+    // Kirim notifikasi ke semua pengelola
+    const notificationController = require('./notification');
+    const allPengelola = await prisma.pengelolaasrama.findMany({
+      include: { user: true }
+    });
+
+    // Kirim notifikasi ke setiap pengelola
+    for (const pengelola of allPengelola) {
+      await notificationController.createNotification(
+        pengelola.user_id,
+        'Pengajuan Surat Bebas Asrama Baru',
+        `${mahasiswa.user.name} (${mahasiswa.nim}) mengajukan surat bebas asrama baru.`,
+        'surat_bebas_asrama',
+        pengajuan.Surat_id.toString()
+      );
+    }
 
     res.json({ success: true, data: pengajuan });
   } catch (err) {

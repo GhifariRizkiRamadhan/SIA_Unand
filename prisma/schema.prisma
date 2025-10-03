@@ -125,6 +125,22 @@ model suratbebasasrama {
   @@index([tanggal_pengajuan], map: "idx_surat_tanggal")
 }
 
+model notification {
+  notification_id Int      @id @default(autoincrement())
+  title          String
+  message        String
+  type           String   // 'surat_bebas_asrama', 'pemberitahuan', 'status_update'
+  is_read        Boolean  @default(false)
+  created_at     DateTime @default(now())
+  user_id        String   @db.VarChar(50)
+  user           user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  reference_id   String?  // ID referensi (misal: ID surat bebas asrama atau pemberitahuan)
+  
+  @@index([user_id])
+  @@index([created_at])
+  @@index([is_read])
+}
+
 model user {
   user_id         String            @id @db.VarChar(50)
   name            String            @db.VarChar(50)
@@ -133,6 +149,7 @@ model user {
   role            String            @db.VarChar(50)
   mahasiswa       mahasiswa[]
   pengelolaasrama pengelolaasrama[]
+  notifications   notification[]
 
   @@index([email], map: "idx_user_email")
 }

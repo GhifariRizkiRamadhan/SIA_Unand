@@ -89,6 +89,8 @@ const verifikasiFasilitas = async (req, res) => {
     }
 
     // Gunakan Transaksi Prisma dengan logging di setiap langkah
+    const { createNotification } = require('./notification');
+    
     const result = await prisma.$transaction(async (tx) => {
       console.log('--- [TRANSAKSI DIMULAI] ---');
 
@@ -131,6 +133,23 @@ const verifikasiFasilitas = async (req, res) => {
       }
       
       console.log('--- [TRANSAKSI SELESAI SUKSES] ---');
+      // Ambil data mahasiswa untuk notifikasi
+      const mahasiswa = await tx.mahasiswa.findUnique({
+        where: { mahasiswa_id: result.mahasiswa_id },
+        include: { user: true }
+      });
+
+      // Kirim notifikasi ke mahasiswa
+      if (mahasiswa) {
+        await createNotification(
+          mahasiswa.user_id,
+          'Status Surat Bebas Asrama Diperbarui',
+          `Status surat bebas asrama Anda telah diperbarui menjadi "MENUNGGU_PEMBAYARAN". Total biaya: Rp${result.total_biaya.toLocaleString('id-ID')}`,
+          'status_update',
+          result.Surat_id.toString()
+        );
+      }
+
       return updatedSurat;
     });
 
