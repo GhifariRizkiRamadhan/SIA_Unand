@@ -28,6 +28,15 @@ router.get("/logout", controller1.authController.logout);
 // Mahasiswa
 // ===================
 const controller3 = require("../controller/conDshMhs");
+const notifications = require("../controller/notification");
+
+// ===================
+// Notifications
+// ===================
+router.get("/api/notifications", authMiddleware, notifications.getNotifications);
+router.put("/api/notifications/:id/read", authMiddleware, notifications.markAsRead);
+router.put("/api/notifications/read-all", authMiddleware, notifications.markAllAsRead);
+
 const controller5 = require("../controller/conPbyr");
 const controller6 = require("../controller/conBbsAsr");
 
@@ -86,6 +95,12 @@ router.post("/api/pengelola/bebas-asrama/:id/verifikasi-fasilitas", authMiddlewa
 router.get("/pengelola/pemberitahuan", authMiddleware, requirePengelola, controller8.showPemberitahuanPengelola);
 router.get("/api/pemberitahuan/:id", authMiddleware, controller8.getPemberitahuan);
 router.delete("/api/pemberitahuan/:id", authMiddleware, controller8.hapusPemberitahuan);
+
+// Notification routes
+const notificationController = require('../controller/notification');
+router.get('/api/notifications', authMiddleware, notificationController.getNotifications);
+router.put('/api/notifications/:notificationId/read', authMiddleware, notificationController.markAsRead);
+router.put('/api/notifications/read-all', authMiddleware, notificationController.markAllAsRead);
 
 router.get("/pengelola/dataPenghuni", authMiddleware, requirePengelola, controller9.showDtPenghuni);
 router.post("/pengelola/dataPenghuni/tambah", authMiddleware, requirePengelola, uploadMahasiswaFoto.single('foto'), controller9.tambahPenghuni);

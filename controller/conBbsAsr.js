@@ -71,6 +71,23 @@ const ajukanBebasAsrama = async (req, res) => {
       status_pengajuan: "VERIFIKASI_FASILITAS"
     });
 
+    // Kirim notifikasi ke semua pengelola
+    const notificationController = require('./notification');
+    const allPengelola = await prisma.pengelolaasrama.findMany({
+      include: { user: true }
+    });
+
+    // Kirim notifikasi ke setiap pengelola
+    for (const pengelola of allPengelola) {
+      await notificationController.createNotification(
+        pengelola.user_id,
+        'Pengajuan Surat Bebas Asrama Baru',
+        `${mahasiswa.user.name} (${mahasiswa.nim}) mengajukan surat bebas asrama baru.`,
+        'surat_bebas_asrama',
+        pengajuan.Surat_id.toString()
+      );
+    }
+
     res.json({ success: true, data: pengajuan });
   } catch (err) {
     console.error(err);

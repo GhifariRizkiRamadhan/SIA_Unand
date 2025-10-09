@@ -1,0 +1,547 @@
+<div class="relative">
+  <!-- Notification Bell -->
+  <button id="notificationButton" 
+          class="p-2 text-gray-600 hover:text-purple-600 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors relative">
+    <i class="fas fa-bell text-xl"></i>
+    <span id="notificationCount" 
+          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">
+      0
+    </span>
+  </button>
+
+  <!-- Notification Dropdown -->
+  <div id="notificationDropdown" 
+       class="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-lg border border-gray-200 hidden z-50">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b">
+      <h3 class="font-semibold text-gray-700">Notifikasi</h3>
+      <button id="markAllAsRead" 
+              class="text-sm text-purple-600 hover:text-purple-700 focus:outline-none">
+        Tandai semua telah dibaca
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b">
+      <nav class="flex px-4 -mb-px" aria-label="Tabs">
+        <button id="allTab" 
+                class="tab-button py-3 px-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 relative" 
+                data-tab="all">
+          <i class="fas fa-inbox mr-2"></i>
+          Semua
+        </button>
+        <button id="unreadTab" 
+                class="tab-button py-3 px-4 text-sm font-medium border-b-2 border-purple-600 text-purple-600 relative" 
+                data-tab="unread">
+          <i class="fas fa-envelope mr-2"></i>
+          Belum dibaca
+        </button>
+        <button id="readTab" 
+                class="tab-button py-3 px-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 relative" 
+                data-tab="read">
+          <i class="fas fa-check-circle mr-2"></i>
+          Sudah dibaca
+        </button>
+      </nav>
+    </div>
+
+    <!-- Notification Lists -->
+    <div class="max-h-[32rem] overflow-y-auto">
+      <!-- All Notifications -->
+      <div id="allNotifications" class="notification-content divide-y divide-gray-100 hidden">
+        <!-- Will be populated by JavaScript -->
+      </div>
+
+      <!-- Unread Notifications -->
+      <div id="unreadNotifications" class="notification-content divide-y divide-gray-100">
+        <!-- Will be populated by JavaScript -->
+      </div>
+
+      <!-- Read Notifications -->
+      <div id="readNotifications" class="notification-content divide-y divide-gray-100 hidden">
+        <!-- Will be populated by JavaScript -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyNotifications" class="py-12 text-center hidden">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+          <i class="fas fa-bell-slash text-gray-400 text-2xl"></i>
+        </div>
+        <p class="text-gray-600 font-medium">Tidak ada notifikasi</p>
+        <p class="text-gray-400 text-sm mt-1">Anda akan melihat notifikasi di sini ketika ada pembaruan</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"></script>
+<script>
+// Initialize notifications state
+let notifications = {
+  unread: [],
+  read: []
+};
+
+// Function to show specific tab content
+function showTab(tabName) {
+  // Update active state for tab buttons
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    const isActive = btn.getAttribute('data-tab') === tabName;
+    btn.classList.toggle('border-purple-600', isActive);
+    btn.classList.toggle('text-purple-600', isActive);
+    btn.classList.toggle('border-transparent', !isActive);
+    btn.classList.toggle('text-gray-500', !isActive);
+  });
+
+  // Hide all notification containers
+  document.querySelectorAll('.notification-content').forEach(container => {
+    container.classList.add('hidden');
+  });
+
+  // Show selected tab's container
+  const selectedContainer = document.getElementById(`${tabName}Notifications`);
+  if (selectedContainer) {
+    selectedContainer.classList.remove('hidden');
+  }
+
+  // Update notifications display
+  updateNotificationsForTab(tabName);
+}
+
+// Function to update notifications for current tab
+function updateNotificationsForTab(tabName) {
+  const container = document.getElementById(`${tabName}Notifications`);
+  if (!container) return;
+
+  let notificationsToShow = [];
+  switch (tabName) {
+    case 'all':
+      notificationsToShow = [...notifications.unread, ...notifications.read]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      break;
+    case 'unread':
+      notificationsToShow = notifications.unread
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      break;
+    case 'read':
+      notificationsToShow = notifications.read
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      break;
+  }
+
+  if (notificationsToShow.length === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12">
+        <div class="rounded-full bg-gray-100 p-3">
+          <i class="fas fa-bell-slash text-gray-400 text-xl"></i>
+        </div>
+        <p class="mt-2 text-sm font-medium text-gray-900">Tidak ada notifikasi</p>
+        <p class="mt-1 text-sm text-gray-500">
+          ${tabName === 'unread' ? 'Semua notifikasi telah dibaca' : 
+            tabName === 'read' ? 'Belum ada notifikasi yang dibaca' : 
+            'Anda akan melihat notifikasi di sini ketika ada pembaruan'}
+        </p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = notificationsToShow
+      .map(notification => createNotificationElement(notification))
+      .join('');
+  }
+}
+
+// Function to get current active tab
+function getCurrentTab() {
+  const activeTab = document.querySelector('.tab-button.border-purple-600');
+  return activeTab ? activeTab.getAttribute('data-tab') : 'unread';
+}
+
+// Function to update notification count badge
+function updateNotificationCount() {
+  const count = notifications.unread.length;
+  notificationCount.textContent = count;
+  notificationCount.classList.toggle('hidden', count === 0);
+}
+
+// Function to load notifications
+async function loadNotifications() {
+  try {
+    const response = await fetch('/api/notifications');
+    const data = await response.json();
+    
+    if (data.success) {
+      notifications = {
+        unread: data.notifications.filter(n => !n.is_read),
+        read: data.notifications.filter(n => n.is_read)
+      };
+      updateNotificationCount();
+      updateNotificationsForTab(getCurrentTab());
+    }
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+}
+
+// Function to create notification element
+function createNotificationElement(notification) {
+  const isRead = notification.is_read;
+  const timeAgo = getTimeAgo(new Date(notification.created_at));
+  
+  // Get icon based on notification type
+  let icon = 'fas fa-bell';
+  let bgColor = 'bg-blue-100';
+  let iconColor = 'text-blue-500';
+  
+  switch(notification.type) {
+    case 'surat_bebas_asrama':
+      icon = 'fas fa-file-alt';
+      bgColor = 'bg-purple-100';
+      iconColor = 'text-purple-500';
+      break;
+    case 'pemberitahuan':
+      icon = 'fas fa-bullhorn';
+      bgColor = 'bg-yellow-100';
+      iconColor = 'text-yellow-600';
+      break;
+    case 'status_update':
+      icon = 'fas fa-sync-alt';
+      bgColor = 'bg-green-100';
+      iconColor = 'text-green-500';
+      break;
+  }
+
+  return `
+    <div class="notification-item group ${isRead ? 'bg-white' : 'bg-blue-50'} hover:bg-gray-50 transition-colors cursor-pointer p-4"
+         data-notification-id="${notification.notification_id}">
+      <div class="flex items-start space-x-4">
+        <div class="flex-shrink-0">
+          <div class="w-10 h-10 rounded-full ${bgColor} flex items-center justify-center">
+            <i class="${icon} ${iconColor}"></i>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-gray-900">
+              ${notification.title}
+            </p>
+            <span class="text-xs text-gray-500 whitespace-nowrap ml-2">
+              ${timeAgo}
+            </span>
+          </div>
+          <p class="text-sm text-gray-600 mt-1">
+            ${notification.message}
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Connect to Socket.IO
+  const socket = io();
+  
+  // Join user's room
+  socket.emit('join', '<%= user.user_id %>');
+
+  // Elements
+  const notificationButton = document.getElementById('notificationButton');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  const notificationCount = document.getElementById('notificationCount');
+  const emptyState = document.getElementById('emptyNotifications');
+  const markAllAsReadBtn = document.getElementById('markAllAsRead');
+  const tabButtons = document.querySelectorAll('.tab-button');
+
+  // Add click event listeners to tab buttons
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tabName = button.getAttribute('data-tab');
+      showTab(tabName);
+    });
+  });
+
+  // Toggle dropdown and show unread notifications by default
+  notificationButton.addEventListener('click', () => {
+    notificationDropdown.classList.toggle('hidden');
+    if (!notificationDropdown.classList.contains('hidden')) {
+      loadNotifications().then(() => {
+        showTab('unread'); // Default to unread tab
+      });
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!notificationDropdown.contains(event.target) && 
+        !notificationButton.contains(event.target)) {
+      notificationDropdown.classList.add('hidden');
+    }
+  });
+
+  // Mark all as read functionality
+  markAllAsReadBtn.addEventListener('click', async () => {
+    try {
+      const response = await fetch('/api/notifications/read-all', {
+        method: 'PUT'
+      });
+
+      if (response.ok) {
+        // Move all unread to read
+        notifications.read = [...notifications.unread, ...notifications.read];
+        notifications.unread = [];
+        
+        // Update display
+        updateNotificationsForTab(getCurrentTab());
+        updateNotificationCount();
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  });
+
+  // Mark all as read
+  markAllAsReadBtn.addEventListener('click', async () => {
+    try {
+      const response = await fetch('/api/notifications/read-all', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        notifications.read = [...notifications.read, ...notifications.unread];
+        notifications.unread = [];
+        updateNotificationDisplay();
+        updateNotificationCount();
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  });
+
+  // Load notifications
+  async function loadNotifications() {
+    try {
+      const response = await fetch('/api/notifications');
+      const data = await response.json();
+
+      if (data.success) {
+        notifications = {
+          unread: data.data.unread,
+          read: data.data.read
+        };
+        updateNotificationDisplay();
+        updateNotificationCount();
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  }
+
+  // Update notification display
+  function updateNotificationDisplay() {
+    // Update unread notifications
+    unreadContainer.innerHTML = notifications.unread
+      .map(notification => createNotificationElement(notification, false))
+      .join('');
+
+    // Update read notifications
+    readContainer.innerHTML = notifications.read
+      .map(notification => createNotificationElement(notification, true))
+      .join('');
+
+    // Update empty states
+    updateEmptyState('unread');
+    updateEmptyState('read');
+  }
+
+  // Get notification icon based on type
+  function getNotificationIcon(type) {
+    switch (type) {
+      case 'surat_bebas_asrama':
+        return 'fa-file-alt';
+      case 'pemberitahuan':
+        return 'fa-bullhorn';
+      case 'status_update':
+        return 'fa-sync';
+      default:
+        return 'fa-bell';
+    }
+  }
+
+  // Create notification element
+  function createNotificationElement(notification, isRead) {
+    const timeAgo = getTimeAgo(new Date(notification.created_at));
+    const bgClass = isRead ? 'hover:bg-gray-50' : 'bg-purple-50 hover:bg-purple-100';
+    const icon = getNotificationIcon(notification.type);
+
+    return `
+      <div class="notification-item p-4 border-b last:border-b-0 ${bgClass} transition-colors cursor-pointer"
+           data-id="${notification.notification_id}"
+           onclick="handleNotificationClick(this)">
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0 pt-1">
+            <i class="fas ${icon} text-purple-500"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900">
+              ${notification.title}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${notification.message}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+              ${timeAgo}
+            </p>
+          </div>
+          ${!isRead ? `
+          <button class="text-purple-600 hover:text-purple-700 focus:outline-none"
+                  onclick="markAsRead(event, ${notification.notification_id})">
+            <i class="fas fa-circle text-xs"></i>
+          </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Update notification count
+  function updateNotificationCount() {
+    const count = notifications.unread.length;
+    notificationCount.textContent = count;
+    notificationCount.classList.toggle('hidden', count === 0);
+  }
+
+  // Update empty state
+  function updateEmptyState(type) {
+    const container = document.getElementById(`${type}Notifications`);
+    const hasNotifications = notifications[type].length > 0;
+    container.classList.toggle('hidden', !hasNotifications);
+    emptyState.classList.toggle('hidden', hasNotifications);
+  }
+
+  // Handle new notification from socket
+  socket.on('new_notification', (notification) => {
+    notifications.unread.unshift(notification);
+    updateNotificationDisplay();
+    updateNotificationCount();
+
+    // Show notification toast
+    showNotificationToast(notification);
+  });
+
+  // Initial load
+  loadNotifications();
+});
+
+// Handle notification click
+async function handleNotificationClick(element) {
+  const notificationId = element.dataset.id;
+  const notification = element.querySelector('.notification-item');
+  
+  if (!notification.classList.contains('bg-gray-50')) {
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'PUT'
+      });
+
+      if (response.ok) {
+        // Move notification from unread to read
+        const notificationData = notifications.unread.find(n => n.notification_id === parseInt(notificationId));
+        if (notificationData) {
+          notifications.unread = notifications.unread.filter(n => n.notification_id !== parseInt(notificationId));
+          notifications.read.unshift(notificationData);
+          updateNotificationDisplay();
+          updateNotificationCount();
+        }
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }
+
+  // Handle navigation based on notification type and user role
+  const notificationData = [...notifications.unread, ...notifications.read]
+    .find(n => n.notification_id === parseInt(notificationId));
+
+  if (notificationData) {
+    const userRole = '<%= user.role %>';
+    switch (notificationData.type) {
+      case 'surat_bebas_asrama':
+        if (userRole === 'pengelola') {
+          window.location.href = `/pengelola/pengelola-bebas-asrama?id=${notificationData.reference_id}`;
+        } else {
+          window.location.href = `/mahasiswa/bebas-asrama?id=${notificationData.reference_id}`;
+        }
+        break;
+      case 'pemberitahuan':
+        if (userRole === 'pengelola') {
+          window.location.href = `/pengelola/pemberitahuan?id=${notificationData.reference_id}`;
+        } else {
+          // Open pemberitahuan detail modal for mahasiswa
+          openDetailModal(notificationData.reference_id);
+        }
+        break;
+      case 'status_update':
+        window.location.href = `/mahasiswa/bebas-asrama?id=${notificationData.reference_id}`;
+        break;
+    }
+  }
+}
+
+// Helper function to format time ago
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  const intervals = {
+    tahun: 31536000,
+    bulan: 2592000,
+    minggu: 604800,
+    hari: 86400,
+    jam: 3600,
+    menit: 60
+  };
+
+  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+    const interval = Math.floor(seconds / secondsInUnit);
+    if (interval >= 1) {
+      return `${interval} ${unit} yang lalu`;
+    }
+  }
+  return 'Baru saja';
+}
+
+// Show notification toast
+function showNotificationToast(notification) {
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-md z-50 transform transition-all duration-300 translate-x-full';
+  toast.innerHTML = `
+    <div class="flex items-start">
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900">
+          ${notification.title}
+        </p>
+        <p class="text-sm text-gray-500 mt-1">
+          ${notification.message}
+        </p>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" 
+              class="text-gray-400 hover:text-gray-500 focus:outline-none">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(toast);
+
+  // Animate in
+  setTimeout(() => {
+    toast.classList.remove('translate-x-full');
+  }, 100);
+
+  // Remove after 5 seconds
+  setTimeout(() => {
+    toast.classList.add('translate-x-full');
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+</script>

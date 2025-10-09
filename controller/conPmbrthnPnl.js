@@ -121,6 +121,27 @@ const tambahPemberitahuan = async (req, res) => {
       }
     });
 
+    // Import notification controller di awal file
+    const notificationController = require('./notification');
+    
+    // Kirim notifikasi ke semua mahasiswa
+    const allMahasiswa = await prisma.mahasiswa.findMany({
+      select: {
+        user_id: true
+      }
+    });
+    
+    // Kirim notifikasi ke setiap mahasiswa
+    for (const mahasiswa of allMahasiswa) {
+      await notificationController.createNotification(
+        mahasiswa.user_id,
+        newPemberitahuan.title,
+        newPemberitahuan.content,
+        'pemberitahuan',
+        newPemberitahuan.pemberitahuan_id
+      );
+    }
+
     console.log("✅ Berhasil simpan:", newPemberitahuan);
 
     res.json({ 
@@ -241,41 +262,73 @@ const hapusPemberitahuan = async (req, res) => {
       return res.status(400).json({ success: false, message: 'ID tidak valid' });
     }
 
-    // Cari pengelola
-    const pengelola = await prisma.pengelolaasrama.findUnique({
-      where: { user_id: userId }
-    });
+    // Gunakan transaksi untuk memastikan konsistensi data
+    const result = await prisma.$transaction(async (prisma) => {
+      // Cari pengelola berdasarkan user_id
+      const pengelola = await prisma.pengelolaasrama.findFirst({
+        where: { 
+          user: {
+            user_id: userId
+          }
+        }
+      });
 
-    if (!pengelola) {
-      return res.status(404).json({ success: false, message: 'Pengelola tidak ditemukan' });
-    }
-
-    // Cek apakah pemberitahuan ada dan milik pengelola ini
-    const existing = await prisma.pemberitahuan.findFirst({
-      where: {
-        pemberitahuan_id: parsedId,
-        Pengelola_id: pengelola.Pengelola_id
+      if (!pengelola) {
+        throw new Error('Pengelola tidak ditemukan');
       }
-    });
 
-    if (!existing) {
-      return res.status(404).json({ success: false, message: 'Pemberitahuan tidak ditemukan atau bukan milik Anda' });
-    }
+      // Cek apakah pemberitahuan ada dan milik pengelola ini
+      const existing = await prisma.pemberitahuan.findFirst({
+        where: {
+          pemberitahuan_id: parsedId,
+          Pengelola_id: pengelola.Pengelola_id
+        }
+      });
 
-    // Hapus gambar jika ada
-    if (existing.image) {
-      const imagePath = path.join(__dirname, '../public', existing.image);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+      if (!existing) {
+        throw new Error('Pemberitahuan tidak ditemukan atau bukan milik Anda');
       }
-    }
 
-    // Hapus dari database
-    await prisma.pemberitahuan.delete({ 
-      where: { pemberitahuan_id: parsedId } 
+      // Hapus notifikasi terkait terlebih dahulu
+      await prisma.notification.deleteMany({
+        where: {
+          type: 'pemberitahuan',
+          reference_id: parsedId.toString()
+        }
+      });
+
+      // Hapus gambar jika ada
+      if (existing.image) {
+        const imagePath = path.join(__dirname, '../public', existing.image);
+        if (fs.existsSync(imagePath)) {
+          try {
+            fs.unlinkSync(imagePath);
+          } catch (err) {
+            console.error('Error deleting image:', err);
+            // Lanjutkan eksekusi meskipun gagal menghapus file
+          }
+        }
+      }
+
+      // Hapus pemberitahuan dari database
+      return await prisma.pemberitahuan.delete({ 
+        where: { pemberitahuan_id: parsedId } 
+      });
     });
 
-    res.json({ success: true, message: 'Pemberitahuan berhasil dihapus' });
+    // Emit socket event untuk memberitahu client bahwa ada pemberitahuan yang dihapus
+    if (global.io) {
+      global.io.emit('notification_deleted', {
+        type: 'pemberitahuan',
+        id: parsedId
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Pemberitahuan berhasil dihapus',
+      data: result
+    });
 
   } catch (error) {
     console.error('Error hapusPemberitahuan:', error);
