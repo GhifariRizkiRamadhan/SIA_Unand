@@ -130,7 +130,10 @@ const downloadSurat = async (req, res) => {
       return res.status(404).json({ success: false, message: "Data pengajuan tidak ditemukan." });
     }
 
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const doc = new PDFDocument({ size: 'A4', margin: 80 });
+    const signaturePath = path.join(__dirname, '../public/image/kepala_asrama/ttdme.png');
+    const tahunSekarang = new Date().getFullYear();
+    const textOptions = { indent: 30 };
 
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -138,13 +141,9 @@ const downloadSurat = async (req, res) => {
 
     doc.pipe(res);
 
-    // Header
-    doc.fontSize(16).text('ASRAMA MAHASISWA UNIVERSITAS ABC', { align: 'center', underline: true });
-    doc.moveDown();
-
     // Judul Surat
-    doc.fontSize(14).text('SURAT KETERANGAN BEBAS ASRAMA', { align: 'center' });
-    doc.fontSize(11).text(`Nomor: ${pengajuan.nomor_pengajuan}`, { align: 'center' });
+    doc.font('Times-Bold').fontSize(14).text(`SURAT KETERANGAN BEBAS ASRAMA UNIVERSITAS ANDALAS ${tahunSekarang}`, { align: 'center'});
+    doc.font('Times-Roman').fontSize(11).text(`Nomor: ${pengajuan.nomor_pengajuan}`, { align: 'center' });
     doc.moveDown(2);
 
     // Isi
@@ -152,23 +151,34 @@ const downloadSurat = async (req, res) => {
     doc.moveDown();
 
     // Data Mahasiswa (diambil dari database)
-    doc.text(`    Nama Lengkap       : ${pengajuan.mahasiswa.nama}`);
-    doc.text(`    NIM                : ${pengajuan.mahasiswa.nim}`);
-    doc.text(`    Fakultas / Jurusan : -`); 
+    doc.text(`Nama               : ${pengajuan.mahasiswa.nama}`,textOptions);
+    doc.text(`NIM                : ${pengajuan.mahasiswa.nim}`,textOptions);
+    doc.text(`Jurusan            : ${pengajuan.mahasiswa.jurusan}`,textOptions); 
     doc.moveDown();
 
-    doc.text('Telah menyelesaikan seluruh kewajiban dan administrasi terkait hunian di Asrama Mahasiswa dan dinyatakan telah BEBAS ASRAMA.');
+    doc.text('Telah menyelesaikan seluruh kewajiban dan administrasi di Asrama Universitas Andalas dan dinyatakan telah BEBAS ASRAMA.', { align: 'justify' });
     doc.moveDown();
     
-    doc.text('Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.');
+    doc.text('Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.',{align: 'justify'});
     doc.moveDown(4);
 
     // Tanda Tangan
-    doc.text(`Kota Cerdas, ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`);
-    doc.text('Kepala Asrama Mahasiswa,');
-    doc.moveDown(5);
-    doc.text('(Nama Lengkap Anda)');
-    doc.text('NIP. 19801234 200501 1 001');
+  
+    doc.text(`Padang, ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`,{align: 'right'});
+    doc.text('Kepala Asrama Mahasiswa,',{align: 'right'});
+    doc.moveDown(1);
+
+    const imageWidth = 150; 
+    const xPosition = doc.page.width - doc.page.margins.right - imageWidth;
+
+    doc.image(signaturePath, xPosition, doc.y, {
+      width: imageWidth
+    });
+
+    doc.moveDown(6);
+
+    doc.text('Asmiruddin Abdullah S, S.E',{align: 'right'});
+    doc.text('NIP. 19801234 200501 1 001',{align: 'right'});
 
     doc.end();
 
