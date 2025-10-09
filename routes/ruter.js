@@ -50,6 +50,7 @@ router.get("/api/bebas-asrama/:id/surat", authMiddleware, controller6.downloadSu
 router.get("/api/tagihan/:id", authMiddleware, controller6.getTagihanMahasiswa);
 router.get("/api/bebas-asrama/mahasiswa/:id", authMiddleware, controller6.getRiwayatPengajuan);
 
+
 // ====================== PEMBERITAHUAN (Mahasiswa) ======================
 router.get("/api/pemberitahuan-mahasiswa/:id", authMiddleware, controller3.getPemberitahuanDetail);
 

@@ -50,10 +50,10 @@
             <!-- Modal Detail -->
             <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
                 <div class="flex items-center justify-center min-h-screen p-4">
-                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
                         
                         <!-- Header Modal -->
-                        <div class="px-6 py-4 border-b">
+                        <div class="px-6 py-4 border-b flex-shrink-0">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-lg font-semibold text-gray-800">Detail Pengajuan Surat Bebas Asrama</h3>
                                 <button onclick="closeModal('detailModal')" class="text-gray-400 hover:text-gray-600">
@@ -63,7 +63,7 @@
                         </div>
 
                         <!-- Konten Modal -->
-                        <div class="px-6 py-4">
+                        <div class="px-6 py-4 overflow-y-auto flex-grow">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 
                                 <!-- Informasi Mahasiswa -->
@@ -82,8 +82,8 @@
                                             <span class="font-medium" id="detailNim">-</span>
                                         </div>
                                         <div class="flex justify-between">
-                                            <span class="text-gray-600">Kategori:</span>
-                                            <span class="font-medium" id="detailCategory">-</span>
+                                            <span class="text-gray-600">Jurusan:</span>
+                                            <span class="font-medium" id="detailJurusan">-</span>
                                         </div>
                                     </div>
                                 </div>
@@ -111,43 +111,43 @@
                                             <span class="text-gray-600">Tanggal Update:</span>
                                             <span class="font-medium" id="detailUpdateDate">-</span>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <!-- Informasi Fasilitas -->
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                        <i class="fas fa-home mr-2 text-purple-600"></i>
-                                        Informasi Fasilitas
-                                    </h4>
-                                    <div class="space-y-2 text-sm">
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-600">Status Fasilitas:</span>
-                                            <span class="font-medium" id="detailFacilities">-</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-600">Total Tagihan:</span>
-                                            <span class="font-medium text-red-600" id="detailTotalAmount">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Informasi Pembayaran -->
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                        <i class="fas fa-credit-card mr-2 text-yellow-600"></i>
-                                        Informasi Pembayaran
-                                    </h4>
-                                    <div class="space-y-2 text-sm">
-                                        <div class="flex justify-between">
+                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Status Bukti:</span>
                                             <span class="font-medium" id="detailPaymentProof">-</span>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Rincian Biaya -->
+                             <div class="bg-gray-50 rounded-lg p-4 md:col-span-2">
+                                <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                    <i class="fas fa-file-invoice-dollar mr-2 text-purple-600"></i>
+                                    Rincian Biaya
+                                </h4>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between py-2 border-b border-gray-200">
+                                        <span class="text-gray-600">Status Fasilitas:</span>
+                                        <span class="font-medium" id="detailFacilities">-</span>
+                                    </div>
+
+                                    <div id="facilityListDetail" class="hidden py-2 border-b border-gray-200">
+                                        <div>
+                                            <span class="text-gray-600">Rincian Biaya:</span>
+                                            <div id="facilityItems" class="pl-4 mt-1 space-y-1">
+                                                </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-between items-center pt-3">
+                                        <span class="text-base font-bold text-gray-800">Total :</span>
+                                        <span class="text-lg font-bold text-green-600" id="detailTotalAmount">-</span>
+                                    </div>
+                                </div>
                             </div>
                             
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                </div>
+
                             <!-- Daftar Fasilitas yang Perlu Dibayar -->
                             <div id="facilityListDetail" class="mt-6 hidden">
                                 <div class="bg-blue-50 rounded-lg p-4">
@@ -161,15 +161,13 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Footer Modal -->
+                    </div>
+                                            <!-- Footer Modal -->
                         <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
                             <button onclick="closeModal('detailModal')" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
                                 Tutup
                             </button>
                         </div>
-
-                    </div>
                 </div>
             </div>
                     <!-- Daftar Fasilitas yang Perlu Dibayar -->
@@ -254,7 +252,8 @@
         </div>
     </div>
 
-    <div id="paymentVerificationModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+<!-- modal verifikasi bayar -->
+<div id="paymentVerificationModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b">
@@ -444,6 +443,15 @@ window.closeModal = function(modalId) {
     document.getElementById(modalId).classList.add('hidden');
 }
 
+function toTitleCase(str) {
+    if (!str) return ''; // Mengembalikan string kosong jika input tidak ada
+    return str.toLowerCase() // 1. Ubah semua jadi huruf kecil
+        .replace(/_/g, ' ')  // 2. Ganti semua underscore dengan spasi
+        .split(' ')          // 3. Pisah menjadi kata-kata
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // 4. Ubah huruf pertama setiap kata menjadi kapital
+        .join(' ');          // 5. Gabungkan kembali
+}
+
 // --- Modal Detail ---
 window.openDetailModal = function(id) {
     const submission = allSubmissions.find(s => s.Surat_id === id);
@@ -451,46 +459,84 @@ window.openDetailModal = function(id) {
     
     document.getElementById('detailName').textContent = submission.mahasiswa.nama;
     document.getElementById('detailNim').textContent = submission.mahasiswa.nim;
-    document.getElementById('detailCategory').textContent = submission.kategori || '-';
+    document.getElementById('detailJurusan').textContent = submission.mahasiswa.jurusan || '-';
     document.getElementById('detailSubmissionNumber').textContent = submission.nomor_pengajuan;
     document.getElementById('detailStatus').innerHTML = getStatusBadge(submission.status_pengajuan).badge;
     document.getElementById('detailSubmissionDate').textContent = formatDate(submission.tanggal_pengajuan);
     document.getElementById('detailUpdateDate').textContent = formatDate(submission.tanggal_update);
     
-    // Informasi Fasilitas
-    document.getElementById('detailFacilities').textContent = submission.fasilitas_status ? submission.fasilitas_status.replace('_', ' ') : 'Belum Diverifikasi';
+    // rincian biaya
+    document.getElementById('detailFacilities').textContent = submission.fasilitas_status ? toTitleCase(submission.fasilitas_status) : 'Belum Diverifikasi';
     document.getElementById('detailTotalAmount').textContent = formatCurrency(submission.total_biaya);
     
-    // Informasi Pembayaran
     const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
     const paymentProofStatusEl = document.getElementById('detailPaymentProof');
 
-    if (payment && payment.bukti_pembayaran) {
-        paymentProofStatusEl.textContent = payment.status_bukti.replace('_', ' ');
-    } else {
-        paymentProofStatusEl.textContent = 'Belum Upload';
+    if (payment) {
+    switch (payment.status_bukti) {
+        case 'VALID':
+            paymentProofStatusEl.textContent = 'Valid';
+            paymentProofStatusEl.className = 'font-medium text-green-600';
+            break;
+
+        case 'TIDAK_VALID':
+            paymentProofStatusEl.textContent = 'Tidak Valid';
+            paymentProofStatusEl.className = 'font-medium text-red-600';
+            break;
+
+        case 'BELUM_DIVERIFIKASI':
+            // TAMBAHKAN PENGECEKAN DI SINI
+            if (payment.bukti_pembayaran) {
+                // Jika bukti sudah ada, berarti menunggu verifikasi
+                paymentProofStatusEl.textContent = 'Belum Diverifikasi';
+                paymentProofStatusEl.className = 'font-medium text-blue-600';
+            } else {
+                // Jika bukti belum ada, berarti menunggu upload
+                paymentProofStatusEl.textContent = 'Belum Upload';
+                paymentProofStatusEl.className = 'font-medium text-gray-700';
+            }
+            break;
+
+        default:
+            paymentProofStatusEl.textContent = 'Belum Upload';
+            paymentProofStatusEl.className = 'font-medium text-gray-700';
+            break;
     }
-    
+    } else {
+        paymentProofStatusEl.textContent = '-'; // Tidak ada data pembayaran
+        paymentProofStatusEl.className = 'font-medium text-gray-700';
+    }
+
     // Menampilkan daftar fasilitas yang rusak
     const facilityListDetailEl = document.getElementById('facilityListDetail');
     const facilityItemsEl = document.getElementById('facilityItems');
-    
+    let rincianHtml = ''; // Siapkan string kosong untuk menampung HTML
+
+    // 1. Hitung dan tambahkan Biaya Pokok/Administrasi
+    const biayaPokok = submission.total_biaya - (submission.biaya_tambahan || 0);
+    rincianHtml += `
+        <div class="flex justify-between items-center p-2 bg-white rounded border">
+            <span class="text-sm text-gray-700">Biaya Pokok Administrasi</span>
+            <span class="text-sm font-semibold text-gray-900">${formatCurrency(biayaPokok)}</span>
+        </div>
+    `;
+
+    // 2. Tambahkan rincian kerusakan jika ada
     if (submission.kerusakanFasilitas && submission.kerusakanFasilitas.length > 0) {
-        facilityItemsEl.innerHTML = '';
         submission.kerusakanFasilitas.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'flex justify-between items-center p-2 bg-white rounded border';
-            itemDiv.innerHTML = `
-                <span class="text-sm text-gray-700">${item.nama_fasilitas}</span>
-                <span class="text-sm font-semibold text-red-600">${formatCurrency(item.biaya_kerusakan)}</span>
+            rincianHtml += `
+                <div class="flex justify-between items-center p-2 bg-white rounded border">
+                    <span class="text-sm text-gray-700">${item.nama_fasilitas}</span>
+                    <span class="text-sm font-semibold text-green-600">+ ${formatCurrency(item.biaya_kerusakan)}</span>
+                </div>
             `;
-            facilityItemsEl.appendChild(itemDiv);
         });
-        facilityListDetailEl.classList.remove('hidden');
-    } else {
-        facilityListDetailEl.classList.add('hidden');
     }
-    
+
+    // 3. Masukkan semua rincian ke dalam HTML dan tampilkan bloknya
+    facilityItemsEl.innerHTML = rincianHtml;
+    facilityListDetailEl.classList.remove('hidden');
+        
     document.getElementById('detailModal').classList.remove('hidden');
 }
 

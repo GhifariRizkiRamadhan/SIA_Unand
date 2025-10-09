@@ -40,7 +40,8 @@ async findById(id) {
           }
         },
         pengelolaasrama: true,
-        pembayaran: true
+        pembayaran: true,
+        kerusakanFasilitas: true
       }
     });
 
@@ -65,12 +66,13 @@ async findById(id) {
           }
         },
         pengelolaasrama: true,
-        pembayaran: true
+        pembayaran: true,
+        kerusakanFasilitas: true
     
       },
   
       orderBy: {
-        tanggal_pengajuan: 'asc'
+        tanggal_pengajuan: 'desc'
       }
     });
   } catch (error) {
@@ -192,6 +194,21 @@ async findByMahasiswaId(id) {
       throw error;
     }
   },
+
+async findActiveByMahasiswaId(mahasiswaId) {
+    try {
+        return await prisma.suratbebasasrama.findFirst({
+            where: {
+                mahasiswa_id: mahasiswaId,
+                NOT: {
+                    status_pengajuan: 'SELESAI' 
+                }
+            }
+        });
+    } catch (error) {
+        throw error;
+    }
+}
 };
 
 module.exports = BebasAsrama;

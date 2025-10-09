@@ -196,27 +196,47 @@
         </div> -->
     </div>
 
+    <!-- modal pengajuan baru -->
     <div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
-        <div class="flex items-center mb-4">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                <i class="fas fa-paper-plane text-blue-600"></i>
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <div class="flex items-center mb-4">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <i class="fas fa-paper-plane text-blue-600"></i>
+                </div>
+            </div>
+            <div class="text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Buat Pengajuan Baru</h3>
+                <p class="text-sm text-gray-500 mb-4">Anda akan membuat pengajuan bebas asrama. Lanjutkan?</p>
+                <div class="flex space-x-3 justify-center">
+                    <button id="cancelCreate" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button id="confirmCreate" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                        Ya, Lanjutkan
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="text-center">
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Buat Pengajuan Baru</h3>
-            <p class="text-sm text-gray-500 mb-4">Anda akan membuat pengajuan bebas asrama. Lanjutkan?</p>
-            <div class="flex space-x-3 justify-center">
-                <button id="cancelCreate" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    Batal
-                </button>
-                <button id="confirmCreate" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
-                    Ya, Lanjutkan
+    </div>
+
+    <!-- peringatan hanya dapat mengajukan satu surat bebas asrama -->
+    <div id="warningModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <div class="flex items-center mb-4">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                </div>
+            </div>
+            <div class="text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Pengajuan Gagal</h3>
+                <p id="warningMessage" class="text-sm text-gray-500 mb-4">
+                    </p>
+                <button id="closeWarning" class="w-full px-4 py-2 text-sm font-medium text-white bg-yellow-500 border border-transparent rounded-md hover:bg-yellow-600">
+                    Mengerti
                 </button>
             </div>
         </div>
     </div>
-</div>
 
  <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -228,11 +248,17 @@
         const cancelCreate = document.getElementById('cancelCreate');
         const confirmCreate = document.getElementById('confirmCreate');
         const container = document.getElementById('bebas-asrama-container'); 
+        
+        const warningModal = document.getElementById('warningModal');
+        const closeWarning = document.getElementById('closeWarning');
+        const warningMessage = document.getElementById('warningMessage');
+
         let pengajuanIdToDelete = null;
 
         // --- Inisialisasi ---
-        fetchRiwayatPengajuan(); // Ambil data saat halaman dimuat
-        initializeEventListeners(); // Pasang semua event listener satu kali
+        fetchRiwayatPengajuan();
+        initializeEventListeners();
+
 
         // =================================================================
         // BAGIAN PENGAMBILAN & PENAMPILAN DATA (FETCH & RENDER)
@@ -318,24 +344,43 @@
             createModal.addEventListener('click', (e) => {
                 if (e.target === createModal) hideCreateModal();
             });
+
+            closeWarning.addEventListener('click', hideWarningModal);
+            warningModal.addEventListener('click', (e) => {
+                if (e.target === warningModal) hideWarningModal();
+            });
         }
 
         // =================================================================
         // BAGIAN FUNGSI AKSI (CREATE, DELETE)
         // =================================================================
 
-        async function executeCreatePengajuan() {
+       async function executeCreatePengajuan() {
             hideCreateModal();
             try {
                 const response = await fetch('/api/bebas-asrama', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 });
+
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.message || 'Gagal membuat pengajuan.');
                 
+                // Cek jika response TIDAK OK
+                if (!response.ok) {
+                    // Jika status error adalah 409 (Conflict), tampilkan modal peringatan
+                    if (response.status === 409) {
+                        showWarningModal(result.message);
+                    } else {
+                        // Untuk error lainnya, lempar seperti biasa
+                        throw new Error(result.message || 'Gagal membuat pengajuan.');
+                    }
+                    return; // Hentikan eksekusi jika ada error
+                }
+                
+                // Jika berhasil
                 showSuccessNotification('Pengajuan baru berhasil dibuat!');
                 fetchRiwayatPengajuan();
+
             } catch (error) {
                 console.error('Error saat membuat pengajuan:', error);
                 alert(`Terjadi kesalahan: ${error.message}`);
@@ -434,6 +479,18 @@
         function hideCreateModal() {
             createModal.classList.add('hidden');
             createModal.classList.remove('flex');
+        }
+
+            
+        function showWarningModal(message) {
+            warningMessage.textContent = message;
+            warningModal.classList.remove('hidden');
+            warningModal.classList.add('flex');
+        }
+
+        function hideWarningModal() {
+            warningModal.classList.add('hidden');
+            warningModal.classList.remove('flex');
         }
 
         function showSuccessNotification(message) {

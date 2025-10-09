@@ -17,7 +17,7 @@
                                 <div class="space-y-4">
                                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                         <span class="text-gray-600 text-sm">Nama</span>
-                                        <span class="font-medium text-gray-900"><%= user.name %></span>
+                                        <span class="font-medium text-gray-900"><%= pengajuan.mahasiswa.nama %></span>
                                     </div>
                                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                         <span class="text-gray-600 text-sm">NIM</span>
@@ -36,17 +36,32 @@
                                 <div class="bg-gray-50 rounded-lg p-4 space-y-3">
                                     <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                         <span class="text-sm font-medium text-gray-900">Biaya Pokok Bebas Asrama</span>
-                                        <span class="font-medium text-gray-900"><%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(pengajuan.total_biaya - (pengajuan.biaya_tambahan || 0)) %></span>
+                                        <span class="font-semibold text-gray-900">
+                                            <%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(pengajuan.total_biaya - (pengajuan.biaya_tambahan || 0)) %>
+                                        </span>
                                     </div>
-                                    <% if (pengajuan.biaya_tambahan > 0) { %>
-                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                        <span class="text-sm font-medium text-gray-900">Biaya Tambahan (Kerusakan)</span>
-                                        <span class="font-medium text-red-600">+ <%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(pengajuan.biaya_tambahan) %></span>
-                                    </div>
+
+                                    <% if (pengajuan.kerusakanFasilitas && pengajuan.kerusakanFasilitas.length > 0) { %>
+                                        <div class="py-2 border-b border-gray-200">
+                                            <span class="text-sm font-semibold text-gray-900">Biaya Tambahan (Kerusakan):</span>
+                                            <div class="pl-4 mt-2 space-y-1">
+                                                <% pengajuan.kerusakanFasilitas.forEach(item => { %>
+                                                    <div class="flex justify-between items-center">
+                                                        <span class="text-gray-900 text-sm font-semibold">- <%= item.nama_fasilitas %></span>
+                                                        <span class="font-medium text-red-600">
+                                                            + <%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.biaya_kerusakan) %>
+                                                        </span>
+                                                    </div>
+                                                <% }) %>
+                                            </div>
+                                        </div>
                                     <% } %>
+
                                     <div class="flex justify-between items-center pt-3 border-t-2 border-purple-200">
                                         <span class="text-base font-bold text-gray-900">Total Pembayaran</span>
-                                        <span class="text-lg font-bold text-green-600"><%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(pengajuan.total_biaya) %></span>
+                                        <span class="text-lg font-bold text-green-600">
+                                            <%= new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(pengajuan.total_biaya) %>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -75,7 +90,7 @@
                             <p class="text-sm text-blue-700 text-center mt-2">a.n. Asrama Universitas Andalas</p>
                             <div class="mt-3 text-center">
                                 <p class="text-xs text-blue-600">Kode Virtual Account (Opsional):</p>
-                                <p class="font-mono text-sm font-bold text-blue-900"><%= user?.nim || '1234567890' %>5000</p>
+                                <p class="font-mono text-sm font-bold text-blue-900"><%= pengajuan.nim || '1234567890' %>5000</p>
                             </div>
                         </div>
                         <div>
