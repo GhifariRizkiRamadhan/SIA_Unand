@@ -55,11 +55,14 @@ const ajukanBebasAsrama = async (req, res) => {
       });
     }
 
-    // Dapatkan data mahasiswa
-    const mahasiswa = await prisma.mahasiswa.findUnique({
-      where: { mahasiswa_id: mahasiswaId },
-      include: { user: true }
-    });
+    const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
+    if (activeSubmission) {
+      // Kirim status 409 Conflict jika sudah ada pengajuan aktif
+      return res.status(409).json({ 
+          success: false, 
+          message: "Anda sudah memiliki pengajuan yang sedang diproses. Silakan batalkan pengajuan sebelumnya untuk membuat yang baru." 
+      });
+    }
 
     const pengajuan = await BebasAsrama.create({
       mahasiswa_id: mahasiswaId,

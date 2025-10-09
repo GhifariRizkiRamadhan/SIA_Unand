@@ -227,6 +227,7 @@ module.exports = {
   uploadBuktiPembayaran,
   getDetailPembayaran,
   updatePembayaran,
+  // pengelola
   getAllPembayaran,
   approvePembayaran,
   rejectPembayaran,
