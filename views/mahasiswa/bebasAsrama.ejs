@@ -5,9 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surat Bebas Asrama</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        table.dataTable thead {
+        font-weight: 600;
+        background-color: #f3f4f6;
+    }
+    
+    table.dataTable tr:hover {
+        background-color: #f9fafb !important;
+    }
+    /* Atur ukuran tabel utama */
+    table.dataTable {
+        width: 100%;             /* Biar tabel full container */
+        max-width: 100%;         /* Jangan melebihi container */
+        border-collapse: collapse;
+        font-size: 0.9rem;       /* Ukuran font tabel */
+    }
+
+    /* Atur ukuran cell (td, th) */
+    table.dataTable th,
+    table.dataTable td {
+        padding: 0.75rem 1rem;   /* Spasi dalam sel */
+        text-align: left;        /* Rata kiri */
+        vertical-align: middle;  /* Tengah vertikal */
+    }
+
+    /* Kalau tabel terlalu panjang, buat scroll horizontal */
+    .dataTables_wrapper {
+        overflow-x: auto;
+    }
+
+    /* Atur tinggi baris */
+    table.dataTable tbody tr {
+        height: 2.5rem;
+    }
+
+
+    /* Mengatur header: "Show entries" & "Search" */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 1.5rem;
+        margin-top: 0.25rem;
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    /* Mengatur footer: "Showing..." & Paginasi */
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1.5rem;
+        margin-left: 0.5rem;
+        margin-bottom: 0.5rem;
+        margin-right: 0.5rem;
+
+    }
+
+    /* Menata ulang posisi header dan footer dengan flexbox */
+    .dt-layout-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Styling untuk input search agar lebih modern */
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        margin-left: 0.5rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dataTables_wrapper .dataTables_filter input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Styling untuk tombol paginasi */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.25rem 0.5rem;
+        margin: 0 0.25rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: #3b82f6 !important; /* Paksa override style */
+        color: white !important;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    </style>
 </head>
 <body class="lg:ml-52 bg-gray-50" data-mahasiswa-id="<%= mahasiswaId %>">
+    <div id ="bebas-asrama-container" class="bg-white rounded-lg shadow-sm border">
+        <div class="px-6 py-4 border-b">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Daftar Pengajuan Surat Bebas Asrama</h2>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Buat Pengajuan Baru
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto p-4">
+            <table class=" w-full" id="riwayatTable">
+                <thead class="bg-gray-50">
+                     <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Pengajuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pengajuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pembayaran</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Empty State (uncomment if needed) -->
+        <!-- <div class="text-center py-12">
+            <i class="fas fa-file-alt text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada pengajuan</h3>
+            <p class="text-gray-500 mb-4">Anda belum memiliki pengajuan surat bebas asrama.</p>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <i class="fas fa-plus mr-2"></i>Buat Pengajuan Pertama
+            </button>
+        </div> -->
+    </div>
+
     <!-- Modal Konfirmasi Hapus -->
     <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
@@ -29,171 +160,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id ="bebas-asrama-container" class="bg-white rounded-lg shadow-sm border">
-        <div class="px-6 py-4 border-b">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-800">Daftar Pengajuan Surat Bebas Asrama</h2>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Buat Pengajuan Baru
-                </button>
-            </div>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Nomor Pengajuan
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tanggal Pengajuan
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Pembayaran
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status Pengajuan
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Aksi
-                        </th>
-                    </tr>
-                </thead>
-                <tbody id="riwayat-table-body" class="bg-white divide-y divide-gray-200">
-                    <!-- Row 1: Menunggu Pembayaran -->
-                    <tr class="hover:bg-gray-50" data-status="menunggu_pembayaran" data-id="001">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">001</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            05-09-2025
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            Rp 50.000
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
-                                <i class="fas fa-clock mr-1"></i>
-                                Menunggu Pembayaran
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex space-x-2">
-                                <button class="bayar-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                                    <i class="fas fa-credit-card mr-1"></i>Bayar
-                                </button>
-                                <button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                                    <i class="fas fa-trash mr-1"></i>Hapus
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Row 2: Verifikasi Pembayaran -->
-                    <tr class="hover:bg-gray-50" data-status="verifikasi_pembayaran" data-id="002">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">002</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            03-09-2025
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <span class="text-sm text-blue-600 font-medium">
-                                <i class="fas fa-clock mr-1"></i>Verifikasi
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                <i class="fas fa-search mr-1"></i>
-                                Verifikasi Pembayaran
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex space-x-2">
-                                <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                                    <i class="fas fa-credit-card mr-1"></i>Bayar
-                                </button>
-                                <button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                                    <i class="fas fa-trash mr-1"></i>Hapus
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Row 3: Verifikasi Fasilitas -->
-                    <tr class="hover:bg-gray-50" data-status="verifikasi_fasilitas" data-id="003">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">003</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            01-09-2025
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <span class="text-sm text-green-600 font-medium">
-                                <i class="fas fa-check-circle mr-1"></i>Lunas
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                <i class="fas fa-clipboard-check mr-1"></i>
-                                Verifikasi Fasilitas
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex space-x-2">
-                                <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                                    <i class="fas fa-credit-card mr-1"></i>Bayar
-                                </button>
-                                <button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed">
-                                    <i class="fas fa-trash mr-1"></i>Hapus
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Row 4: Selesai -->
-                    <tr class="hover:bg-gray-50" data-status="selesai" data-id="004">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">004</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            30-08-2025
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <span class="text-sm text-green-600 font-medium">
-                                <i class="fas fa-check-circle mr-1"></i>Lunas
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                <i class="fas fa-check mr-1"></i>
-                                Selesai
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex space-x-2">
-                                <button class="unduh-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                                    <i class="fas fa-download mr-1"></i>Unduh Surat
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Empty State (uncomment if needed) -->
-        <!-- <div class="text-center py-12">
-            <i class="fas fa-file-alt text-gray-400 text-4xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada pengajuan</h3>
-            <p class="text-gray-500 mb-4">Anda belum memiliki pengajuan surat bebas asrama.</p>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                <i class="fas fa-plus mr-2"></i>Buat Pengajuan Pertama
-            </button>
-        </div> -->
     </div>
 
     <!-- modal pengajuan baru -->
@@ -238,124 +204,143 @@
         </div>
     </div>
 
- <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- Variabel Global untuk Elemen UI ---
-        const deleteModal = document.getElementById('deleteModal');
-        const cancelDelete = document.getElementById('cancelDelete');
-        const confirmDelete = document.getElementById('confirmDelete');
-        const createModal = document.getElementById('createModal');
-        const cancelCreate = document.getElementById('cancelCreate');
-        const confirmCreate = document.getElementById('confirmCreate');
-        const container = document.getElementById('bebas-asrama-container'); 
-        
-        const warningModal = document.getElementById('warningModal');
-        const closeWarning = document.getElementById('closeWarning');
-        const warningMessage = document.getElementById('warningMessage');
+ <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+    <script>
+        // --- State & Fungsi Global ---
+        let datatable;
         let pengajuanIdToDelete = null;
 
-        // --- Inisialisasi ---
-        fetchRiwayatPengajuan();
-        initializeEventListeners();
+        const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+        const formatCurrency = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a);
+        
+        function showDeleteModal(id) {
+            pengajuanIdToDelete = id;
+            deleteModal.querySelector('h3').textContent = `Hapus Pengajuan`;
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        }
 
+        function hideDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            pengajuanIdToDelete = null;
+        }
+        function showCreateModal() {
+            createModal.classList.remove('hidden');
+            createModal.classList.add('flex');
+        }
+        function hideCreateModal() {
+            createModal.classList.add('hidden');
+            createModal.classList.remove('flex');
+        }
+        function showWarningModal(message) {
+            warningMessage.textContent = message;
+            warningModal.classList.remove('hidden');
+            warningModal.classList.add('flex');
+        }
 
-        // =================================================================
-        // BAGIAN PENGAMBILAN & PENAMPILAN DATA (FETCH & RENDER)
-        // =================================================================
+        function hideWarningModal() {
+            warningModal.classList.add('hidden');
+            warningModal.classList.remove('flex');
+        }
 
-        async function fetchRiwayatPengajuan() {
-            const mahasiswaId = document.body.dataset.mahasiswaId;
+        function showSuccessNotification(message) {
+            const el = document.createElement('div');
+            el.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+            el.innerHTML = `<div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>${message}</span></div>`;
+            document.body.appendChild(el);
+            setTimeout(() => el.classList.remove('translate-x-full'), 100);
+            setTimeout(() => {
+                el.classList.add('translate-x-full');
+                setTimeout(() => document.body.removeChild(el), 300);
+            }, 3000);
+        }
+        // Fungsi untuk memuat ulang tabel
+        function reloadTable() {
+            if (datatable) datatable.ajax.reload(null, false);
+        }
+
+        // --- Inisialisasi JQuery ---
+        $(document).ready(function() {
+            const mahasiswaId = $('body').data('mahasiswa-id');
             if (!mahasiswaId) {
                 console.error("ID Mahasiswa tidak ditemukan.");
-                showEmptyState();
-                return;
-            }
-            try {
-                const response = await fetch(`/api/bebas-asrama/mahasiswa/${mahasiswaId}`);
-                if (!response.ok) {
-                    throw new Error('Gagal memuat data riwayat.');
-                }
-                const result = await response.json();
-                renderTable(result.data);
-            } catch (error) {
-                console.error("Gagal mengambil data riwayat:", error);
-                showEmptyState();
-            }
-        }
-
-
-        function renderTable(data) {
-            const tbody = document.getElementById('riwayat-table-body');
-            tbody.innerHTML = ''; // Cukup kosongkan isinya
-
-            if (!data || data.length === 0) {
-                showEmptyState();
                 return;
             }
 
-            data.forEach(pengajuan => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                row.setAttribute('data-id', pengajuan.Surat_id);
-                row.innerHTML = generateRowHTML(pengajuan);
-                tbody.appendChild(row);
+            datatable = $('#riwayatTable').DataTable({
+                processing: true,
+                ajax: {
+                    url: `/api/bebas-asrama/mahasiswa/${mahasiswaId}`,
+                    dataSrc: 'data'
+                },
+                columns: [
+                    { data: 'nomor_pengajuan'},
+                    { data: 'tanggal_pengajuan', render: formatDate },
+                    { 
+                        data: 'total_biaya',
+                        render: (data, type, row) => {
+                            if (row.status_pengajuan === 'VERIFIKASI_PEMBAYARAN') return `<span class="text-sm text-blue-600">Verifikasi</span>`;
+                            if (row.status_pengajuan === 'SELESAI') return `<span class="text-sm text-green-600">Lunas</span>`;
+                            return formatCurrency(data);
+                        }
+                    },
+                    {
+                        data: 'status_pengajuan',
+                        render: (data) => {
+                            const statuses = {
+                                'VERIFIKASI_FASILITAS': { text: 'Verifikasi Fasilitas', class: 'bg-purple-100 text-purple-800' },
+                                'MENUNGGU_PEMBAYARAN': { text: 'Menunggu Pembayaran', class: 'bg-amber-100 text-amber-800' },
+                                'VERIFIKASI_PEMBAYARAN': { text: 'Verifikasi Pembayaran', class: 'bg-blue-100 text-blue-800' },
+                                'SELESAI': { text: 'Selesai', class: 'bg-green-100 text-green-800' }
+                            };
+                            const status = statuses[data] || { text: 'Unknown', class: 'bg-gray-100' };
+                            return `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status.class}">${status.text}</span>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (data, type, row) => {
+                            let btns = '';
+                            if (row.status_pengajuan === 'MENUNGGU_PEMBAYARAN') {
+                                btns += `<button onclick="window.location.href='/mahasiswa/pembayaran/${row.Surat_id}'" class="bayar-btn bg-green-600 text-white px-3 py-1 rounded text-xs">Bayar</button> `;
+                            }
+                            if (row.status_pengajuan === 'VERIFIKASI_FASILITAS' || row.status_pengajuan === 'MENUNGGU_PEMBAYARAN') {
+                                btns += `<button onclick="showDeleteModal(${row.Surat_id})" class="hapus-btn bg-red-600 text-white px-3 py-1 rounded text-xs">Hapus</button>`;
+                            }
+                            if (row.status_pengajuan === 'SELESAI') {
+                                btns += `<button onclick="window.location.href='/api/bebas-asrama/${row.Surat_id}/surat'" class="unduh-btn bg-blue-600 text-white px-3 py-1 rounded text-xs">Unduh Surat</button>`;
+                            }
+                            return `<div class="flex space-x-2">${btns || '-'}</div>`;
+                        }
+                    }
+                ],
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
+                pageLength: 10,
+                order: [[ 0, 'desc' ]] // Urutkan berdasarkan tanggal pengajuan terbaru
             });
-        }
-        // =================================================================
-        // BAGIAN EVENT HANDLING (EVENT DELEGATION)
-        // =================================================================
-        
-        function initializeEventListeners() {
-            if (container) {
-                container.addEventListener('click', function(event) {
-                    const button = event.target.closest('button');
-                    if (!button || button.disabled) return;
+            
+            async function handleCreateClick() {
+                try {
+                    const response = await fetch(`/api/bebas-asrama/mahasiswa/${mahasiswaId}/status-aktif`);
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message);
 
-                    if (button.matches('button:has(.fa-plus), .create-new-btn')) {
+                    if (result.hasActive) {
+                        showWarningModal(result.message);
+                    } else {
                         showCreateModal();
-                        return;
                     }
-
-                    const row = button.closest('tr');
-                    if (!row) return;
-                    
-                    const pengajuanId = row.getAttribute('data-id');
-                    if (button.classList.contains('hapus-btn')) {
-                        showDeleteModal(pengajuanId);
-                    } else if (button.classList.contains('bayar-btn')) {
-                        window.location.href = `/mahasiswa/pembayaran/${pengajuanId}`;
-                    } else if (button.classList.contains('unduh-btn')) {
-                        window.location.href = `/api/bebas-asrama/${pengajuanId}/surat`;
-                    }
-                });
+                } catch (error) {
+                    console.error('Gagal memeriksa status:', error);
+                    alert(`Terjadi kesalahan: ${error.message}`);
+                }
             }
 
-            cancelDelete.addEventListener('click', hideDeleteModal);
-            confirmDelete.addEventListener('click', () => {
-                if (pengajuanIdToDelete) deletePengajuan(pengajuanIdToDelete);
-            });
-            deleteModal.addEventListener('click', (e) => {
-                if (e.target === deleteModal) hideDeleteModal();
-            });
-
-            cancelCreate.addEventListener('click', hideCreateModal);
-            confirmCreate.addEventListener('click', executeCreatePengajuan);
-            createModal.addEventListener('click', (e) => {
-                if (e.target === createModal) hideCreateModal();
-            });
-
-            closeWarning.addEventListener('click', hideWarningModal);
-            warningModal.addEventListener('click', (e) => {
-                if (e.target === warningModal) hideWarningModal();
-            });
-        }
-
-        // =================================================================
-        // BAGIAN FUNGSI AKSI (CREATE, DELETE)
-        // =================================================================
-
-       async function executeCreatePengajuan() {
+            async function executeCreatePengajuan() {
             hideCreateModal();
             try {
                 const response = await fetch('/api/bebas-asrama', {
@@ -379,7 +364,7 @@
                 
                 // Jika berhasil
                 showSuccessNotification('Pengajuan baru berhasil dibuat!');
-                fetchRiwayatPengajuan();
+                reloadTable();
 
             } catch (error) {
                 console.error('Error saat membuat pengajuan:', error);
@@ -387,7 +372,7 @@
             }
         }
 
-        async function deletePengajuan(pengajuanId) {
+            async function deletePengajuan(pengajuanId) {
             hideDeleteModal();
             try {
 
@@ -398,134 +383,26 @@
                     throw new Error(result.message || 'Gagal menghapus pengajuan.');
                 }
 
-                showSuccessNotification(`Pengajuan #${pengajuanId} berhasil dihapus.`);
-                fetchRiwayatPengajuan();
+                showSuccessNotification(`Pengajuan berhasil dihapus.`);
+                reloadTable();
 
             } catch (error) {
                 console.error('Error saat menghapus:', error);
                 alert(`Gagal menghapus: ${error.message}`);
             }
         }
-        function checkEmptyTable() {
-            // Ambil referensi tbody yang ada saat ini
-            const currentTableBody = document.getElementById('riwayat-table-body');
-            // Jika tbody tidak ada atau tidak punya anak, tampilkan empty state
-            if (!currentTableBody || currentTableBody.children.length === 0) {
-                showEmptyState();
-            }
-        }
 
-        // =================================================================
-        // FUNGSI HELPER (UI & FORMATTING)
-        // =================================================================
-
-        function generateRowHTML(pengajuan) {
-            const formatDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const formatCurrency = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a);
-            let statusBadge = '', paymentStatus = '', actionButtons = '';
-
-            switch (pengajuan.status_pengajuan) {
-                case 'VERIFIKASI_FASILITAS':
-                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800"><i class="fas fa-clipboard-check mr-1"></i>Verifikasi Fasilitas</span>`;
-                    paymentStatus = `<span class="text-sm text-gray-600">Belum Ditentukan</span>`;
-                    actionButtons = `<button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-trash mr-1"></i>Hapus</button>`;
-                    break;
-                case 'MENUNGGU_PEMBAYARAN':
-                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800"><i class="fas fa-clock mr-1"></i>Menunggu Pembayaran</span>`;
-                    paymentStatus = `<span class="text-sm text-gray-600">${formatCurrency(pengajuan.total_biaya)}</span>`;
-                    actionButtons = `<button class="bayar-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-credit-card mr-1"></i>Bayar</button> <button class="hapus-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-trash mr-1"></i>Hapus</button>`;
-                    break;
-                case 'VERIFIKASI_PEMBAYARAN':
-                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-search mr-1"></i>Verifikasi Pembayaran</span>`;
-                    paymentStatus = `<span class="text-sm text-blue-600 font-medium"><i class="fas fa-clock mr-1"></i>Verifikasi</span>`;
-                    actionButtons = `<button disabled class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-xs font-medium cursor-not-allowed"><i class="fas fa-trash mr-1"></i>Hapus</button>`;
-                    break;
-                case 'SELESAI':
-                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Selesai</span>`;
-                    paymentStatus = `<span class="text-sm text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>Lunas</span>`;
-                    actionButtons = `<button class="unduh-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium"><i class="fas fa-download mr-1"></i>Unduh Surat</button>`;
-                    break;
-                default:
-                    statusBadge = `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Tidak Diketahui</span>`;
-                    break;
-            }
-            return `
-                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${pengajuan.nomor_pengajuan}</div></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(pengajuan.tanggal_pengajuan)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${paymentStatus}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-                <td class="px-6 py-4 whitespace-nowrap"><div class="flex space-x-2">${actionButtons}</div></td>
-            `;
-        }
-
-        function showDeleteModal(id) {
-            pengajuanIdToDelete = id;
-            deleteModal.querySelector('h3').textContent = `Hapus Pengajuan #${id}`;
-            deleteModal.classList.remove('hidden');
-            deleteModal.classList.add('flex');
-        }
-
-        function hideDeleteModal() {
-            deleteModal.classList.add('hidden');
-            deleteModal.classList.remove('flex');
-            pengajuanIdToDelete = null;
-        }
-
-        function showCreateModal() {
-            createModal.classList.remove('hidden');
-            createModal.classList.add('flex');
-        }
-
-        function hideCreateModal() {
-            createModal.classList.add('hidden');
-            createModal.classList.remove('flex');
-        }
-
+            // --- Event Listeners ---
+            $('#bebas-asrama-container').on('click', 'button:has(.fa-plus), .create-new-btn', handleCreateClick);
+            $('#confirmCreate').on('click', executeCreatePengajuan);
+            $('#confirmDelete').on('click', () => { if (pengajuanIdToDelete) deletePengajuan(pengajuanIdToDelete); });
             
-        function showWarningModal(message) {
-            warningMessage.textContent = message;
-            warningModal.classList.remove('hidden');
-            warningModal.classList.add('flex');
-        }
+            // Listener untuk menutup modal
+            $('#cancelDelete, #cancelCreate, #closeWarning').on('click', function() {
+                $(this).closest('.fixed').addClass('hidden');
+            });
+        });
+    </script>
 
-        function hideWarningModal() {
-            warningModal.classList.add('hidden');
-            warningModal.classList.remove('flex');
-        }
-
-        function showSuccessNotification(message) {
-            const el = document.createElement('div');
-            el.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
-            el.innerHTML = `<div class="flex items-center"><i class="fas fa-check-circle mr-2"></i><span>${message}</span></div>`;
-            document.body.appendChild(el);
-            setTimeout(() => el.classList.remove('translate-x-full'), 100);
-            setTimeout(() => {
-                el.classList.add('translate-x-full');
-                setTimeout(() => document.body.removeChild(el), 300);
-            }, 3000);
-        }
-
-        function checkEmptyTable() {
-            if (tableBody.children.length === 0) showEmptyState();
-        }
-
-        function showEmptyState() {
-            const tableBody = document.getElementById('riwayat-table-body');
-            if (tableBody) {
-                // Buat satu baris tabel yang berisi pesan
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center py-10 text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-file-alt text-3xl mb-2"></i>
-                                <span>Belum ada pengajuan</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-    });
-</script>
 </body>
 </html>
