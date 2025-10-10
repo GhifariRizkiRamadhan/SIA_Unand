@@ -6,6 +6,7 @@ const User = require('../models/userModels');
 const path = require('path');
 const BebasAsrama = require('../models/bebasAsramaModel');
 const Pembayaran = require('../models/pembayaranModel');
+const { createNotification } = require('./notification');
 const { PrismaClient } = require('@prisma/client'); 
 const prisma = new PrismaClient();    
 
@@ -88,9 +89,6 @@ const verifikasiFasilitas = async (req, res) => {
         return res.status(400).json({ success: false, message: "ID pengajuan tidak valid." });
     }
 
-    // Gunakan Transaksi Prisma dengan logging di setiap langkah
-    const { createNotification } = require('./notification');
-    
     const result = await prisma.$transaction(async (tx) => {
       console.log('--- [TRANSAKSI DIMULAI] ---');
 
@@ -135,20 +133,21 @@ const verifikasiFasilitas = async (req, res) => {
       console.log('--- [TRANSAKSI SELESAI SUKSES] ---');
       // Ambil data mahasiswa untuk notifikasi
       const mahasiswa = await tx.mahasiswa.findUnique({
-        where: { mahasiswa_id: result.mahasiswa_id },
+        where: { mahasiswa_id: updatedSurat.mahasiswa_id },
         include: { user: true }
       });
 
       // Kirim notifikasi ke mahasiswa
-      if (mahasiswa) {
+      if (mahasiswa && mahasiswa.user) {
         await createNotification(
-          mahasiswa.user_id,
-          'Status Surat Bebas Asrama Diperbarui',
-          `Status surat bebas asrama Anda telah diperbarui menjadi "MENUNGGU_PEMBAYARAN". Total biaya: Rp${result.total_biaya.toLocaleString('id-ID')}`,
-          'status_update',
-          result.Surat_id.toString()
+            mahasiswa.user.user_id,
+            'Status Surat Bebas Asrama Diperbarui',
+            // PERBAIKAN: Gunakan 'updatedSurat' yang sudah ada
+            `Status surat Anda telah diperbarui menjadi "Menunggu Pembayaran". Total tagihan: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(updatedSurat.total_biaya)}`,
+            'status_update',
+            updatedSurat.Surat_id.toString()
         );
-      }
+    }
 
       return updatedSurat;
     });
@@ -156,8 +155,8 @@ const verifikasiFasilitas = async (req, res) => {
     res.json({ success: true, message: "Verifikasi fasilitas berhasil diperbarui", data: result });
   } catch (err) {
     // LOG PALING PENTING ADA DI SINI
-    // console.error("!!! TRANSAKSI GAGAL, SEMUA DIBATALKAN (ROLLBACK) !!!");
-    // console.error("Penyebab Error:", err);
+    console.error("!!! TRANSAKSI GAGAL, SEMUA DIBATALKAN (ROLLBACK) !!!");
+    console.error("Penyebab Error:", err);
     
     res.status(500).json({ success: false, message: "Gagal verifikasi fasilitas" });
   }

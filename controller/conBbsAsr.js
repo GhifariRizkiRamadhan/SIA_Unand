@@ -7,6 +7,8 @@ const path = require('path');
 const BebasAsrama = require('../models/bebasAsramaModel');
 const Pembayaran = require('../models/pembayaranModel');
 const PDFDocument = require('pdfkit');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 
 const showBebasAsrama = async (req, res) => {
@@ -53,6 +55,24 @@ const ajukanBebasAsrama = async (req, res) => {
         success: false, 
         message: "Forbidden: Akun Anda tidak terhubung dengan data mahasiswa." 
       });
+    }
+
+     const mahasiswa = await prisma.mahasiswa.findUnique({
+      where: {
+        // Change 'id' to 'mahasiswa_id' (or whatever your @id field is named)
+        mahasiswa_id: mahasiswaId
+      },
+      include: {
+        user: true // Include the related user to get the name
+      }
+    });
+
+    // Handle case where mahasiswa is not found
+    if (!mahasiswa) {
+        return res.status(404).json({
+            success: false,
+            message: "Data mahasiswa tidak ditemukan."
+        });
     }
 
     const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
