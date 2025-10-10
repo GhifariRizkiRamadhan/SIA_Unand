@@ -195,20 +195,26 @@ async findByMahasiswaId(id) {
     }
   },
 
+// models/bebasAsramaModel.js
+
 async findActiveByMahasiswaId(mahasiswaId) {
     try {
+        const numericId = parseInt(mahasiswaId, 10);
+        if (isNaN(numericId)) throw new Error("ID Mahasiswa tidak valid.");
+
+        // Cari pengajuan yang dimiliki mahasiswa ini & statusnya BUKAN 'SELESAI'
         return await prisma.suratbebasasrama.findFirst({
             where: {
-                mahasiswa_id: mahasiswaId,
+                mahasiswa_id: numericId,
                 NOT: {
-                    status_pengajuan: 'SELESAI' 
+                    status_pengajuan: 'SELESAI'
                 }
             }
         });
     } catch (error) {
         throw error;
     }
-}
+},
 };
 
 module.exports = BebasAsrama;

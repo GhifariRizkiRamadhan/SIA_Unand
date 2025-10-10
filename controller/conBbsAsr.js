@@ -234,16 +234,34 @@ const getRiwayatPengajuan = async (req, res) => {
     
     const riwayat = await BebasAsrama.findByMahasiswaId(mahasiswaId);
 
-    if (!riwayat || riwayat.length === 0) {
-      return res.status(404).json({ success: false, message: "Tidak ada riwayat pengajuan yang ditemukan." });
-    }
-
-    res.json({ success: true, data: riwayat });
+     res.json({ success: true, data: riwayat || [] });
   } catch (err) {
     console.error("Gagal ambil riwayat pengajuan:", err);
     res.status(500).json({ success: false, message: "Gagal mengambil riwayat pengajuan." });
   }
 };
+
+// controller/conBbsAsr.js
+
+const checkActiveSubmission = async (req, res) => {
+  try {
+    const mahasiswaId = req.params.id;
+    const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
+
+    if (activeSubmission) {
+      res.json({
+        hasActive: true,
+        message: "Anda sudah memiliki pengajuan yang sedang diproses. Batalkan pengajuan sebelumnya untuk membuat yang baru."
+      });
+    } else {
+      res.json({ hasActive: false });
+    }
+  } catch (err) {
+    console.error("Gagal cek pengajuan aktif:", err);
+    res.status(500).json({ success: false, message: "Gagal memeriksa status pengajuan." });
+  }
+};
+
 
 module.exports = {
   showBebasAsrama,
@@ -252,5 +270,6 @@ module.exports = {
   deleteBebasAsrama,
   downloadSurat,
   getTagihanMahasiswa,
-  getRiwayatPengajuan
+  getRiwayatPengajuan,
+  checkActiveSubmission,
 };
