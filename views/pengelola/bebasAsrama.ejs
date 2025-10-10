@@ -6,6 +6,7 @@
     <title>Surat Bebas Asrama - Pengelola</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 </head>
 
 <style>
@@ -17,6 +18,99 @@
         transform: scale(1.5); /* Anda bisa ubah angka ini untuk perbesaran yang berbeda */
         cursor: zoom-out;
     }
+ 
+        
+    table.dataTable thead {
+        background-color: #f3f4f6;
+        font-weight: 600;
+    }
+    
+    table.dataTable tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    /* Atur ukuran tabel utama */
+    table.dataTable {
+        width: 100%;             /* Biar tabel full container */
+        max-width: 100%;         /* Jangan melebihi container */
+        border-collapse: collapse;
+        font-size: 0.9rem;       /* Ukuran font tabel */
+    }
+
+    /* Atur ukuran cell (td, th) */
+    table.dataTable th,
+    table.dataTable td {
+        padding: 0.75rem 1rem;   /* Spasi dalam sel */
+        text-align: left;        /* Rata kiri */
+        vertical-align: middle;  /* Tengah vertikal */
+    }
+
+    /* Kalau tabel terlalu panjang, buat scroll horizontal */
+    .dataTables_wrapper {
+        overflow-x: auto;
+    }
+
+    /* Atur tinggi baris */
+    table.dataTable tbody tr {
+        height: 2.5rem;          /* Atur tinggi minimum baris */
+    }
+
+
+    /* Mengatur header: "Show entries" & "Search" */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 1.5rem;
+        margin-top: 0.5rem;
+        margin-left: 1.5rem;
+        margin-right: 1.5rem;
+    }
+
+    /* Mengatur footer: "Showing..." & Paginasi */
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 1.5rem;
+        margin-left: 1.5rem;
+        margin-bottom: 1rem;
+        margin-right: 1.5rem;
+
+    }
+
+    /* Menata ulang posisi header dan footer dengan flexbox */
+    .dt-layout-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Styling untuk input search agar lebih modern */
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        margin-left: 0.5rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dataTables_wrapper .dataTables_filter input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Styling untuk tombol paginasi */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.25rem 0.5rem;
+        margin: 0 0.25rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: #3b82f6 !important; /* Paksa override style */
+        color: white !important;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
 </style>
 
 <body class="lg:ml-52 bg-gray-50">
@@ -27,7 +121,7 @@
             </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table id="submissionTable" class="w-full">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
@@ -39,7 +133,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="submissionTable" class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200">
                     <!-- Data akan dimuat melalui JavaScript -->
                 </tbody>
             </table>
@@ -145,8 +239,7 @@
                                 </div>
                             </div>
                             
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                </div>
+            
 
                             <!-- Daftar Fasilitas yang Perlu Dibayar -->
                             <div id="facilityListDetail" class="mt-6 hidden">
@@ -244,7 +337,7 @@
                     <button onclick="closeModal('facilityVerificationModal')" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
                         Batal
                     </button>
-                    <button onclick="submitFacilityVerification()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">
+                    <button id="submitFacilityBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium">
                         Simpan
                     </button>
                 </div>
@@ -279,10 +372,10 @@
                     <p class="text-gray-700 mb-4">Apakah bukti pembayaran sudah sesuai dan dapat diverifikasi?</p>
                     
                     <div class="flex justify-end space-x-2">
-                        <button onclick="rejectPayment()" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium">
+                        <button id="rejectPaymentBtn" class="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium">
                             <i class="fas fa-times mr-1"></i> Tidak, Tolak
                         </button>
-                        <button onclick="approvePayment()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+                        <button id="approvePaymentBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
                             <i class="fas fa-check mr-1"></i> Ya, Verifikasi
                         </button>
                     </div>
@@ -294,400 +387,22 @@
 
 </body>
 </html>
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // --- State & Variabel Global ---
-    let allSubmissions = []; // Menyimpan data asli dari server
-    let currentSubmissionId = null; // Menyimpan ID pengajuan yang sedang aktif di modal
-
-    // --- Elemen DOM ---
-    const tableBody = document.getElementById('submissionTable');
-    const modals = {
-        detail: document.getElementById('detailModal'),
-        facility: document.getElementById('facilityVerificationModal'),
-        payment: document.getElementById('paymentVerificationModal')
-    };
-
     // =================================================================
-    // INISIALISASI
+    // BAGIAN FUNGSI GLOBAL & STATE
+    // Didefinisikan di sini agar bisa diakses oleh onclick dari DataTables
     // =================================================================
-    fetchSubmissions();
-    initializeEventListeners();
+    let allSubmissions = [];
+    let currentSubmissionId = null;
+    let datatable;
 
-    // =================================================================
-    // BAGIAN PENGAMBILAN & PENAMPILAN DATA (FETCH & RENDER)
-    // =================================================================
-
-    async function fetchSubmissions() {
-        try {
-            const response = await fetch('/api/pengelola/bebas-asrama');
-            if (!response.ok) throw new Error('Gagal memuat data pengajuan.');
-            
-            const result = await response.json();
-            allSubmissions = result.data || [];
-            renderTable(allSubmissions);
-        } catch (error) {
-            console.error('Fetch error:', error);
-            renderTable([]); // Tampilkan status kosong jika error
-        }
-    }
-
-    function renderTable(submissions) {
-        tableBody.innerHTML = '';
-        if (submissions.length === 0) {
-            tableBody.innerHTML = `
-                <tr><td colspan="7" class="text-center py-10 text-gray-500">
-                    <i class="fas fa-file-alt text-3xl mb-2"></i><p>Belum ada pengajuan dari mahasiswa.</p>
-                </td></tr>`;
-            return;
-        }
-        submissions.forEach((submission, index) => {
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50';
-            row.setAttribute('data-id', submission.Surat_id);
-            row.innerHTML = generateRowHTML(submission, index);
-            tableBody.appendChild(row);
-        });
-    }
-
-    // =================================================================
-    // BAGIAN EVENT HANDLING (Menggunakan Event Delegation)
-    // =================================================================
-
-    function initializeEventListeners() {
-        // Event listener utama pada tabel untuk semua tombol aksi
-        tableBody.addEventListener('click', (event) => {
-            const button = event.target.closest('button');
-            if (!button || button.disabled) return;
-
-            const row = button.closest('tr');
-            const id = Number(row.dataset.id);
-
-            if (button.dataset.action === 'detail') openDetailModal(id);
-            if (button.dataset.action === 'verify-facility') openFacilityVerificationModal(id);
-            if (button.dataset.action === 'verify-payment') openPaymentVerificationModal(id);
-        });
-    }
-
-    // =================================================================
-    // FUNGSI AKSI (SUBMIT MODAL)
-    // =================================================================
-
-    window.submitFacilityVerification = async function() {
-        const isLengkap = document.getElementById('complete').checked;
-        const status = isLengkap ? "LENGKAP" : "TIDAK_LENGKAP";
-        let kerusakan = [];
-
-        if (!isLengkap) {
-            document.querySelectorAll('#facilityList .facility-item').forEach(item => {
-                const nama = item.querySelector('input[type="text"]').value;
-                const biaya = item.querySelector('input[type="number"]').value;
-                if (nama && biaya) {
-                    kerusakan.push({ nama_fasilitas: nama, biaya_kerusakan: Number(biaya) });
-                }
-            });
-        }
-        
-        try {
-            const response = await fetch(`/api/pengelola/bebas-asrama/${currentSubmissionId}/verifikasi-fasilitas`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fasilitas_status: status, kerusakan: kerusakan })
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-            
-            showNotification('Verifikasi fasilitas berhasil disimpan.', 'success');
-            fetchSubmissions(); // Muat ulang data tabel
-            closeModal('facilityVerificationModal');
-        } catch (error) {
-            showNotification(`Error: ${error.message}`, 'error');
-        }
-    }
-
-    window.approvePayment = async function() {
-        try {
-            const response = await fetch(`/api/pengelola/pembayaran/${currentSubmissionId}/approve`, { method: 'POST' });
-            if (!response.ok) throw new Error('Gagal menyetujui pembayaran.');
-            
-            showNotification('Pembayaran berhasil diverifikasi.', 'success');
-            fetchSubmissions();
-            closeModal('paymentVerificationModal');
-        } catch(error) {
-            showNotification(error.message, 'error');
-        }
-    }
-    
-    window.rejectPayment = async function() {
-        try {
-            const response = await fetch(`/api/pengelola/pembayaran/${currentSubmissionId}/reject`, { method: 'POST' });
-            if (!response.ok) throw new Error('Gagal menolak pembayaran.');
-            
-            showNotification('Pembayaran berhasil ditolak.', 'warning');
-            fetchSubmissions();
-            closeModal('paymentVerificationModal');
-        } catch(error) {
-            showNotification(error.message, 'error');
-        }
-    }
-
-// =================================================================
-// FUNGSI MODAL (OPEN, CLOSE, & HELPERS)
-// =================================================================
-
-// --- Variabel Helper ---
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
-const formatCurrency = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a);
-
-window.closeModal = function(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
-}
-
-function toTitleCase(str) {
-    if (!str) return ''; // Mengembalikan string kosong jika input tidak ada
-    return str.toLowerCase() // 1. Ubah semua jadi huruf kecil
-        .replace(/_/g, ' ')  // 2. Ganti semua underscore dengan spasi
-        .split(' ')          // 3. Pisah menjadi kata-kata
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // 4. Ubah huruf pertama setiap kata menjadi kapital
-        .join(' ');          // 5. Gabungkan kembali
-}
-
-// --- Modal Detail ---
-window.openDetailModal = function(id) {
-    const submission = allSubmissions.find(s => s.Surat_id === id);
-    if (!submission) return;
-    
-    document.getElementById('detailName').textContent = submission.mahasiswa.nama;
-    document.getElementById('detailNim').textContent = submission.mahasiswa.nim;
-    document.getElementById('detailJurusan').textContent = submission.mahasiswa.jurusan || '-';
-    document.getElementById('detailSubmissionNumber').textContent = submission.nomor_pengajuan;
-    document.getElementById('detailStatus').innerHTML = getStatusBadge(submission.status_pengajuan).badge;
-    document.getElementById('detailSubmissionDate').textContent = formatDate(submission.tanggal_pengajuan);
-    document.getElementById('detailUpdateDate').textContent = formatDate(submission.tanggal_update);
-    
-    // rincian biaya
-    document.getElementById('detailFacilities').textContent = submission.fasilitas_status ? toTitleCase(submission.fasilitas_status) : 'Belum Diverifikasi';
-    document.getElementById('detailTotalAmount').textContent = formatCurrency(submission.total_biaya);
-    
-    const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
-    const paymentProofStatusEl = document.getElementById('detailPaymentProof');
-
-    if (payment) {
-    switch (payment.status_bukti) {
-        case 'VALID':
-            paymentProofStatusEl.textContent = 'Valid';
-            paymentProofStatusEl.className = 'font-medium text-green-600';
-            break;
-
-        case 'TIDAK_VALID':
-            paymentProofStatusEl.textContent = 'Tidak Valid';
-            paymentProofStatusEl.className = 'font-medium text-red-600';
-            break;
-
-        case 'BELUM_DIVERIFIKASI':
-            // TAMBAHKAN PENGECEKAN DI SINI
-            if (payment.bukti_pembayaran) {
-                // Jika bukti sudah ada, berarti menunggu verifikasi
-                paymentProofStatusEl.textContent = 'Belum Diverifikasi';
-                paymentProofStatusEl.className = 'font-medium text-blue-600';
-            } else {
-                // Jika bukti belum ada, berarti menunggu upload
-                paymentProofStatusEl.textContent = 'Belum Upload';
-                paymentProofStatusEl.className = 'font-medium text-gray-700';
-            }
-            break;
-
-        default:
-            paymentProofStatusEl.textContent = 'Belum Upload';
-            paymentProofStatusEl.className = 'font-medium text-gray-700';
-            break;
-    }
-    } else {
-        paymentProofStatusEl.textContent = '-'; // Tidak ada data pembayaran
-        paymentProofStatusEl.className = 'font-medium text-gray-700';
-    }
-
-    // Menampilkan daftar fasilitas yang rusak
-    const facilityListDetailEl = document.getElementById('facilityListDetail');
-    const facilityItemsEl = document.getElementById('facilityItems');
-    let rincianHtml = ''; // Siapkan string kosong untuk menampung HTML
-
-    // 1. Hitung dan tambahkan Biaya Pokok/Administrasi
-    const biayaPokok = submission.total_biaya - (submission.biaya_tambahan || 0);
-    rincianHtml += `
-        <div class="flex justify-between items-center p-2 bg-white rounded border">
-            <span class="text-sm text-gray-700">Biaya Pokok Administrasi</span>
-            <span class="text-sm font-semibold text-gray-900">${formatCurrency(biayaPokok)}</span>
-        </div>
-    `;
-
-    // 2. Tambahkan rincian kerusakan jika ada
-    if (submission.kerusakanFasilitas && submission.kerusakanFasilitas.length > 0) {
-        submission.kerusakanFasilitas.forEach(item => {
-            rincianHtml += `
-                <div class="flex justify-between items-center p-2 bg-white rounded border">
-                    <span class="text-sm text-gray-700">${item.nama_fasilitas}</span>
-                    <span class="text-sm font-semibold text-green-600">+ ${formatCurrency(item.biaya_kerusakan)}</span>
-                </div>
-            `;
-        });
-    }
-
-    // 3. Masukkan semua rincian ke dalam HTML dan tampilkan bloknya
-    facilityItemsEl.innerHTML = rincianHtml;
-    facilityListDetailEl.classList.remove('hidden');
-        
-    document.getElementById('detailModal').classList.remove('hidden');
-}
-
-// --- Modal Verifikasi Fasilitas ---
-window.openFacilityVerificationModal = function(id) {
-    currentSubmissionId = id;
-    const submission = allSubmissions.find(s => s.Surat_id === id);
-    if (!submission) return;
-    
-    document.getElementById('facilityStudentName').textContent = submission.mahasiswa.nama;
-    
-    // Reset form
-    document.getElementById('complete').checked = false;
-    document.getElementById('incomplete').checked = false;
-    document.getElementById('facilityForm').classList.add('hidden');
-    resetFacilityForm();
-    
-    modals.facility.classList.remove('hidden');
-}
-
-// --- Modal Verifikasi Pembayaran ---
-window.openPaymentVerificationModal = function(id) {
-    currentSubmissionId = id;
-    const submission = allSubmissions.find(s => s.Surat_id === id);
-    if (!submission) return;
-
-    // Ambil elemen gambar dan placeholder
-    const proofImage = document.getElementById('proofImage');
-    const proofPlaceholder = document.getElementById('proofPlaceholder');
-    
-    // Reset status zoom
-    proofImage.classList.remove('zoomed-in');
-
-    // Mengisi data nama dan jumlah
-    document.getElementById('paymentStudentName').textContent = submission.mahasiswa.nama;
-    document.getElementById('paymentAmount').textContent = formatCurrency(submission.total_biaya);
-
-    // Cek apakah ada bukti pembayaran
-    const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
-    if (payment && payment.bukti_pembayaran) {
-        // Jika ada, set sumber gambar dan tampilkan elemen gambar
-        proofImage.src = `/api/pengelola/surat/${id}/bukti-pembayaran`;
-        proofImage.classList.remove('hidden');
-        proofPlaceholder.classList.add('hidden');
-    } else {
-        // Jika tidak ada, sembunyikan elemen gambar dan tampilkan placeholder
-        proofImage.classList.add('hidden');
-        proofPlaceholder.classList.remove('hidden');
-    }
-
-    // Tambahkan event listener untuk zoom on-click
-    proofImage.onclick = function() {
-        this.classList.toggle('zoomed-in');
-    };
-    
-    // Tampilkan modal
-    modals.payment.classList.remove('hidden');
-} 
-    // --- FUNGSI HELPER UNTUK FORM VERIFIKASI FASILITAS ---
-
-    window.toggleFacilityForm = function() {
-        const incomplete = document.getElementById('incomplete').checked;
-        const facilityForm = document.getElementById('facilityForm');
-        
-        if (incomplete) {
-            facilityForm.classList.remove('hidden');
-        } else {
-            facilityForm.classList.add('hidden');
-            resetFacilityForm();
-        }
-    }
-
-    function resetFacilityForm() {
-        const facilityList = document.getElementById('facilityList');
-        facilityList.innerHTML = `
-            <div class="flex gap-2 items-center facility-item">
-                <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" oninput="calculateTotal()">
-                <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        calculateTotal();
-    }
-
-    window.addFacility = function() {
-        const facilityList = document.getElementById('facilityList');
-        const newFacility = document.createElement('div');
-        newFacility.className = 'flex gap-2 items-center facility-item';
-        newFacility.innerHTML = `
-            <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" oninput="calculateTotal()">
-            <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        facilityList.appendChild(newFacility);
-    }
-
-    window.removeFacility = function(button) {
-        const facilityList = document.getElementById('facilityList');
-        if (facilityList.children.length > 1) {
-            button.parentElement.remove();
-            calculateTotal();
-        }
-    }
-
-    window.calculateTotal = function() {
-        const prices = document.querySelectorAll('.facility-price');
-        let total = 0;
-        prices.forEach(price => {
-            total += Number(price.value) || 0;
-        });
-        document.getElementById('totalAmount').textContent = total.toLocaleString('id-ID');
-    }
-
-    window.viewPaymentProof = function() {
-        const submission = allSubmissions.find(s => s.Surat_id === currentSubmissionId);
-        if (submission && submission.pembayaran.length > 0 && submission.pembayaran[0].bukti_pembayaran) {
-            // Membuka path bukti di tab baru
-            window.open(`/${submission.pembayaran[0].bukti_pembayaran}`, '_blank');
-        } else {
-            alert('Bukti pembayaran tidak ditemukan.');
-        }
-    }
-    // =================================================================
-    // FUNGSI HELPER (UI & FORMATTING)
-    // =================================================================
-
-    function generateRowHTML(submission, index) {
-        const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
-        const statusInfo = getStatusBadge(submission.status_pengajuan);
-        let actionButtons = `<button data-action="detail" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs font-medium">Detail</button>`;
-
-        if (submission.status_pengajuan === 'VERIFIKASI_FASILITAS') {
-            actionButtons += ` <button data-action="verify-facility" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-medium">Verifikasi Fasilitas</button>`;
-        } else if (submission.status_pengajuan === 'VERIFIKASI_PEMBAYARAN') {
-            actionButtons += ` <button data-action="verify-payment" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium">Verifikasi Bayar</button>`;
-        }
-
-        return `
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">${index + 1}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">${submission.mahasiswa.nama}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">${submission.mahasiswa.nim}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">${formatDate(submission.tanggal_pengajuan)}</td>
-            <td class="px-6 py-4"><span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.class}">${statusInfo.badge}</span></td>
-            <td class="px-6 py-4 text-sm text-gray-600">${formatDate(submission.tanggal_update)}</td>
-            <td class="px-6 py-4"><div class="flex space-x-2">${actionButtons}</div></td>
-        `;
-    }
+    // --- Fungsi Helper Formatting ---
+    const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+    const formatCurrency = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a);
 
     function getStatusBadge(status) {
         const statuses = {
@@ -699,6 +414,155 @@ window.openPaymentVerificationModal = function(id) {
         return statuses[status] || { badge: 'Unknown', class: 'bg-gray-100 text-gray-800' };
     }
 
+    // --- Fungsi Modal (dijadikan global dengan window.) ---
+    window.closeModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+            if (modalId === 'facilityVerificationModal') {
+                document.querySelectorAll('input[name="completeness"]').forEach(radio => radio.checked = false);
+                toggleFacilityForm();
+            }
+        }
+    };
+
+    window.openDetailModal = function(id) {
+        currentSubmissionId = id;
+        const submission = allSubmissions.find(s => s.Surat_id === id);
+        if (!submission) return;
+
+        document.getElementById('detailName').textContent = submission.mahasiswa.nama;
+        document.getElementById('detailNim').textContent = submission.mahasiswa.nim;
+        document.getElementById('detailJurusan').textContent = submission.mahasiswa.jurusan || '-';
+        document.getElementById('detailSubmissionNumber').textContent = submission.nomor_pengajuan;
+        document.getElementById('detailStatus').innerHTML = getStatusBadge(submission.status_pengajuan).badge;
+        document.getElementById('detailSubmissionDate').textContent = formatDate(submission.tanggal_pengajuan);
+        document.getElementById('detailUpdateDate').textContent = formatDate(submission.tanggal_update);
+        
+        document.getElementById('detailFacilities').textContent = submission.fasilitas_status ? submission.fasilitas_status.replace(/_/g, ' ') : 'Belum Diverifikasi';
+        document.getElementById('detailTotalAmount').textContent = formatCurrency(submission.total_biaya);
+        
+        const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
+        const paymentProofStatusEl = document.getElementById('detailPaymentProof');
+
+        if (payment) {
+            if (payment.status_bukti === 'TIDAK_VALID') {
+                paymentProofStatusEl.textContent = 'TIDAK VALID';
+                paymentProofStatusEl.className = 'font-medium text-red-600';
+            } else if (payment.bukti_pembayaran) {
+                paymentProofStatusEl.textContent = payment.status_bukti.replace(/_/g, ' ');
+                paymentProofStatusEl.className = 'font-medium text-blue-600';
+            } 
+        } else {
+            paymentProofStatusEl.textContent = 'BELUM UPLOAD';
+            paymentProofStatusEl.className = 'font-medium text-gray-600';
+        }
+
+        const facilityListDetailEl = document.getElementById('facilityListDetail');
+        const facilityItemsEl = document.getElementById('facilityItems');
+        let rincianHtml = `<div class="flex justify-between items-center p-2 bg-white rounded border"><span class="text-sm text-gray-700">Biaya Pokok Administrasi</span><span class="text-sm font-semibold text-gray-900">${formatCurrency(submission.total_biaya - (submission.biaya_tambahan || 0))}</span></div>`;
+
+        if (submission.kerusakanFasilitas && submission.kerusakanFasilitas.length > 0) {
+            submission.kerusakanFasilitas.forEach(item => {
+                rincianHtml += `<div class="flex justify-between items-center p-2 bg-white rounded border"><span class="text-sm text-gray-700">${item.nama_fasilitas}</span><span class="text-sm font-semibold text-red-600">+ ${formatCurrency(item.biaya_kerusakan)}</span></div>`;
+            });
+            facilityListDetailEl.classList.remove('hidden');
+        } else {
+            facilityListDetailEl.classList.add('hidden');
+        }
+        facilityItemsEl.innerHTML = rincianHtml;
+        facilityListDetailEl.classList.remove('hidden');
+        
+        document.getElementById('detailModal').classList.remove('hidden');
+    };
+
+    window.openFacilityVerificationModal = function(id) {
+        currentSubmissionId = id;
+        const submission = allSubmissions.find(s => s.Surat_id === id);
+        if (!submission) return;
+        document.getElementById('facilityStudentName').textContent = submission.mahasiswa.nama;
+        document.getElementById('facilityVerificationModal').classList.remove('hidden');
+    };
+
+    window.openPaymentVerificationModal = function(id) {
+        currentSubmissionId = id;
+        const submission = allSubmissions.find(s => s.Surat_id === id);
+        if (!submission) return;
+
+        const proofImage = document.getElementById('proofImage');
+        const proofPlaceholder = document.getElementById('proofPlaceholder');
+        proofImage.classList.remove('zoomed-in');
+        document.getElementById('paymentStudentName').textContent = submission.mahasiswa.nama;
+        document.getElementById('paymentAmount').textContent = formatCurrency(submission.total_biaya);
+
+        const payment = submission.pembayaran.length > 0 ? submission.pembayaran[0] : null;
+        if (payment && payment.bukti_pembayaran) {
+            proofImage.src = `/api/pengelola/surat/${id}/bukti-pembayaran`;
+            proofImage.classList.remove('hidden');
+            proofPlaceholder.classList.add('hidden');
+        } else {
+            proofImage.classList.add('hidden');
+            proofPlaceholder.classList.remove('hidden');
+        }
+        proofImage.onclick = () => proofImage.classList.toggle('zoomed-in');
+        
+        document.getElementById('paymentVerificationModal').classList.remove('hidden');
+    };
+    
+    // --- Fungsi Helper Form Verifikasi Fasilitas ---
+    window.toggleFacilityForm = function() { 
+        const incomplete = document.getElementById('incomplete').checked;
+        const facilityForm = document.getElementById('facilityForm');
+        
+        if (incomplete) {
+            facilityForm.classList.remove('hidden');
+        } else {
+            facilityForm.classList.add('hidden');
+            resetFacilityForm();
+        }
+    };
+    window.addFacility = function() { 
+        const facilityList = document.getElementById('facilityList');
+        const newFacility = document.createElement('div');
+        newFacility.className = 'flex gap-2 items-center facility-item';
+        newFacility.innerHTML = `
+            <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" oninput="calculateTotal()">
+            <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        facilityList.appendChild(newFacility);
+    };
+    window.removeFacility = function(button) { 
+        const facilityList = document.getElementById('facilityList');
+        if (facilityList.children.length > 1) {
+            button.parentElement.remove();
+            calculateTotal();
+        }
+    };
+    window.calculateTotal = function() { 
+        const prices = document.querySelectorAll('.facility-price');
+        let total = 0;
+        prices.forEach(price => {
+            total += Number(price.value) || 0;
+        });
+        document.getElementById('totalAmount').textContent = total.toLocaleString('id-ID');
+    };
+    function resetFacilityForm() { 
+        const facilityList = document.getElementById('facilityList');
+        facilityList.innerHTML = `
+            <div class="flex gap-2 items-center facility-item">
+                <input type="text" placeholder="Nama Fasilitas" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="number" placeholder="Harga" class="w-24 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 facility-price" oninput="calculateTotal()">
+                <button type="button" onclick="removeFacility(this)" class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        calculateTotal();
+    };
+    
     function showNotification(message, type = 'info') {
         const colors = { success: 'bg-green-500', warning: 'bg-yellow-500', error: 'bg-red-500', info: 'bg-blue-500' };
         const notification = document.createElement('div');
@@ -711,5 +575,122 @@ window.openPaymentVerificationModal = function(id) {
             setTimeout(() => document.body.removeChild(notification), 300);
         }, 4000);
     }
-});
+
+    // Fungsi untuk memuat ulang tabel
+    window.reloadTable = function() {
+        if (datatable) {
+            datatable.ajax.reload(null, false);
+        }
+    };
+
+    // =================================================================
+    // INISIALISASI JQUERY & DATATABLES
+    // =================================================================
+    $(document).ready(function() {
+        datatable = $('#submissionTable').DataTable({
+            processing: true,
+            ajax: {
+                url: '/api/pengelola/bebas-asrama',
+                dataSrc: (json) => {
+                    allSubmissions = json.data || []; 
+                    return allSubmissions;
+                }
+            },
+            columns: [
+                { data: null, render: (data, type, row, meta) => meta.row + 1, className: "text-center", width: "5%" },
+                { data: 'mahasiswa.nama', width: "20%" },
+                { data: 'mahasiswa.nim' },
+                { data: 'tanggal_pengajuan', render: formatDate },
+                {
+                    data: 'status_pengajuan',
+                    render: (data) => {
+                        const statusInfo = getStatusBadge(data);
+                        return `<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.class}">${statusInfo.badge}</span>`;
+                    }
+                },
+                { data: 'tanggal_update', render: formatDate },
+                {
+                    data: null, orderable: false,
+                    render: (data, type, row) => {
+                        let btns = `<button onclick="openDetailModal(${row.Surat_id})" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">Detail</button>`;
+                        if (row.status_pengajuan === 'VERIFIKASI_FASILITAS') {
+                            btns += ` <button onclick="openFacilityVerificationModal(${row.Surat_id})" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs">Verifikasi Fasilitas</button>`;
+                        } else if (row.pembayaran.some(p => p.status_bukti === 'BELUM_DIVERIFIKASI' && p.bukti_pembayaran)) {
+                            btns += ` <button onclick="openPaymentVerificationModal(${row.Surat_id})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">Verifikasi Bayar</button>`;
+                        }
+                        return `<div class="flex space-x-2">${btns}</div>`;
+                    }
+                }
+            ],
+
+            
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
+            pageLength: 10,
+            order: [[ 0, 'asc' ]] // Urutkan berdasarkan(kolom ke-1)
+        });
+
+        async function submitFacilityVerification() { 
+            const isLengkap = document.getElementById('complete').checked;
+            const status = isLengkap ? "LENGKAP" : "TIDAK_LENGKAP";
+            let kerusakan = [];
+
+            if (!isLengkap) {
+                document.querySelectorAll('#facilityList .facility-item').forEach(item => {
+                    const nama = item.querySelector('input[type="text"]').value;
+                    const biaya = item.querySelector('input[type="number"]').value;
+                    if (nama && biaya) {
+                        kerusakan.push({ nama_fasilitas: nama, biaya_kerusakan: Number(biaya) });
+                    }
+                });
+            }
+            
+            try {
+                const response = await fetch(`/api/pengelola/bebas-asrama/${currentSubmissionId}/verifikasi-fasilitas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fasilitas_status: status, kerusakan: kerusakan })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                
+                showNotification('Verifikasi fasilitas berhasil disimpan.', 'success');
+                closeModal('facilityVerificationModal');
+                reloadTable(); 
+            } catch (error) {
+                console.error('Gagal verifikasi fasilitas:', error); 
+                showNotification('Gagal menyimpan verifikasi.', 'error'); 
+            }
+        };
+        
+        async function approvePayment() {
+            try {
+                const response = await fetch(`/api/pengelola/pembayaran/${currentSubmissionId}/approve`, { method: 'POST' });
+                if (!response.ok) throw new Error('Gagal menyetujui pembayaran.');
+                
+                showNotification('Pembayaran berhasil diverifikasi.', 'success');
+                closeModal('paymentVerificationModal');
+                reloadTable();
+            } catch(error) {
+                showNotification(error.message, 'error');
+            }
+        }
+        
+        async function rejectPayment() {
+            try {
+                const response = await fetch(`/api/pengelola/pembayaran/${currentSubmissionId}/reject`, { method: 'POST' });
+                if (!response.ok) throw new Error('Gagal menolak pembayaran.');
+                
+                showNotification('Pembayaran berhasil ditolak.', 'warning');
+                closeModal('paymentVerificationModal');
+                reloadTable();
+            } catch(error) {
+                showNotification(error.message, 'error');
+            }
+        }
+        
+        // --- EVENT LISTENER BARU (menggunakan JQuery) ---
+        $('#submitFacilityBtn').on('click', submitFacilityVerification);
+        $('#approvePaymentBtn').on('click', approvePayment);
+        $('#rejectPaymentBtn').on('click', rejectPayment);
+    });
 </script>
