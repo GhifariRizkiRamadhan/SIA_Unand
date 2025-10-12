@@ -56,7 +56,7 @@ const showDtPenghuni = async (req, res) => {
     // Render isi dataPenghuni.ejs sebagai body
     const body = await ejs.renderFile(
       path.join(__dirname, '../views/pengelola/dataPenghuni.ejs'),
-      { 
+      {
         user,
         penghuniAktif,
         penghuniTidakAktif,
@@ -87,7 +87,7 @@ const showDtPenghuni = async (req, res) => {
 
 const tambahPenghuni = async (req, res) => {
   try {
-    const { nama, nim, jurusan, status } = req.body;
+    const { nama, nim, jurusan, status, kipk } = req.body;
 
     // Validasi
     if (!nama || !nim || !jurusan) {
@@ -136,6 +136,7 @@ const tambahPenghuni = async (req, res) => {
         jurusan,
         foto: fotoPath,
         status: status || 'aktif',
+        kipk: kipk || 'ya', // Default KIP-K adalah "ya"
         user_id
       }
     });
@@ -156,7 +157,7 @@ const tambahPenghuni = async (req, res) => {
 
 const editPenghuni = async (req, res) => {
   try {
-    const { mahasiswa_id, nama, nim, jurusan, status } = req.body;
+    const { mahasiswa_id, nama, nim, jurusan, status, kipk } = req.body;
 
     // Validasi
     if (!mahasiswa_id || !nama || !nim || !jurusan || !status) {
@@ -194,7 +195,8 @@ const editPenghuni = async (req, res) => {
       nim,
       nama,
       jurusan,
-      status
+      status,
+      kipk: kipk || 'ya'
     };
 
     // Jika ada foto baru

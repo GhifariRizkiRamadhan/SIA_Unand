@@ -40,6 +40,7 @@ model mahasiswa {
   jurusan String? @db.VarChar(100)
   foto String? @db.VarChar(255)
   status String? @default("aktif") @db.VarChar(50)
+  kipk String? @default("ya") @db.VarChar(10)
   user_id String @db.VarChar(50)
   izinkeluar izinkeluar[]
   user user @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "mahasiswa_ibfk_1")

@@ -15,14 +15,13 @@ const regcon = {
       res.status(500).json({ success: false, message: error.message });
     }
   },
-  
+
   register: async (req, res) => {
     try {
       const { name, email, password, confirmPassword, nim, jurusan } = req.body;
       
       // Basic validation
       if (!name || !email || !password || !confirmPassword || !nim || !jurusan) {
-        // Hapus file jika ada yang diupload
         if (req.file) {
           fs.unlinkSync(req.file.path);
         }
@@ -44,7 +43,6 @@ const regcon = {
       
       // Validate password match
       if (password !== confirmPassword) {
-        // Hapus file yang diupload
         if (req.file) {
           fs.unlinkSync(req.file.path);
         }
@@ -57,7 +55,6 @@ const regcon = {
       
       // Validate password length
       if (password.length < 6) {
-        // Hapus file yang diupload
         if (req.file) {
           fs.unlinkSync(req.file.path);
         }
@@ -71,7 +68,6 @@ const regcon = {
       // Check if email already exists
       const emailExists = await User.emailExists(email);
       if (emailExists) {
-        // Hapus file yang diupload
         if (req.file) {
           fs.unlinkSync(req.file.path);
         }
@@ -85,7 +81,6 @@ const regcon = {
       // Check if NIM already exists
       const nimExists = await User.nimExists(nim);
       if (nimExists) {
-        // Hapus file yang diupload
         if (req.file) {
           fs.unlinkSync(req.file.path);
         }
@@ -112,7 +107,8 @@ const regcon = {
         role: 'mahasiswa',
         nim,
         jurusan,
-        foto: fotoPath
+        foto: fotoPath,
+        kipk: 'ya' // Default status KIP-K adalah "ya"
       };
       
       // Create user
