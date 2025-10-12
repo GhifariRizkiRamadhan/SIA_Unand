@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const ejs = require('ejs');
 const User = require('../models/userModels');
 const path = require('path');
+const {prisma} = require('../config/database');
 
 const showDashboard = async (req, res) => {
    try {
@@ -14,13 +15,52 @@ const showDashboard = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    const totalUsers = await User.countAll();
+    const totalMahasiswaAktif = await prisma.mahasiswa.count({
+      where: {
+        status: 'aktif'
+      }
+    });
+
+
+     const sevenDaysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+
+    // Hitung mahasiswa baru dalam 7 hari terakhir
+    const penambahan = await prisma.mahasiswa.count({
+      where: {
+        createdAt: {
+          gte: sevenDaysAgo // gte = greater than or equal
+        }
+      }
+    });
+
+    // Hitung mahasiswa yang dinonaktifkan dalam 7 hari terakhir
+    const pengurangan = await prisma.mahasiswa.count({
+      where: {
+        status: 'tidak aktif',
+        updatedAt: {
+          gte: sevenDaysAgo
+        }
+      }
+    });
+    
+    const perubahan = penambahan - pengurangan;
+
+    const totalSelesai = await prisma.suratbebasasrama.count({
+      where: {
+        status_pengajuan: 'SELESAI'
+      }
+    });
 
     // Render isi dashboard.ejs sebagai body
     const body = await ejs.renderFile(
       path.join(__dirname, '../views/pengelola/dashboard.ejs'),
-      { user, totalUsers }
+      { user, 
+        totalMahasiswaAktif,
+        perubahanPenghuni: perubahan,
+        totalSelesai:totalSelesai
+       }
     );
+
     res.render("layouts/main", { 
       title: 'Dashboard',
       pageTitle: 'Dashboard',
