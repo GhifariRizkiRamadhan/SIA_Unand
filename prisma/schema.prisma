@@ -12,7 +12,7 @@ model izinkeluar {
   reason          String           @db.VarChar(255)
   date_requested  DateTime         @db.Date
   // Waktu submit pengajuan (jam tanggal submit)
-  submitted_at    DateTime         @default(now()) @db.DateTime
+  submitted_at    DateTime      @default(now()) @db.Timestamp(0)
   // Waktu keluar dan kembali
   date_out        DateTime?        @db.DateTime
   date_return     DateTime?        @db.DateTime
