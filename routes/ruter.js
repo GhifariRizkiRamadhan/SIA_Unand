@@ -31,9 +31,13 @@ router.get("/logout", controller1.authController.logout);
 
 // Profile Routes
 const profileController = require("../controller/conProfile");
-
 router.get("/profile", authMiddleware, profileController.showProfile);
 router.post("/profile/update", authMiddleware, uploadMahasiswaFoto.single('foto'), profileController.updateProfile);
+
+// Forgot Password Routes
+const forgotPasswordController = require("../controller/conForgot");
+router.get("/forgot-password", redirectIfAuthenticated, forgotPasswordController.showForgotPassword);
+router.post("/forgot-password", redirectIfAuthenticated, forgotPasswordController.resetPassword);
 
 // ===================
 // Mahasiswa
