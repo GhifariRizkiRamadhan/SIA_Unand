@@ -84,10 +84,14 @@ const ajukanBebasAsrama = async (req, res) => {
       });
     }
 
+    const BIAYA_DEFAULT = 2000000;
+    const isKipk = String(mahasiswa.kipk).toLowerCase().trim() === 'ya';
+    const totalBiaya = isKipk ? 0 : BIAYA_DEFAULT;
+
     const pengajuan = await BebasAsrama.create({
       mahasiswa_id: mahasiswaId,
       nomor_pengajuan: `SB-${Date.now()}`,
-      total_biaya: req.body.total_biaya || 2000000,
+      total_biaya: totalBiaya,
       status_pengajuan: "VERIFIKASI_FASILITAS"
     });
 

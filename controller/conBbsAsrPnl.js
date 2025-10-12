@@ -78,15 +78,35 @@ const verifikasiFasilitas = async (req, res) => {
       });
     }
 
-    // Hitung total biaya tambahan dari array kerusakan
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+        return res.status(400).json({ success: false, message: "ID pengajuan tidak valid." });
+    }
+
+    const pengajuan = await prisma.suratbebasasrama.findUnique({
+      where: { Surat_id: numericId },
+      include: { mahasiswa: true } // Wajib untuk mendapatkan status KIPK
+    });
+
+    if (!pengajuan) {
+      return res.status(404).json({ success: false, message: "Pengajuan tidak ditemukan." });
+    }
+
+    const isKipk = pengajuan.mahasiswa && String(pengajuan.mahasiswa.kipk).toLowerCase().trim() === 'ya';
+    const biayaPokok = isKipk ? 0 : 2000000;
+    
     let totalBiayaTambahan = 0;
     if (fasilitas_status === 'TIDAK_LENGKAP' && Array.isArray(kerusakan)) {
       totalBiayaTambahan = kerusakan.reduce((sum, item) => sum + (Number(item.biaya_kerusakan) || 0), 0);
     }
     
-    const numericId = parseInt(id, 10);
-    if (isNaN(numericId)) {
-        return res.status(400).json({ success: false, message: "ID pengajuan tidak valid." });
+    let statusAkhir = "MENUNGGU_PEMBAYARAN";
+    const totalBiayaAkhir = biayaPokok + totalBiayaTambahan;
+
+    // 3. Kondisi Khusus: Jika mahasiswa KIPK DAN fasilitasnya lengkap
+    if (isKipk && fasilitas_status === 'LENGKAP') {
+        // Tidak ada biaya apapun, langsung ubah status menjadi SELESAI
+        statusAkhir = "SELESAI";
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -102,8 +122,8 @@ const verifikasiFasilitas = async (req, res) => {
         data: {
           fasilitas_status: fasilitas_status,
           biaya_tambahan: totalBiayaTambahan,
-          total_biaya: 2000000 + totalBiayaTambahan,
-          status_pengajuan: "MENUNGGU_PEMBAYARAN",
+          total_biaya: totalBiayaAkhir,
+          status_pengajuan: statusAkhir,
           tanggal_update: new Date()
         }
       });
