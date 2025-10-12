@@ -29,6 +29,12 @@ router.get("/register", redirectIfAuthenticated, controller2.regcon.showRegis);
 router.post("/register", redirectIfAuthenticated, uploadMahasiswaFoto.single('foto'), controller2.regcon.register);
 router.get("/logout", controller1.authController.logout);
 
+// Profile Routes
+const profileController = require("../controller/conProfile");
+
+router.get("/profile", authMiddleware, profileController.showProfile);
+router.post("/profile/update", authMiddleware, uploadMahasiswaFoto.single('foto'), profileController.updateProfile);
+
 // ===================
 // Mahasiswa
 // ===================

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - SIA Asrama Unand</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .section-card {
+            transition: all 0.3s ease;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center mb-2">
+                <a href="/<%= profileData.role %>/dashboard" class="text-blue-600 hover:text-blue-700 mr-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800">Profile Saya</h1>
+            </div>
+            <p class="text-sm text-gray-500">Kelola informasi profile Anda</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-3.5 mb-4 rounded-md shadow-sm flex items-center justify-between text-sm" id="alertError">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2.5 text-base"></i>
+                    <span><%= error %></span>
+                </div>
+                <button onclick="document.getElementById('alertError').remove()" class="text-red-700 hover:text-red-900">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+        <% } %>
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3.5 mb-4 rounded-md shadow-sm flex items-center justify-between text-sm" id="alertSuccess">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2.5 text-base"></i>
+                    <span><%= success %></span>
+                </div>
+                <button onclick="document.getElementById('alertSuccess').remove()" class="text-green-700 hover:text-green-900">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+        <% } %>
+
+        <form action="/profile/update" method="POST" enctype="multipart/form-data" id="profileForm">
+            <!-- Profile Picture & Basic Info -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-5 section-card">
+                <div class="flex flex-col md:flex-row md:items-center md:space-x-6">
+                    <!-- Avatar -->
+                    <div class="flex flex-col items-center mb-4 md:mb-0">
+                        <div id="avatarPreview" class="avatar-preview rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold mb-3 overflow-hidden">
+                            <% if (profileData.mahasiswa && profileData.mahasiswa.foto) { %>
+                                <img src="<%= profileData.mahasiswa.foto %>" alt="Avatar" class="w-full h-full object-cover">
+                            <% } else { %>
+                                <span><%= profileData.name.charAt(0).toUpperCase() %></span>
+                            <% } %>
+                        </div>
+                        
+                        <% if (profileData.role === 'mahasiswa') { %>
+                            <label for="foto" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-md text-sm font-medium transition">
+                                <i class="fas fa-camera mr-2"></i>Ganti Foto
+                            </label>
+                            <input type="file" id="foto" name="foto" accept="image/jpeg,image/jpg,image/png" class="hidden" onchange="previewPhoto(event)">
+                            <p class="text-xs text-gray-500 mt-2 text-center">JPG, PNG (Max. 2MB)</p>
+                        <% } %>
+                    </div>
+
+                    <!-- Basic Info -->
+                    <div class="flex-1">
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full mb-2">
+                                <%= profileData.role === 'mahasiswa' ? 'Mahasiswa' : 'Pengelola Asrama' %>
+                            </span>
+                            <h2 class="text-2xl font-bold text-gray-800"><%= profileData.name %></h2>
+                            <p class="text-sm text-gray-500"><%= profileData.email %></p>
+                            <% if (profileData.mahasiswa) { %>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <i class="fas fa-id-card mr-1"></i>
+                                    NIM: <%= profileData.mahasiswa.nim %>
+                                </p>
+                            <% } %>
+                        </div>
+
+                        <% if (profileData.mahasiswa) { %>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Jurusan</p>
+                                    <p class="font-medium text-gray-800"><%= profileData.mahasiswa.jurusan || '-' %></p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Status</p>
+                                    <% if (profileData.mahasiswa.status === 'aktif') { %>
+                                        <span class="inline-flex items-center bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-check-circle mr-1"></i>Aktif
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-times-circle mr-1"></i>Tidak Aktif
+                                        </span>
+                                    <% } %>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">KIP-K</p>
+                                    <% if (profileData.mahasiswa.kipk === 'ya') { %>
+                                        <span class="inline-flex items-center bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-check-circle mr-1"></i>Ya
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                                            <i class="fas fa-times-circle mr-1"></i>Tidak
+                                        </span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-5 section-card">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-user-edit mr-2 text-blue-600"></i>
+                    Informasi Personal
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Nama Lengkap <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" value="<%= profileData.name %>" required
+                            class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Masukkan nama lengkap">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Email <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" name="email" value="<%= profileData.email %>" required
+                            class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="email@example.com">
+                    </div>
+
+                    <% if (profileData.mahasiswa) { %>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                NIM <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="nim" value="<%= profileData.mahasiswa.nim %>" required
+                                class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Nomor Induk Mahasiswa">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Jurusan
+                            </label>
+                            <input type="text" name="jurusan" value="<%= profileData.mahasiswa.jurusan || '' %>"
+                                class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Contoh: Teknik Informatika">
+                        </div>
+                    <% } %>
+                </div>
+
+                <% if (profileData.mahasiswa) { %>
+                    <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                        <div class="flex">
+                            <i class="fas fa-info-circle text-yellow-600 mt-0.5 mr-2"></i>
+                            <div class="text-xs text-yellow-800">
+                                <p class="font-semibold mb-1">Informasi:</p>
+                                <p>Status Aktif dan Status KIP-K tidak dapat diubah sendiri. Silakan hubungi pengelola asrama jika perlu perubahan.</p>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Change Password -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-5 section-card">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-key mr-2 text-blue-600"></i>
+                    Ubah Password
+                </h3>
+
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div class="flex">
+                        <i class="fas fa-info-circle text-blue-600 mt-0.5 mr-2 text-sm"></i>
+                        <p class="text-xs text-blue-800">
+                            Kosongkan jika tidak ingin mengubah password. Password minimal 6 karakter.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Password Lama
+                        </label>
+                        <div class="relative">
+                            <input type="password" name="oldPassword" id="oldPassword"
+                                class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                                placeholder="Masukkan password lama">
+                            <button type="button" onclick="togglePasswordVisibility('oldPassword')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye" id="oldPassword-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Password Baru
+                        </label>
+                        <div class="relative">
+                            <input type="password" name="newPassword" id="newPassword"
+                                class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                                placeholder="Masukkan password baru"
+                                oninput="checkPasswordStrength(this.value)">
+                            <button type="button" onclick="togglePasswordVisibility('newPassword')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye" id="newPassword-icon"></i>
+                            </button>
+                        </div>
+                        <div id="passwordStrength" class="mt-2 hidden">
+                            <div class="password-strength bg-gray-200" id="strengthBar"></div>
+                            <p class="text-xs mt-1" id="strengthText"></p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Konfirmasi Password Baru
+                        </label>
+                        <div class="relative">
+                            <input type="password" name="confirmPassword" id="confirmPassword"
+                                class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                                placeholder="Ulangi password baru"
+                                oninput="checkPasswordMatch()">
+                            <button type="button" onclick="togglePasswordVisibility('confirmPassword')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye" id="confirmPassword-icon"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs mt-1 hidden" id="passwordMatchText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3">
+                <a href="/<%= profileData.role %>/dashboard" 
+                    class="px-5 py-2.5 text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md transition">
+                    <i class="fas fa-times mr-2"></i>Batal
+                </a>
+                <button type="submit" id="submitBtn"
+                    class="px-5 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition">
+                    <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Preview photo
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('avatarPreview');
+            
+            if (file) {
+                // Validasi ukuran file
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file terlalu besar! Maksimal 2MB');
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Validasi tipe file
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Format file tidak didukung! Gunakan JPG, JPEG, atau PNG');
+                    event.target.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Toggle password visibility
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '-icon');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Check password strength
+        function checkPasswordStrength(password) {
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            const container = document.getElementById('passwordStrength');
+            
+            if (!password) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            
+            let strength = 0;
+            let text = '';
+            let color = '';
+            
+            if (password.length >= 6) strength++;
+            if (password.length >= 10) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/\d/.test(password)) strength++;
+            if (/[^a-zA-Z\d]/.test(password)) strength++;
+            
+            if (strength <= 2) {
+                text = 'Lemah';
+                color = 'bg-red-500';
+                strengthBar.style.width = '33%';
+            } else if (strength <= 3) {
+                text = 'Sedang';
+                color = 'bg-yellow-500';
+                strengthBar.style.width = '66%';
+            } else {
+                text = 'Kuat';
+                color = 'bg-green-500';
+                strengthBar.style.width = '100%';
+            }
+            
+            strengthBar.className = `password-strength ${color}`;
+            strengthText.textContent = `Kekuatan password: ${text}`;
+            strengthText.className = `text-xs mt-1 ${color.replace('bg-', 'text-')}`;
+        }
+
+        // Check password match
+        function checkPasswordMatch() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const matchText = document.getElementById('passwordMatchText');
+            
+            if (!confirmPassword) {
+                matchText.classList.add('hidden');
+                return;
+            }
+            
+            matchText.classList.remove('hidden');
+            
+            if (newPassword === confirmPassword) {
+                matchText.textContent = 'Password cocok ✓';
+                matchText.className = 'text-xs mt-1 text-green-600';
+            } else {
+                matchText.textContent = 'Password tidak cocok ✗';
+                matchText.className = 'text-xs mt-1 text-red-600';
+            }
+        }
+
+        // Form validation
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const oldPassword = document.getElementById('oldPassword').value;
+            
+            // Jika ada input password
+            if (oldPassword || newPassword || confirmPassword) {
+                // Semua field password harus diisi
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                    e.preventDefault();
+                    alert('Jika ingin mengubah password, semua field password harus diisi');
+                    return;
+                }
+                
+                // Password baru harus cocok
+                if (newPassword !== confirmPassword) {
+                    e.preventDefault();
+                    alert('Password baru dan konfirmasi tidak cocok');
+                    return;
+                }
+                
+                // Password minimal 6 karakter
+                if (newPassword.length < 6) {
+                    e.preventDefault();
+                    alert('Password baru minimal 6 karakter');
+                    return;
+                }
+            }
+            
+            // Disable submit button dan tampilkan loading
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+        });
+
+        // Auto hide alerts
+        setTimeout(function() {
+            const alertError = document.getElementById('alertError');
+            const alertSuccess = document.getElementById('alertSuccess');
+            if (alertError) alertError.remove();
+            if (alertSuccess) alertSuccess.remove();
+        }, 5000);
+    </script>
+</body>
+</html>
