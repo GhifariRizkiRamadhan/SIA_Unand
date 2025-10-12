@@ -233,6 +233,142 @@ const createPemberitahuanNotification = async (title, pemberitahuanId) => {
   }
 };
 
+// Fungsi untuk membuat notifikasi izin keluar
+const createIzinKeluarNotification = async (mahasiswaId, izinId, status = null) => {
+  try {
+    // Jika status null, berarti ini pengajuan baru
+    if (!status) {
+      // Ambil data mahasiswa
+      const mahasiswa = await prisma.mahasiswa.findUnique({
+        where: { mahasiswa_id: mahasiswaId },
+        include: { user: true }
+      });
+
+      // Notifikasi ke pengelola
+      const pengelolas = await prisma.pengelolaasrama.findMany({
+        include: { user: true }
+      });
+
+      const notifications = pengelolas.map(pengelola =>
+        createNotification(
+          pengelola.user_id,
+          'Pengajuan Izin Keluar Baru',
+          `${mahasiswa.user.name} telah mengajukan izin keluar asrama`,
+          'izin_keluar',
+          izinId.toString()
+        )
+      );
+
+      await Promise.all(notifications);
+    } else {
+      // Update status - notifikasi ke mahasiswa
+      const mahasiswa = await prisma.mahasiswa.findUnique({
+        where: { mahasiswa_id: mahasiswaId },
+        include: { user: true }
+      });
+
+      await createNotification(
+        mahasiswa.user_id,
+        'Update Status Izin Keluar',
+        `Status izin keluar Anda telah diperbarui menjadi "${status}"`,
+        'izin_keluar_status',
+        izinId.toString()
+      );
+    }
+  } catch (error) {
+    console.error('Error creating izin keluar notification:', error);
+    throw error;
+  }
+};
+
+// Fungsi untuk membuat notifikasi pelaporan kerusakan
+const createKerusakanNotification = async (mahasiswaId, kerusakanId, status = null) => {
+  try {
+    if (!status) {
+      // Pelaporan baru
+      const mahasiswa = await prisma.mahasiswa.findUnique({
+        where: { mahasiswa_id: mahasiswaId },
+        include: { user: true }
+      });
+
+      const pengelolas = await prisma.pengelolaasrama.findMany({
+        include: { user: true }
+      });
+
+      const notifications = pengelolas.map(pengelola =>
+        createNotification(
+          pengelola.user_id,
+          'Laporan Kerusakan Baru',
+          `${mahasiswa.user.name} telah melaporkan kerusakan fasilitas`,
+          'kerusakan',
+          kerusakanId.toString()
+        )
+      );
+
+      await Promise.all(notifications);
+    } else {
+      // Update status
+      const mahasiswa = await prisma.mahasiswa.findUnique({
+        where: { mahasiswa_id: mahasiswaId },
+        include: { user: true }
+      });
+
+      await createNotification(
+        mahasiswa.user_id,
+        'Update Status Laporan Kerusakan',
+        `Status laporan kerusakan Anda telah diperbarui menjadi "${status}"`,
+        'kerusakan_status',
+        kerusakanId.toString()
+      );
+    }
+  } catch (error) {
+    console.error('Error creating kerusakan notification:', error);
+    throw error;
+  }
+};
+
+// Fungsi untuk membuat notifikasi pembayaran
+const createPembayaranNotification = async (mahasiswaId, pembayaranId, status) => {
+  try {
+    // Ambil data mahasiswa
+    const mahasiswa = await prisma.mahasiswa.findUnique({
+      where: { mahasiswa_id: mahasiswaId },
+      include: { user: true }
+    });
+
+    // Notifikasi ke mahasiswa
+    await createNotification(
+      mahasiswa.user_id,
+      'Update Status Pembayaran',
+      `Status pembayaran Anda telah diperbarui menjadi "${status}"`,
+      'pembayaran',
+      pembayaranId.toString()
+    );
+
+    // Jika pembayaran berhasil, notifikasi ke pengelola
+    if (status === 'berhasil') {
+      const pengelolas = await prisma.pengelolaasrama.findMany({
+        include: { user: true }
+      });
+
+      const notifications = pengelolas.map(pengelola =>
+        createNotification(
+          pengelola.user_id,
+          'Pembayaran Baru',
+          `${mahasiswa.user.name} telah melakukan pembayaran`,
+          'pembayaran_berhasil',
+          pembayaranId.toString()
+        )
+      );
+
+      await Promise.all(notifications);
+    }
+  } catch (error) {
+    console.error('Error creating pembayaran notification:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getNotifications,
   markAsRead,
@@ -240,5 +376,8 @@ module.exports = {
   createNotification,
   createSuratBebasAsramaNotification,
   createStatusUpdateNotification,
-  createPemberitahuanNotification
+  createPemberitahuanNotification,
+  createIzinKeluarNotification,
+  createKerusakanNotification,
+  createPembayaranNotification
 };

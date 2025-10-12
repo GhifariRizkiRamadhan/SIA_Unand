@@ -2,6 +2,7 @@ require('dotenv').config();
 const ejs = require('ejs');
 const path = require('path');
 const { prisma } = require('../config/database');
+const { createKerusakanNotification } = require('./notification');
 
 const showFormPelaporan = async (req, res) => {
   try {
@@ -32,8 +33,19 @@ const submitPelaporan = async (req, res) => {
     }
 
     const laporan = await prisma.pelaporankerusakan.create({
-      data: { jenis: jenis.trim(), description: description.trim(), location: location.trim(), photo: photoPath, mahasiswa_id: mahasiswaId }
+      data: {
+        description: description.trim(),
+        location: location.trim(),
+        jenis: jenis.trim(),
+        photo: photoPath,
+        mahasiswa_id: mahasiswaId
+        // date_submitted akan otomatis diisi oleh Prisma dengan waktu sekarang
+      }
     });
+
+    // Create notification for pengelola
+    await createKerusakanNotification(mahasiswaId, laporan.laporan_id);
+    
     res.status(201).json({ success: true, data: laporan });
   } catch (error) {
     console.error('submitPelaporan error:', error);
@@ -81,7 +93,26 @@ const updateStatusPelaporan = async (req, res) => {
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Status tidak valid' });
     }
-    const laporan = await prisma.pelaporankerusakan.update({ where: { laporan_id: Number(id) }, data: { status } });
+    
+    // Retrieve the laporan with mahasiswa information
+    const currentLaporan = await prisma.pelaporankerusakan.findUnique({
+      where: { laporan_id: Number(id) },
+      include: { mahasiswa: true }
+    });
+
+    if (!currentLaporan) {
+      return res.status(404).json({ success: false, message: 'Laporan tidak ditemukan' });
+    }
+
+    // Update status
+    const laporan = await prisma.pelaporankerusakan.update({ 
+      where: { laporan_id: Number(id) }, 
+      data: { status } 
+    });
+
+    // Create notification for mahasiswa about status update
+    await createKerusakanNotification(currentLaporan.mahasiswa_id, laporan.laporan_id, status);
+    
     res.json({ success: true, data: laporan });
   } catch (error) {
     console.error('updateStatusPelaporan error:', error);

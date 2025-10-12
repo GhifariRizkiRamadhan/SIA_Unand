@@ -2,6 +2,7 @@ require('dotenv').config();
 const ejs = require('ejs');
 const path = require('path');
 const { prisma } = require('../config/database');
+const { createIzinKeluarNotification } = require('./notification');
 
 const showFormMahasiswa = async (req, res) => {
   try {
@@ -72,9 +73,13 @@ const submitIzinMahasiswa = async (req, res) => {
         date_out: outDateTime,
         date_return: returnDateTime,
         document: documentPath,
-        mahasiswa_id: mahasiswaId
+        mahasiswa_id: mahasiswaId,
+        status: 'pending'
       }
     });
+
+    // Kirim notifikasi ke pengelola
+    await createIzinKeluarNotification(mahasiswaId, izin.izin_id);
 
     return res.status(201).json({ success: true, data: izin });
   } catch (error) {
@@ -159,6 +164,10 @@ const approveIzin = async (req, res) => {
       where: { izin_id: izinId },
       data: { status: 'approved', date_approved: new Date(), Pengelola_id: pengelolaId }
     });
+
+    // Kirim notifikasi ke mahasiswa
+    await createIzinKeluarNotification(current.mahasiswa_id, izinId, 'disetujui');
+    
     return res.json({ success: true, data: izin });
   } catch (error) {
     console.error('approveIzin error:', error);
@@ -193,6 +202,10 @@ const rejectIzin = async (req, res) => {
       where: { izin_id: izinId },
       data: { status: 'rejected', notes: String(notes).trim(), Pengelola_id: pengelolaId }
     });
+
+    // Kirim notifikasi ke mahasiswa
+    await createIzinKeluarNotification(current.mahasiswa_id, izinId, 'ditolak');
+    
     return res.json({ success: true, data: izin });
   } catch (error) {
     console.error('rejectIzin error:', error);
