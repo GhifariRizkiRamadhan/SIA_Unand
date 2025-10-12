@@ -25,38 +25,23 @@
                     
                     <!-- Stats Content -->
                     <div>
-                        <p class="text-gray-500 text-sm font-medium mb-1">Penghuni</p>
-                        <p class="text-3xl font-bold text-gray-800"><%= totalUsers.toLocaleString() %></p>
+                        <p class="text-gray-500 text-sm font-medium mb-1">Total Penghuni</p>
+                        <p class="text-3xl font-bold text-gray-800"><%= totalMahasiswaAktif.toLocaleString() %></p>
                         <div class="flex items-center mt-2">
-                            <svg class="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="text-sm text-green-600 font-medium">7</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add more cards here if needed -->
-        <!-- Example: Additional stat cards -->
-        
-        <div class="stats-card bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 text-sm font-medium mb-1">Data Lain</p>
-                        <p class="text-3xl font-bold text-gray-800">1,234</p>
-                        <div class="flex items-center mt-2">
-                            <svg class="w-4 h-4 text-blue-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="text-sm text-blue-600 font-medium">12</span>
+                            <% if (perubahanPenghuni > 0) { %>
+                                <svg class="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-sm text-green-600 font-medium">+<%= perubahanPenghuni %></span>
+                            <% } else if (perubahanPenghuni < 0) { %>
+                                <svg class="w-4 h-4 text-red-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="text-sm text-red-600 font-medium"><%= perubahanPenghuni %></span>
+                            <% } else { %>
+                                <span class="text-sm text-gray-500 font-medium">- 0</span>
+                            <% } %>
+                            <span class="text-sm text-gray-500 ml-1">minggu ini</span>
                         </div>
                     </div>
                 </div>
@@ -72,13 +57,36 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-gray-500 text-sm font-medium mb-1">Data Lain</p>
-                        <p class="text-3xl font-bold text-gray-800">1,234</p>
+                        <p class="text-gray-500 text-sm font-medium mb-1">Total Surat Bebas Asrama (Selesai)</p>
+                        <p class="text-3xl font-bold text-gray-800"><%= totalSelesai.toLocaleString() %></p>
                         <div class="flex items-center mt-2">
-                            <svg class="w-4 h-4 text-blue-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                             </svg>
-                            <span class="text-sm text-blue-600 font-medium">12</span>
+                            <span class="text-sm text-green-600 font-medium">+1 minggu ini</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                
+        <div class="stats-card bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium mb-1">Total Laporan Kerusakan</p>
+                        <p class="text-3xl font-bold text-gray-800">5</p>
+                        <div class="flex items-center mt-2">
+                            <svg class="w-4 h-4 text-green-600 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-sm text-green-600 font-medium">+5 minggu ini</span>
                         </div>
                     </div>
                 </div>
