@@ -1,0 +1,273 @@
+<div class="p-6">
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Daftar Pengajuan Izin</h2>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm min-w-[800px]" id="tableIzin">
+      <thead>
+        <tr class="text-left">
+          <th class="p-2">Tanggal Submit</th>
+          <th class="p-2">Mahasiswa</th>
+          <th class="p-2">NIM</th>
+          <th class="p-2">Tanggal Keluar</th>
+          <th class="p-2">Alasan</th>
+          <th class="p-2">Dokumen</th>
+          <th class="p-2">Status</th>
+          <th class="p-2">Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function loadIzin() {
+    const res = await fetch('/api/pengelola/izin');
+    const json = await res.json();
+    const tbody = document.querySelector('#tableIzin tbody');
+    tbody.innerHTML = '';
+    if (json.success && Array.isArray(json.data)) {
+      const data = [...json.data].sort((a,b)=> new Date(b.submitted_at || b.date_requested) - new Date(a.submitted_at || a.date_requested));
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-id', item.izin_id);
+        tr.setAttribute('data-notes', item.notes || '');
+        tr.setAttribute('data-reason', item.reason || '');
+        const tanggalKeluar = item.date_out ? new Date(item.date_out) : (item.date_requested ? new Date(item.date_requested) : null);
+        // Simpan tanggal untuk digunakan di popup konfirmasi reset
+        tr.setAttribute('data-tanggal', tanggalKeluar ? tanggalKeluar.toLocaleString('id-ID') : '-');
+        tr.setAttribute('data-tanggal', tanggalKeluar ? tanggalKeluar.toLocaleString('id-ID') : '-');
+        const actions = item.status === 'pending'
+          ? `<button class="bg-green-600 text-white px-3 py-1 rounded" data-action="approve">Approve</button>
+             <button class="bg-red-600 text-white px-3 py-1 rounded" data-action="reject">Reject</button>`
+          : `<button class="bg-yellow-600 text-white px-3 py-1 rounded" data-action="edit-notes">Edit</button>
+             <button class="bg-gray-600 text-white px-3 py-1 rounded" data-action="reset">Reset</button>`;
+        tr.innerHTML = `
+          <td class="p-2">${item.submitted_at ? new Date(item.submitted_at).toLocaleString('id-ID') : (item.date_requested ? new Date(item.date_requested).toLocaleString('id-ID') : '-')}</td>
+          <td class="p-2">${item.mahasiswa?.nama || '-'}</td>
+          <td class="p-2">${item.mahasiswa?.nim || '-'}</td>
+          <td class="p-2">${item.date_out ? new Date(item.date_out).toLocaleString('id-ID') : (item.date_requested ? new Date(item.date_requested).toLocaleString('id-ID') : '-')}</td>
+          <td class="p-2">${item.reason}</td>
+          <td class="p-2">${item.document ? `<a href="${item.document}" target="_blank" class="text-blue-600">Lihat</a>` : '-'}</td>
+          <td class="p-2">${renderStatusBadge(item.status)}</td>
+          <td class="p-2 space-x-2">${actions}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Event delegation untuk tombol approve/reject
+  document.querySelector('#tableIzin').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    const row = btn.closest('tr');
+    const id = row?.getAttribute('data-id');
+    const currentNotes = row?.getAttribute('data-notes') || '';
+    if (!id) return;
+    
+    try {
+      if (action === 'approve') {
+        const res = await fetch(`/api/pengelola/izin/${id}/approve`, { method: 'PUT' });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Gagal approve');
+        openNotifyModal('success', 'Pengajuan izin telah di-approve.');
+        loadIzin();
+      } else if (action === 'reject') {
+        openNotesModal(id, 'reject', '');
+        return; // Don't continue processing
+      } else if (action === 'edit-notes') {
+        openNotesModal(id, 'edit', currentNotes);
+        return; // Don't continue processing
+      } else if (action === 'reset') {
+        // Prevent any default behavior
+        e.preventDefault();
+        e.stopPropagation();
+        const nama = row?.children[1]?.textContent || '-';
+        const tanggalKeluar = row?.children[3]?.textContent || '-';
+        openConfirmModal(`Yakin mereset status pengajuan izin atas nama "${nama}" untuk tanggal keluar "${tanggalKeluar}"?\nCatatan akan dihapus dan status kembali Pending.`, () => confirmResetIzin(id));
+        return; // Always return to prevent further processing
+      }
+    } catch (err) {
+      openNotifyModal('error', err.message);
+    }
+  });
+
+  // Modal Catatan
+  function openNotesModal(id, mode, initialNotes) {
+    const modal = document.getElementById('notesModal');
+    const input = document.getElementById('notesInput');
+    const modalId = document.getElementById('modalIzinId');
+    const modalMode = document.getElementById('modalMode');
+    input.value = initialNotes || '';
+    modalId.value = id;
+    modalMode.value = mode;
+    document.getElementById('notesError').classList.add('hidden');
+    modal.classList.remove('hidden');
+  }
+
+  function closeNotesModal() {
+    const modal = document.getElementById('notesModal');
+    modal.classList.add('hidden');
+  }
+
+  async function submitNotes() {
+    const id = document.getElementById('modalIzinId').value;
+    const mode = document.getElementById('modalMode').value;
+    const notes = document.getElementById('notesInput').value.trim();
+    const err = document.getElementById('notesError');
+    if (!notes) {
+      err.textContent = 'Catatan wajib diisi.';
+      err.classList.remove('hidden');
+      return;
+    }
+    try {
+      let url = '';
+      let method = 'PUT';
+      let body = JSON.stringify({ notes });
+      if (mode === 'reject') {
+        url = `/api/pengelola/izin/${id}/reject`;
+      } else {
+        url = `/api/pengelola/izin/${id}/notes`;
+      }
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Gagal menyimpan catatan');
+      closeNotesModal();
+      loadIzin();
+    } catch (e) {
+      err.textContent = e.message;
+      err.classList.remove('hidden');
+    }
+  }
+
+  // Inisialisasi modal events
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('notesCancelBtn')?.addEventListener('click', closeNotesModal);
+    document.getElementById('notesSaveBtn')?.addEventListener('click', submitNotes);
+    document.getElementById('confirmCancelBtn')?.addEventListener('click', closeConfirmModal);
+    document.getElementById('confirmOkBtn')?.addEventListener('click', () => typeof window.__confirmOk === 'function' && window.__confirmOk());
+    document.getElementById('notifyOkBtn')?.addEventListener('click', closeNotifyModal);
+  });
+
+  loadIzin();
+</script>
+
+<!-- Modal Konfirmasi Seragam -->
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+      <h3 class="text-lg font-semibold mb-2">Konfirmasi</h3>
+      <p id="confirmText" class="text-sm text-gray-700 mb-3"></p>
+      <div class="mt-4 flex justify-end space-x-2">
+        <button id="confirmCancelBtn" class="px-4 py-2 rounded border">Batal</button>
+        <button id="confirmOkBtn" class="px-4 py-2 rounded bg-blue-600 text-white">Oke</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openConfirmModal(message, onOk) {
+  const modal = document.getElementById('confirmModal');
+  const text = document.getElementById('confirmText');
+  window.__confirmOk = async () => {
+    try {
+      await onOk();
+    } finally {
+      window.__confirmOk = null;
+    }
+  };
+  text.textContent = message;
+  modal.classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById('confirmModal');
+  modal.classList.add('hidden');
+}
+
+async function confirmResetIzin(id) {
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.disabled = true;
+  try {
+    const res = await fetch(`/api/pengelola/izin/${id}/reset`, { method: 'PUT' });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      openNotifyModal('error', json.message || 'Gagal reset status');
+    } else {
+      closeConfirmModal();
+      openNotifyModal('success', 'Status izin berhasil direset ke Pending.');
+      loadIzin();
+    }
+  } catch (e) {
+    openNotifyModal('error', e.message || 'Terjadi kesalahan');
+  } finally {
+    okBtn.disabled = false;
+  }
+}
+</script>
+
+<!-- Modal Notifikasi Seragam -->
+<div id="notifyModal" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+      <div id="notifyIcon" class="text-2xl mb-2">🔔</div>
+      <div id="notifyText" class="text-sm text-gray-700 mb-3"></div>
+      <div class="mt-4 flex justify-end">
+        <button id="notifyOkBtn" class="px-4 py-2 rounded bg-blue-600 text-white">Oke</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openNotifyModal(type, htmlText) {
+  const modal = document.getElementById('notifyModal');
+  const icon = document.getElementById('notifyIcon');
+  const text = document.getElementById('notifyText');
+  text.innerHTML = htmlText;
+  if (type === 'success') {
+    icon.textContent = '✅';
+  } else if (type === 'error') {
+    icon.textContent = '⚠️';
+  } else {
+    icon.textContent = '🔔';
+  }
+  modal.classList.remove('hidden');
+}
+
+function closeNotifyModal() {
+  document.getElementById('notifyModal').classList.add('hidden');
+}
+</script>
+
+<script>
+// Badge status berwarna: hijau untuk approved, merah untuk rejected
+function renderStatusBadge(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'approved') return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Approved</span>';
+  if (s === 'rejected') return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">Rejected</span>';
+  return `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">${status || 'Pending'}</span>`;
+}
+</script>
+
+<!-- Modal Catatan -->
+<div id="notesModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+      <h3 class="text-lg font-semibold mb-2">Catatan</h3>
+      <p class="text-sm text-gray-600 mb-3">Isi alasan penolakan atau ubah catatan pengajuan.</p>
+      <textarea id="notesInput" class="w-full border rounded p-2" rows="4" placeholder="Tuliskan catatan..."></textarea>
+      <p id="notesError" class="hidden text-xs text-red-600 mt-1"></p>
+      <input type="hidden" id="modalIzinId" />
+      <input type="hidden" id="modalMode" />
+      <div class="mt-4 flex justify-end space-x-2">
+        <button id="notesCancelBtn" class="px-4 py-2 rounded border">Batal</button>
+        <button id="notesSaveBtn" class="px-4 py-2 rounded bg-purple-600 text-white">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>

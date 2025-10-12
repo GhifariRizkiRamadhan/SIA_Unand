@@ -31,34 +31,61 @@ const authController = {
   async login(req, res) {
     try {
       const { email, password, remember } = req.body;
+      const isApiRequest = (
+        (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+        (req.get && typeof req.get === 'function' && (req.get('accept') || '').includes('application/json')) ||
+        (req.is && req.is('application/json')) ||
+        (req.xhr === true)
+      );
 
       // Validation
       if (!email || !password) {
-        return res.render("login", {
-          activePage: "login",
-          error: "Email dan password harus diisi",
-          success: null
-        });
+        if (isApiRequest) {
+          return res.status(400).json({
+            success: false,
+            message: "Email dan password harus diisi"
+          });
+        } else {
+          return res.render("login", {
+            activePage: "login",
+            error: "Email dan password harus diisi",
+            success: null
+          });
+        }
       }
 
       // Find user
       const user = await User.findByEmail(email);
       if (!user) {
-        return res.render("login", {
-          activePage: "login",
-          error: "Email atau password salah",
-          success: null
-        });
+        if (isApiRequest) {
+          return res.status(401).json({
+            success: false,
+            message: "Email atau password salah"
+          });
+        } else {
+          return res.render("login", {
+            activePage: "login",
+            error: "Email atau password salah",
+            success: null
+          });
+        }
       }
 
       // Verify password
       const isValidPassword = await User.verifyPassword(password, user.password);
       if (!isValidPassword) {
-        return res.render("login", {
-          activePage: "login",
-          error: "Email atau password salah",
-          success: null
-        });
+        if (isApiRequest) {
+          return res.status(401).json({
+            success: false,
+            message: "Email atau password salah"
+          });
+        } else {
+          return res.render("login", {
+            activePage: "login",
+            error: "Email atau password salah",
+            success: null
+          });
+        }
       }
 
       // Generate JWT token
@@ -82,25 +109,33 @@ const authController = {
       res.cookie('token', token, cookieOptions);
 
       // --- Bedakan response ---
-    if (req.headers['accept'] && req.headers['accept'].includes('application/json')) {
-      // Kalau request dari Postman / API
-      return res.status(200).json({
-        message: "Login berhasil",
-        token,
-        role: user.role
-      });
-    } else {
-      return redirectByRole(res, user);
-    }
+      // Gunakan req.accepts('json') agar konsisten dengan middleware
+      if (isApiRequest) {
+        // Kalau request dari Postman / API
+        return res.status(200).json({
+          message: "Login berhasil",
+          token,
+          role: user.role
+        });
+      } else {
+        return redirectByRole(res, user);
+      }
 
 
     } catch (error) {
       console.error('Login error:', error);
-      res.render("login", {
-        activePage: "login",
-        error: "Terjadi kesalahan server",
-        success: null
-      });
+      if (isApiRequest) {
+        return res.status(500).json({
+          success: false,
+          message: "Terjadi kesalahan server"
+        });
+      } else {
+        return res.render("login", {
+          activePage: "login",
+          error: "Terjadi kesalahan server",
+          success: null
+        });
+      }
     }
   },
 

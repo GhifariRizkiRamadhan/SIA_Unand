@@ -1,0 +1,154 @@
+<div class="p-6">
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Pelaporan Kerusakan Fasilitas</h2>
+    <form id="laporanForm" class="space-y-4" enctype="multipart/form-data">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Jenis/Judul Kerusakan</label>
+        <input type="text" name="jenis" id="jenis" placeholder="Contoh: Lampu kamar mati" class="mt-1 block w-full border rounded p-2" required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Lokasi</label>
+        <input type="text" name="location" class="mt-1 block w-full border rounded p-2" required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Deskripsi Kerusakan</label>
+        <textarea name="description" class="mt-1 block w-full border rounded p-2" rows="3" required></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Foto (JPG/PNG)</label>
+        <input type="file" name="photo" accept="image/jpeg,image/jpg,image/png" class="mt-1 block w-full border rounded p-2" />
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Laporkan</button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6 mt-6">
+    <h3 class="text-lg font-semibold mb-2">Riwayat Pelaporan</h3>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm min-w-[720px]" id="laporanTable">
+      <thead>
+        <tr class="text-left">
+          <th class="p-2">Tanggal Submit</th>
+          <th class="p-2">Jenis</th>
+          <th class="p-2">Lokasi</th>
+          <th class="p-2">Deskripsi</th>
+          <th class="p-2">Foto</th>
+          <th class="p-2">Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('laporanForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const jenis = document.getElementById('jenis').value;
+    const location = form.querySelector('[name="location"]').value.trim();
+    const description = form.querySelector('[name="description"]').value.trim();
+    const photoInput = form.querySelector('[name="photo"]');
+
+    if (!jenis) {
+      openNotifyModal('error', 'Silakan isi jenis/judul kerusakan');
+      return;
+    }
+    if (location.length < 2) {
+      openNotifyModal('error', 'Lokasi minimal 2 karakter');
+      return;
+    }
+    if (description.length < 10) {
+      openNotifyModal('error', 'Deskripsi minimal 10 karakter');
+      return;
+    }
+    if (photoInput && photoInput.files.length > 0) {
+      const file = photoInput.files[0];
+      const allowed = ['image/jpeg','image/jpg','image/png'];
+      if (!allowed.includes(file.type)) {
+        openNotifyModal('error', 'Foto harus berformat JPG/PNG');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        openNotifyModal('error', 'Ukuran foto maksimal 5MB');
+        return;
+      }
+    }
+
+    const formData = new FormData(form);
+    try {
+      const res = await fetch('/api/pelaporan', { method: 'POST', body: formData });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Gagal mengirim laporan');
+      openNotifyModal('success', '✅ Laporan kerusakan berhasil dikirim!');
+      loadRiwayat();
+      form.reset();
+    } catch (err) {
+      openNotifyModal('error', 'Terjadi kesalahan: ' + err.message);
+    }
+  });
+
+  async function loadRiwayat() {
+    const res = await fetch('/api/pelaporan');
+    const json = await res.json();
+    const tbody = document.querySelector('#laporanTable tbody');
+    tbody.innerHTML = '';
+    if (json.success && Array.isArray(json.data)) {
+      const data = [...json.data].sort((a,b)=> new Date(b.date_submitted) - new Date(a.date_submitted));
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${new Date(item.date_submitted).toLocaleString('id-ID')}</td>
+          <td class="p-2">${item.jenis || '-'}</td>
+          <td class="p-2">${item.location || '-'}</td>
+          <td class="p-2">${item.description}</td>
+          <td class="p-2">${item.photo ? `<a href="${item.photo}" target="_blank" class="text-blue-600">Lihat</a>` : '-'}</td>
+          <td class="p-2"><span class="px-2 py-1 rounded text-white ${item.status==='selesai'?'bg-green-600':(item.status==='ditangani'?'bg-blue-600':'bg-gray-600')}">${item.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  loadRiwayat();
+</script>
+
+<!-- Modal Notifikasi Seragam -->
+<div id="notifyModal" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+      <div id="notifyIcon" class="text-2xl mb-2">🔔</div>
+      <div id="notifyText" class="text-sm text-gray-700 mb-3"></div>
+      <div class="mt-4 flex justify-end">
+        <button id="notifyOkBtn" class="px-4 py-2 rounded bg-blue-600 text-white">Oke</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openNotifyModal(type, htmlText) {
+  const modal = document.getElementById('notifyModal');
+  const icon = document.getElementById('notifyIcon');
+  const text = document.getElementById('notifyText');
+  text.innerHTML = htmlText;
+  if (type === 'success') {
+    icon.textContent = '✅';
+  } else if (type === 'error') {
+    icon.textContent = '⚠️';
+  } else {
+    icon.textContent = '🔔';
+  }
+  modal.classList.remove('hidden');
+}
+
+function closeNotifyModal() {
+  document.getElementById('notifyModal').classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('notifyOkBtn')?.addEventListener('click', closeNotifyModal);
+});
+</script>

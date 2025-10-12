@@ -80,9 +80,17 @@
                 
                 <!-- Perizinan -->
                 <li>
-                    <a href="/perizinan" class="flex items-center px-3 py-3 <%= activeMenu === 'perizinan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                    <a href="/pengelola/perizinan" class="flex items-center px-3 py-3 <%= activeMenu === 'perizinan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
                         <i class="fas fa-file-alt w-5 h-5 mr-3"></i>
                         <span class="sidebar-text font-medium text-sm">Perizinan</span>
+                    </a>
+                </li>
+
+                <!-- Pelaporan Kerusakan (Admin) -->
+                <li>
+                    <a href="/pengelola/pelaporan" class="flex items-center px-3 py-3 <%= activeMenu === 'pelaporan-admin' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
+                        <i class="fas fa-tools w-5 h-5 mr-3"></i>
+                        <span class="sidebar-text font-medium text-sm">Pelaporan Kerusakan</span>
                     </a>
                 </li>
                 

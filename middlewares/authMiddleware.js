@@ -1,11 +1,26 @@
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../config/database');
 
+// Helper redirect sesuai role agar /login mengarahkan ke dashboard yang tepat
+const redirectByRole = (res, user) => {
+  if (user.role === 'mahasiswa') {
+    return res.redirect('/mahasiswa/dashboard');
+  } else if (user.role === 'pengelola') {
+    return res.redirect('/pengelola/dashboard');
+  }
+  return res.redirect('/');
+};
+
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     
-    const isApiRequest = req.accepts('json');
+    const isApiRequest = (
+      (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+      (req.get && typeof req.get === 'function' && (req.get('accept') || '').includes('application/json')) ||
+      (req.is && req.is('application/json')) ||
+      (req.xhr === true)
+    );
 
     if (!token) {
       if (isApiRequest) {
@@ -48,7 +63,14 @@ const authMiddleware = async (req, res, next) => {
     console.error('Auth middleware error:', error);
     res.clearCookie('token');
 
-    if (req.accepts('json')) {
+    const isApiOnError = (
+      (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+      (req.get && typeof req.get === 'function' && (req.get('accept') || '').includes('application/json')) ||
+      (req.is && req.is('application/json')) ||
+      (req.xhr === true)
+    );
+
+    if (isApiOnError) {
       return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
     }
 

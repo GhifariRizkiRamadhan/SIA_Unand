@@ -251,6 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const emptyState = document.getElementById('emptyNotifications');
   const markAllAsReadBtn = document.getElementById('markAllAsRead');
   const tabButtons = document.querySelectorAll('.tab-button');
+  // Containers for notifications (ensure they exist to avoid ReferenceError)
+  const unreadContainer = document.getElementById('unreadNotifications');
+  const readContainer = document.getElementById('readNotifications');
 
   // Add click event listeners to tab buttons
   tabButtons.forEach(button => {

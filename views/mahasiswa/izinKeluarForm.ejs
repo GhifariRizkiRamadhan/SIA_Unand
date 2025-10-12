@@ -1,0 +1,430 @@
+<div class="p-6">
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Pengajuan Izin Keluar Jam Reguler</h2>
+    <form id="izinForm" class="space-y-4" enctype="multipart/form-data">
+      <div id="formMessage" class="hidden p-3 rounded text-sm mb-2"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nama</label>
+          <input type="text" name="nama" value="<%= profil?.nama %>" class="mt-1 block w-full border rounded p-2 bg-gray-100" readonly required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">NIM</label>
+          <input type="text" name="nim" value="<%= profil?.nim %>" class="mt-1 block w-full border rounded p-2 bg-gray-100" readonly required />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Alasan</label>
+        <input type="text" name="reason" id="reason" class="mt-1 block w-full border rounded p-2" required />
+        <p id="error_reason" class="hidden text-xs text-red-600 mt-1">Alasan wajib diisi.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Tanggal Keluar</label>
+          <input type="date" name="date_out" id="date_out" class="mt-1 block w-full border rounded p-2" placeholder="YYYY-MM-DD" required 
+                 style="cursor: text !important; -webkit-appearance: none; -moz-appearance: textfield;" 
+                 onclick="this.showPicker ? this.showPicker() : this.focus()" />
+          <p id="error_date_out" class="hidden text-xs text-red-600 mt-1">Tanggal keluar wajib diisi.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Jam Keluar</label>
+          <input type="time" name="time_out" id="time_out" class="mt-1 block w-full border rounded p-2" required 
+                 style="cursor: text !important; -webkit-appearance: none; -moz-appearance: textfield;" 
+                 onclick="this.showPicker ? this.showPicker() : this.focus()" />
+          <p id="error_time_out" class="hidden text-xs text-red-600 mt-1">Jam keluar wajib diisi.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Tanggal Kembali</label>
+          <input type="date" name="date_return" id="date_return" class="mt-1 block w-full border rounded p-2" placeholder="YYYY-MM-DD" required 
+                 style="cursor: text !important; -webkit-appearance: none; -moz-appearance: textfield;" 
+                 onclick="this.showPicker ? this.showPicker() : this.focus()" />
+          <p id="error_date_return" class="hidden text-xs text-red-600 mt-1">Tanggal kembali wajib diisi.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Jam Kembali</label>
+          <input type="time" name="time_return" id="time_return" class="mt-1 block w-full border rounded p-2" required 
+                 style="cursor: text !important; -webkit-appearance: none; -moz-appearance: textfield;" 
+                 onclick="this.showPicker ? this.showPicker() : this.focus()" />
+          <p id="error_time_return" class="hidden text-xs text-red-600 mt-1">Jam kembali wajib diisi.</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Dokumen Pendukung (PDF/DOC/DOCX)</label>
+        <input type="file" name="document" id="document" accept=".pdf,.doc,.docx" class="mt-1 block w-full border rounded p-2" required />
+        <p id="error_document" class="hidden text-xs text-red-600 mt-1">Dokumen pendukung wajib diunggah (PDF/DOC/DOCX).</p>
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Kirim</button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6 mt-6">
+    <h3 class="text-lg font-semibold mb-2">Riwayat Pengajuan</h3>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm min-w-[720px]" id="izinTable">
+      <thead>
+        <tr class="text-left">
+          <th class="p-2">Tanggal Submit</th>
+          <th class="p-2">Tanggal Keluar</th>
+          <th class="p-2">Alasan</th>
+          <th class="p-2">Status</th>
+          <th class="p-2">Dokumen</th>
+          <th class="p-2">Catatan</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('izinForm');
+  const msg = document.getElementById('formMessage');
+
+  function showMessage(type, text) {
+    msg.classList.remove('hidden');
+    msg.textContent = text;
+    if (type === 'error') {
+      msg.className = 'p-3 rounded text-sm mb-2 bg-red-100 text-red-700 border border-red-300';
+    } else if (type === 'success') {
+      msg.className = 'p-3 rounded text-sm mb-2 bg-green-100 text-green-700 border border-green-300';
+    } else {
+      msg.className = 'p-3 rounded text-sm mb-2 bg-yellow-100 text-yellow-700 border border-yellow-300';
+    }
+  }
+
+  function hideMessage() {
+    msg.classList.add('hidden');
+    msg.textContent = '';
+  }
+
+  function setFieldError(id, hasError, message) {
+    const input = document.getElementById(id);
+    const err = document.getElementById(`error_${id}`);
+    if (!input || !err) return;
+    if (hasError) {
+      input.classList.add('border-red-500');
+      err.textContent = message;
+      err.classList.remove('hidden');
+    } else {
+      input.classList.remove('border-red-500');
+      err.classList.add('hidden');
+    }
+  }
+
+  function getValues() {
+    return {
+      reason: document.getElementById('reason').value.trim(),
+      dateOut: document.getElementById('date_out').value,
+      timeOut: document.getElementById('time_out').value,
+      dateReturn: document.getElementById('date_return').value,
+      timeReturn: document.getElementById('time_return').value,
+      documentInput: document.getElementById('document')
+    };
+  }
+
+  // Update constraints to prevent selecting invalid return date/time and support manual typing
+  const dateOutEl = document.getElementById('date_out');
+  const timeOutEl = document.getElementById('time_out');
+  const dateReturnEl = document.getElementById('date_return');
+  const timeReturnEl = document.getElementById('time_return');
+
+  function updateReturnConstraints() {
+    const { dateOut, timeOut, dateReturn, timeReturn } = getValues();
+    // Enforce min date for return >= date out
+    if (dateOut) {
+      dateReturnEl.min = dateOut;
+    } else {
+      dateReturnEl.removeAttribute('min');
+    }
+
+    // If dates present but return date earlier, flag immediately
+    if (dateOut && dateReturn && dateReturn < dateOut) {
+      dateReturnEl.setCustomValidity('Tanggal kembali tidak boleh sebelum tanggal keluar.');
+      setFieldError('date_return', true, 'Tanggal kembali tidak boleh sebelum tanggal keluar.');
+    } else {
+      dateReturnEl.setCustomValidity('');
+      // Clear error only if field otherwise valid
+      if (dateReturn) setFieldError('date_return', false, '');
+    }
+
+    // If same day, enforce time-return strictly after time-out
+    if (dateOut && dateReturn && dateReturn === dateOut) {
+      if (timeOut) {
+        timeReturnEl.min = timeOut;
+      } else {
+        timeReturnEl.removeAttribute('min');
+      }
+      if (timeOut && timeReturn) {
+        const okTime = timeReturn > timeOut;
+        if (!okTime) {
+          timeReturnEl.setCustomValidity('Jam kembali harus setelah jam keluar pada tanggal yang sama.');
+          setFieldError('time_return', true, 'Jam kembali harus setelah jam keluar pada tanggal yang sama.');
+        } else {
+          timeReturnEl.setCustomValidity('');
+          setFieldError('time_return', false, '');
+        }
+      } else {
+        // When times not fully provided, clear custom validity to allow typing
+        timeReturnEl.setCustomValidity('');
+      }
+    } else {
+      timeReturnEl.removeAttribute('min');
+      timeReturnEl.setCustomValidity('');
+    }
+  }
+
+  // Allow typing by sanitizing input values for date/time
+  function sanitizeDateInput(el) {
+    // Accept patterns like YYYY-MM-DD and auto-fix common typos
+    let v = (el.value || '').trim();
+    // Replace dots/slashes with hyphen
+    v = v.replace(/[\.\/]/g, '-');
+    // If dd-mm-yyyy typed, swap to yyyy-mm-dd
+    const dmY = v.match(/^([0-3]?\d)-([0-1]?\d)-(\d{4})$/);
+    if (dmY) {
+      const d = dmY[1].padStart(2,'0');
+      const m = dmY[2].padStart(2,'0');
+      const y = dmY[3];
+      v = `${y}-${m}-${d}`;
+    }
+    // If yyyy-m-d, pad
+    const ymd = v.match(/^(\d{4})-([0-1]?\d)-([0-3]?\d)$/);
+    if (ymd) {
+      const y = ymd[1];
+      const m = ymd[2].padStart(2,'0');
+      const d = ymd[3].padStart(2,'0');
+      v = `${y}-${m}-${d}`;
+    }
+    el.value = v;
+  }
+
+  function sanitizeTimeInput(el) {
+    let v = (el.value || '').trim();
+    v = v.replace(/[\.]/g, ':');
+    // Accept HHmm -> HH:mm
+    const hmm = v.match(/^([0-2]?\d)([0-5]\d)$/);
+    if (hmm) {
+      const h = hmm[1].padStart(2,'0');
+      const m = hmm[2].padStart(2,'0');
+      v = `${h}:${m}`;
+    }
+    // If H:M, pad
+    const hm = v.match(/^([0-2]?\d):([0-5]?\d)$/);
+    if (hm) {
+      const h = hm[1].padStart(2,'0');
+      const m = hm[2].padStart(2,'0');
+      v = `${h}:${m}`;
+    }
+    el.value = v;
+  }
+
+  function validateField(id, showInline = true) {
+    const { reason, dateOut, timeOut, dateReturn, timeReturn, documentInput } = getValues();
+    let ok = true;
+    switch (id) {
+      case 'reason':
+        ok = !!reason;
+        if (showInline) setFieldError('reason', !ok, 'Alasan wajib diisi.');
+        break;
+      case 'date_out':
+        ok = !!dateOut;
+        if (showInline) setFieldError('date_out', !ok, 'Tanggal keluar wajib diisi.');
+        break;
+      case 'time_out':
+        ok = !!timeOut;
+        if (showInline) setFieldError('time_out', !ok, 'Jam keluar wajib diisi.');
+        break;
+      case 'date_return':
+        ok = !!dateReturn;
+        if (showInline) setFieldError('date_return', !ok, 'Tanggal kembali wajib diisi.');
+        break;
+      case 'time_return':
+        ok = !!timeReturn;
+        if (showInline) setFieldError('time_return', !ok, 'Jam kembali wajib diisi.');
+        break;
+      case 'document': {
+        const file = documentInput?.files?.[0];
+        if (!file) {
+          ok = false;
+          if (showInline) setFieldError('document', true, 'Dokumen pendukung wajib diunggah (PDF/DOC/DOCX).');
+        } else {
+          const okTypes = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+          ok = okTypes.includes(file.type);
+          if (showInline) setFieldError('document', !ok, 'Format file harus PDF/DOC/DOCX.');
+        }
+        break;
+      }
+    }
+
+    // Cross-field validation
+    if (id === 'date_return' || id === 'date_out' || id === 'time_return' || id === 'time_out') {
+      // If both dates present but times not necessarily present: check date order
+      if (dateOut && dateReturn && (!timeOut || !timeReturn)) {
+        const dateOk = dateReturn >= dateOut;
+        ok = ok && dateOk;
+        if (showInline) {
+          setFieldError('date_return', !dateOk, 'Tanggal kembali tidak boleh sebelum tanggal keluar.');
+        }
+      }
+
+      // If both dates and times present: check precise datetime order
+      if (dateOut && timeOut && dateReturn && timeReturn) {
+        const outDT = new Date(`${dateOut}T${timeOut}:00`);
+        const returnDT = new Date(`${dateReturn}T${timeReturn}:00`);
+        const relationOk = returnDT > outDT;
+        ok = ok && relationOk;
+        if (showInline) {
+          setFieldError('date_return', !relationOk, 'Tanggal/jam kembali harus setelah tanggal/jam keluar');
+          setFieldError('time_return', !relationOk, 'Tanggal/jam kembali harus setelah tanggal/jam keluar');
+        }
+      }
+    }
+    return ok;
+  }
+
+  function validateForm(showInline = true) {
+    const ids = ['reason','date_out','time_out','date_return','time_return','document'];
+    return ids.every(id => validateField(id, showInline));
+  }
+
+  const touched = new Set();
+  ['reason','date_out','time_out','date_return','time_return','document'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', () => {
+      touched.add(id);
+      hideMessage();
+      validateField(id, true);
+      updateReturnConstraints();
+    });
+    el.addEventListener('input', () => {
+      hideMessage();
+      // Sanitize typing for date/time
+      if (id === 'date_out' || id === 'date_return') sanitizeDateInput(el);
+      if (id === 'time_out' || id === 'time_return') sanitizeTimeInput(el);
+      validateField(id, touched.has(id));
+      updateReturnConstraints();
+    });
+    if (id === 'document') {
+      el.addEventListener('change', () => {
+        touched.add(id);
+        hideMessage();
+        validateField(id, true);
+      });
+    }
+  });
+
+  // Initialize constraints once at load
+  updateReturnConstraints();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideMessage();
+    // Final sanitize before validation
+    sanitizeDateInput(dateOutEl);
+    sanitizeDateInput(dateReturnEl);
+    sanitizeTimeInput(timeOutEl);
+    sanitizeTimeInput(timeReturnEl);
+    const isValid = validateForm(true);
+    if (!isValid) {
+      showMessage('error', 'Periksa kembali input Anda. Pastikan seluruh field terisi dan waktu kembali setelah waktu keluar.');
+      form.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    const formData = new FormData(form);
+    try {
+      const res = await fetch('/api/izin', { method: 'POST', body: formData });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Gagal mengajukan izin');
+      
+      // Tampilkan modal notifikasi sukses
+      openNotifyModal('success', '✅ Pengajuan izin berhasil dikirim!<br/><br/>Pengajuan Anda akan diproses oleh pengelola asrama. Silakan cek status pengajuan secara berkala.');
+      showMessage('success', 'Pengajuan berhasil dikirim.');
+      loadRiwayat();
+      form.reset();
+    } catch (err) {
+      openNotifyModal('error', 'Terjadi kesalahan: ' + err.message);
+      showMessage('error', 'Terjadi kesalahan: ' + err.message);
+    }
+  });
+
+  async function loadRiwayat() {
+    const res = await fetch('/api/izin');
+    const json = await res.json();
+    const tbody = document.querySelector('#izinTable tbody');
+    tbody.innerHTML = '';
+    if (json.success && Array.isArray(json.data)) {
+      json.data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${item.submitted_at ? new Date(item.submitted_at).toLocaleString('id-ID') : (item.date_requested ? new Date(item.date_requested).toLocaleString('id-ID') : '-')}</td>
+          <td class="p-2">${item.date_out ? new Date(item.date_out).toLocaleString('id-ID') : (item.date_requested ? new Date(item.date_requested).toLocaleString('id-ID') : '-')}</td>
+          <td class="p-2">${item.reason}</td>
+          <td class="p-2">${renderStatusBadge(item.status)}</td>
+          <td class="p-2">${item.document ? `<a href="${item.document}" target="_blank" class="text-blue-600">Lihat</a>` : '-'}</td>
+          <td class="p-2">${item.notes || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  loadRiwayat();
+</script>
+
+<!-- Modal Notifikasi Seragam -->
+<div id="notifyModal" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+      <div id="notifyIcon" class="text-2xl mb-2">🔔</div>
+      <div id="notifyText" class="text-sm text-gray-700 mb-3"></div>
+      <div class="mt-4 flex justify-end">
+        <button id="notifyOkBtn" class="px-4 py-2 rounded bg-blue-600 text-white">Oke</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openNotifyModal(type, htmlText) {
+  const modal = document.getElementById('notifyModal');
+  const icon = document.getElementById('notifyIcon');
+  const text = document.getElementById('notifyText');
+  text.innerHTML = htmlText;
+  if (type === 'success') {
+    icon.textContent = '✅';
+  } else if (type === 'error') {
+    icon.textContent = '⚠️';
+  } else {
+    icon.textContent = '🔔';
+  }
+  modal.classList.remove('hidden');
+}
+
+function closeNotifyModal() {
+  document.getElementById('notifyModal').classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('notifyOkBtn')?.addEventListener('click', closeNotifyModal);
+});
+</script>
+
+<script>
+// Badge status berwarna: hijau untuk approved, merah untuk rejected
+function renderStatusBadge(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'approved') return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Approved</span>';
+  if (s === 'rejected') return '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">Rejected</span>';
+  return `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">${status || 'Pending'}</span>`;
+}
+</script>

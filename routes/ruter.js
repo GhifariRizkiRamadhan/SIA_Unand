@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { authMiddleware, redirectIfAuthenticated,requireMahasiswa,requirePengelola } = require('../middlewares/authMiddleware');
-const { upload, uploadImage,uploadBukti } = require('../middlewares/uploadMiddleware');
+const { upload, uploadImage,uploadBukti, uploadIzinDokumen, uploadFotoKerusakan } = require('../middlewares/uploadMiddleware');
 const validateEmail = require("../middlewares/validateEmail");
 const forgotPasswordLimiter = require("../middlewares/rateLimiter");
 const { uploadMahasiswaFoto } = require('../config/multerConfig');
@@ -9,6 +9,11 @@ const { uploadMahasiswaFoto } = require('../config/multerConfig');
 // Redirect root to login
 router.get("/", (req, res) => {
   res.redirect("/login");
+});
+
+// Debug route (temporary): inspect incoming headers
+router.get('/debug/headers', (req, res) => {
+  res.json({ headers: req.headers });
 });
 
 // ===================
@@ -39,6 +44,8 @@ router.put("/api/notifications/read-all", authMiddleware, notifications.markAllA
 
 const controller5 = require("../controller/conPbyr");
 const controller6 = require("../controller/conBbsAsr");
+const conIzinKeluar = require('../controller/conIzinKeluar');
+const conPelaporan = require('../controller/conPelaporan');
 
 router.get("/mahasiswa/dashboard", authMiddleware, requireMahasiswa,controller3.showDashboard);  
 
@@ -60,9 +67,17 @@ router.get("/api/tagihan/:id", authMiddleware, controller6.getTagihanMahasiswa);
 router.get("/api/bebas-asrama/mahasiswa/:id", authMiddleware, controller6.getRiwayatPengajuan);
 
 // routes/bebasAsramaRoutes.js
-
 router.get('/api/bebas-asrama/mahasiswa/:id/status-aktif', authMiddleware, controller6.checkActiveSubmission);
 
+// ====================== IZIN KELUAR (Mahasiswa) ======================
+router.get('/pengajuan-surat-izin', authMiddleware, requireMahasiswa, conIzinKeluar.showFormMahasiswa);
+router.get('/api/izin', authMiddleware, requireMahasiswa, conIzinKeluar.listIzinMahasiswa);
+router.post('/api/izin', authMiddleware, requireMahasiswa, uploadIzinDokumen, conIzinKeluar.submitIzinMahasiswa);
+
+// ====================== PELAPORAN (Mahasiswa) ======================
+router.get('/pelaporan', authMiddleware, requireMahasiswa, conPelaporan.showFormPelaporan);
+router.get('/api/pelaporan', authMiddleware, requireMahasiswa, conPelaporan.listPelaporanMahasiswa);
+router.post('/api/pelaporan', authMiddleware, requireMahasiswa, uploadFotoKerusakan, conPelaporan.submitPelaporan);
 
 // ====================== PEMBERITAHUAN (Mahasiswa) ======================
 router.get("/api/pemberitahuan-mahasiswa/:id", authMiddleware, controller3.getPemberitahuanDetail);
@@ -77,6 +92,11 @@ const controller9 = require("../controller/conDtPnghni");
 
 router.get("/pengelola/dashboard", authMiddleware,requirePengelola, controller4.showDashboard);
 router.get("/pengelola/dataPenghuni", authMiddleware, requirePengelola, controller9.showDtPenghuni);
+
+// ====================== PELAPORAN (Pengelola) ======================
+router.get('/pengelola/pelaporan', authMiddleware, requirePengelola, conPelaporan.showPelaporanPengelola);
+router.get('/api/pengelola/pelaporan', authMiddleware, requirePengelola, conPelaporan.listPelaporanPengelola);
+router.put('/api/pengelola/pelaporan/:id/status', authMiddleware, requirePengelola, conPelaporan.updateStatusPelaporan);
 
 
 // ====================== PEMBAYARAN (Pengelola) ======================
@@ -94,6 +114,14 @@ router.get("/pengelola/pengelola-bebas-asrama", authMiddleware,requirePengelola,
 router.get("/api/pengelola/bebas-asrama", authMiddleware, controller7.getAllBebasAsrama);
 router.get("/api/pengelola/bebas-asrama/:id", authMiddleware, controller7.getDetailBebasAsrama);
 router.post("/api/pengelola/bebas-asrama/:id/verifikasi-fasilitas", authMiddleware, controller7.verifikasiFasilitas);
+
+// ====================== PERIZINAN (Pengelola) ======================
+router.get('/pengelola/perizinan', authMiddleware, requirePengelola, conIzinKeluar.showIzinPengelola);
+router.get('/api/pengelola/izin', authMiddleware, requirePengelola, conIzinKeluar.listIzinPengelola);
+router.put('/api/pengelola/izin/:id/approve', authMiddleware, requirePengelola, conIzinKeluar.approveIzin);
+router.put('/api/pengelola/izin/:id/reject', authMiddleware, requirePengelola, conIzinKeluar.rejectIzin);
+router.put('/api/pengelola/izin/:id/notes', authMiddleware, requirePengelola, conIzinKeluar.updateIzinNotes);
+router.put('/api/pengelola/izin/:id/reset', authMiddleware, requirePengelola, conIzinKeluar.resetIzinStatus);
 
 // ====================== PEMBERITAHUAN (Pengelola) ======================
 router.get("/pengelola/pemberitahuan", authMiddleware, requirePengelola, controller8.showPemberitahuanPengelola);
