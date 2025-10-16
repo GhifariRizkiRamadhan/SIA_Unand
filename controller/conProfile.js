@@ -49,7 +49,7 @@ const showProfile = async (req, res) => {
     const activeMenu = user.role === 'mahasiswa' ? 'mahasiswa-profile' : 'pengelola-profile';
 
     res.render('layouts/main', {
-      title: 'Profile Saya',
+      title: 'Profile - MYASRAMA',
       pageTitle: 'Profile Saya',
       activeMenu: activeMenu,
       body,

@@ -26,7 +26,7 @@ const showBebasAsrama = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Surat Bebas Asrama',
+      title: 'Surat Bebas Asrama - MYASRAMA',
       pageTitle: 'Surat Bebas Asrama',
       activeMenu: 'bebas-asrama',
       body,

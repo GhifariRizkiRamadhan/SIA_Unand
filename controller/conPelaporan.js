@@ -8,7 +8,11 @@ const showFormPelaporan = async (req, res) => {
   try {
     const user = { name: req.user.name, role: req.user.role, avatar: req.user.avatar || req.user.name?.charAt(0) };
     const body = await ejs.renderFile(path.join(__dirname, '../views/mahasiswa/pelaporanForm.ejs'), { user });
-    res.render('layouts/main', { title: 'Pelaporan Kerusakan', pageTitle: 'Pelaporan Kerusakan', activeMenu: 'pelaporan', user, body });
+    res.render('layouts/main', { 
+      title: 'Pelaporan Kerusakan - MYASRAMA', 
+      pageTitle: 'Pelaporan Kerusakan', 
+      activeMenu: 'pelaporan', 
+      user, body });
   } catch (error) {
     console.error('showFormPelaporan error:', error);
     res.status(500).render('error', { message: error.message });
@@ -68,7 +72,7 @@ const showPelaporanPengelola = async (req, res) => {
   try {
     const user = { name: req.user.name, role: req.user.role, avatar: req.user.avatar || req.user.name?.charAt(0) };
     const body = await ejs.renderFile(path.join(__dirname, '../views/pengelola/pelaporanAdmin.ejs'), { user });
-    res.render('layouts/main', { title: 'Pelaporan Kerusakan', pageTitle: 'Pelaporan Kerusakan', activeMenu: 'pelaporan-admin', user, body });
+    res.render('layouts/main', { title: 'Pelaporan Kerusakan - MYASRAMA', pageTitle: 'Pelaporan Kerusakan', activeMenu: 'pelaporan-admin', user, body });
   } catch (error) {
     console.error('showPelaporanPengelola error:', error);
     res.status(500).render('error', { message: error.message });

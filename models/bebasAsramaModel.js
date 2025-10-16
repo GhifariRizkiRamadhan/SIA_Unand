@@ -10,7 +10,7 @@ async create(data) {
         Pengelola_id: data.Pengelola_id || null,
         nomor_pengajuan: data.nomor_pengajuan,
         total_biaya: data.total_biaya,
-        status_pengajuan: data.status_pengajuan || 'VERIFIKASI_FASILITAS',
+        status_pengajuan: 'VERIFIKASI_FASILITAS',
         fasilitas_status: data.fasilitas_status || null,
         biaya_tambahan: data.biaya_tambahan || null
       }

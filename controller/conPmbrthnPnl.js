@@ -58,7 +58,7 @@ const showPemberitahuanPengelola = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Kelola Pemberitahuan',
+      title: 'Kelola Pemberitahuan - MYASRAMA',
       pageTitle: 'Kelola Pemberitahuan',
       activeMenu: 'pemberitahuan',
       body,

@@ -8,7 +8,7 @@ const Pembayaran = {
                 data: {
                     amount: data.amount,
                     bukti_pembayaran: data.bukti_pembayaran,
-                    status_bukti: data.status_bukti || 'BELUM_DIVERIFIKASI',
+                    status_bukti: 'BELUM_DIVERIFIKASI',
                     mahasiswa_id: data.mahasiswa_id,
                     surat_id: data.surat_id
                 }

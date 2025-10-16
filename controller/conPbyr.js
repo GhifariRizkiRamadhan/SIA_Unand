@@ -50,7 +50,7 @@ const showPembayaran = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Pembayaran',
+      title: 'Pembayaran - MYASRAMA',
       pageTitle: `Pembayaran `,
       activeMenu: 'bebas-asrama', // Tetap aktifkan menu bebas asrama
       body,

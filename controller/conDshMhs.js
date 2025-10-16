@@ -113,7 +113,7 @@ const showDashboard = async (req, res) => {
     );
     
     res.render("layouts/main", { 
-      title: 'Dashboard',
+      title: 'Dashboard - MYASRAMA',
       pageTitle: 'Dashboard',
       activeMenu: 'dashboard',
       user: {
