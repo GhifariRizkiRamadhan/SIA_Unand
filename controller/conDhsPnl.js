@@ -112,7 +112,7 @@ const showDashboard = async (req, res) => {
     );
 
     res.render("layouts/main", { 
-      title: 'Dashboard',
+      title: 'Dashboard Pengelola - MYASRAMA',
       pageTitle: 'Dashboard',
       activeMenu: 'dashboard',
       user: {

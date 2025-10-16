@@ -66,7 +66,7 @@ const showDtPenghuni = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Data Penghuni',
+      title: 'Data Penghuni - MYASRAMA',
       pageTitle: 'Data Penghuni',
       activeMenu: 'pengelola-data-penghuni',
       body,

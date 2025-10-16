@@ -23,7 +23,7 @@ const showBebasAsramaPengelola = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Surat Bebas Asrama',
+      title: 'Surat Bebas Asrama Pengelola - MYASRAMA',
       pageTitle: 'Surat Bebas Asrama',
       activeMenu: 'pengelola-bebas-asrama',
       body,

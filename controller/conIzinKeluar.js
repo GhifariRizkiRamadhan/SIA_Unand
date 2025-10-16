@@ -23,7 +23,7 @@ const showFormMahasiswa = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Pengajuan Surat Izin',
+      title: 'Pengajuan Surat Izin - MYASRAMA',
       pageTitle: 'Pengajuan Surat Izin',
       activeMenu: 'pengajuan-surat-izin',
       user,
@@ -117,7 +117,7 @@ const showIzinPengelola = async (req, res) => {
     );
 
     res.render('layouts/main', {
-      title: 'Perizinan',
+      title: 'Perizinan - MYASRAMA',
       pageTitle: 'Perizinan',
       activeMenu: 'perizinan',
       user,
