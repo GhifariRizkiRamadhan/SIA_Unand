@@ -14,7 +14,47 @@ const showDashboard = async (req, res) => {
     }
 
     const user = await User.findById(userId);
+    const mahasiswaId = req.user?.mahasiswa_id;
+    if (!mahasiswaId) {
+      return res.status(403).send('Forbidden: Akun Anda tidak terhubung dengan data mahasiswa.');
+    }
     const totalUsers = await User.countAll();
+    const totalIzin = await prisma.izinkeluar.count({
+      where: { mahasiswa_id: mahasiswaId }
+    });
+
+    // Hitung total laporan kerusakan
+    const totalLaporan = await prisma.pelaporankerusakan.count({
+      where: { mahasiswa_id: mahasiswaId }
+    });
+
+    // Hitung total pengajuan surat bebas asrama
+    const totalBebasAsrama = await prisma.suratbebasasrama.count({
+      where: { mahasiswa_id: mahasiswaId }
+    });
+
+    const sevenDaysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+
+    const perubahanIzin = await prisma.izinkeluar.count({
+      where: {
+        mahasiswa_id: mahasiswaId,
+        submitted_at: { gte: sevenDaysAgo } // gte = greater than or equal
+      }
+    });
+
+    const perubahanLaporan = await prisma.pelaporankerusakan.count({
+      where: {
+        mahasiswa_id: mahasiswaId,
+        date_submitted: { gte: sevenDaysAgo }
+      }
+    });
+
+    const perubahanBebasAsrama = await prisma.suratbebasasrama.count({
+      where: {
+        mahasiswa_id: mahasiswaId,
+        tanggal_pengajuan: { gte: sevenDaysAgo }
+      }
+    });
 
     // Paginasi
     const page = parseInt(req.query.page) || 1;
@@ -55,6 +95,14 @@ const showDashboard = async (req, res) => {
         user, 
         totalUsers,
         pemberitahuanList,
+        stats: { 
+            izin: totalIzin,
+            laporan: totalLaporan,
+            bebasAsrama: totalBebasAsrama,
+            perubahanIzin: perubahanIzin,
+            perubahanLaporan: perubahanLaporan,
+            perubahanBebasAsrama: perubahanBebasAsrama
+        },
         pagination: {
           page,
           totalPages,
