@@ -65,6 +65,8 @@ model pelaporankerusakan {
   location        String?          @db.VarChar(255)
   mahasiswa_id    Int
   Pengelola_id    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
   mahasiswa       mahasiswa        @relation(fields: [mahasiswa_id], references: [mahasiswa_id], onDelete: Cascade, map: "pelaporankerusakan_ibfk_1")
   pengelolaasrama pengelolaasrama? @relation(fields: [Pengelola_id], references: [Pengelola_id], map: "pelaporankerusakan_ibfk_2")
 

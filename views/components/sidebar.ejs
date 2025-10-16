@@ -1,11 +1,11 @@
-<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-52 bg-white shadow-lg transform transition-transform duration-300 ease-in-out">
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out">
     <!-- Logo Section -->
     <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
         <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-800 rounded-lg flex items-center justify-center">
                 <i class="fas fa-graduation-cap text-white text-sm"></i>
             </div>
-            <span id="logo-text" class="font-bold text-gray-900 text-lg">SIA UNAND</span>
+            <span id="logo-text" class="font-bold text-gray-900 text-lg">MYASRAMA</span>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
                 <li>
                     <a href="/pelaporan" class="flex items-center px-3 py-3 <%= activeMenu === 'pelaporan' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
                         <i class="fas fa-clipboard-list w-5 h-5 mr-3"></i>
-                        <span class="sidebar-text font-medium text-sm">Pelaporan</span>
+                        <span class="sidebar-text font-medium text-sm">Pelaporan Kerusakan</span>
                     </a>
                 </li>
                 
@@ -42,14 +42,6 @@
                     <a href="/mahasiswa/bebas-asrama" class="flex items-center px-3 py-3 <%= activeMenu === 'bebas-asrama' || activeMenu === 'pembayaran'  ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
                         <i class="fas fa-file-contract w-5 h-5 mr-3"></i>
                         <span class="sidebar-text font-medium text-sm">Surat Bebas Asrama</span>
-                    </a>
-                </li>
-
-                <!-- Riwayat -->
-                <li>
-                    <a href="/riwayat" class="flex items-center px-3 py-3 <%= activeMenu === 'riwayat' ? 'text-white bg-purple-600' : 'text-gray-700 hover:bg-gray-100' %> rounded-lg transition-colors duration-200">
-                        <i class="fas fa-history w-5 h-5 mr-3"></i>
-                        <span class="sidebar-text font-medium text-sm">Riwayat</span>
                     </a>
                 </li>
             <% } %>

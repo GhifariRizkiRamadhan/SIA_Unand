@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const ejs = require('ejs');
 const User = require('../models/userModels');
 const path = require('path');
-const {prisma} = require('../config/database');
+const { prisma } = require('../config/database');
 
 const showDashboard = async (req, res) => {
    try {
@@ -20,9 +20,38 @@ const showDashboard = async (req, res) => {
         status: 'aktif'
       }
     });
+    
+    const totalSelesai = await prisma.suratbebasasrama.count({
+      where: {
+        status_pengajuan: 'SELESAI'
+      }
+    });
 
+     const totalPelaporan = await prisma.pelaporankerusakan.count({
+      where: {
+        status: 'selesai'
+      }
+    });
 
-     const sevenDaysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+    const sevenDaysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+
+    const perubahanSelesai = await prisma.suratbebasasrama.count({
+      where: {
+        status_pengajuan: 'SELESAI',
+        tanggal_update: { // Gunakan 'tanggal_update'
+          gte: sevenDaysAgo
+        }
+      }
+    });
+
+    const perubahanPelaporan = await prisma.pelaporankerusakan.count({
+      where: {
+        status: "selesai",
+        updatedAt: { // Gunakan 'tanggal_update'
+          gte: sevenDaysAgo
+        }
+      }
+    });
 
     // Hitung mahasiswa baru dalam 7 hari terakhir
     const penambahan = await prisma.mahasiswa.count({
@@ -45,11 +74,27 @@ const showDashboard = async (req, res) => {
     
     const perubahan = penambahan - pengurangan;
 
-    const totalSelesai = await prisma.suratbebasasrama.count({
+    const dataJurusan = await prisma.mahasiswa.groupBy({
+      by: ['jurusan'], // Kelompokkan berdasarkan kolom jurusan
+      _count: {
+        jurusan: true, // Hitung jumlah mahasiswa di setiap grup
+      },
       where: {
-        status_pengajuan: 'SELESAI'
+        status: 'aktif', // Hanya hitung mahasiswa aktif
+        NOT: {
+          jurusan: null // Abaikan mahasiswa yang jurusannya kosong
+        }
+      },
+      orderBy: {
+        _count: {
+          jurusan: 'desc' // Urutkan dari jurusan terbanyak
+        }
       }
     });
+
+    // Proses data agar mudah digunakan oleh Chart.js
+    const labelsJurusan = dataJurusan.map(item => item.jurusan);
+    const countsJurusan = dataJurusan.map(item => item._count.jurusan);
 
     // Render isi dashboard.ejs sebagai body
     const body = await ejs.renderFile(
@@ -57,7 +102,12 @@ const showDashboard = async (req, res) => {
       { user, 
         totalMahasiswaAktif,
         perubahanPenghuni: perubahan,
-        totalSelesai:totalSelesai
+        totalSelesai,
+        perubahanSelesai,
+        perubahanPelaporan,
+        totalPelaporan,
+        labelsJurusan,
+        countsJurusan
        }
     );
 
