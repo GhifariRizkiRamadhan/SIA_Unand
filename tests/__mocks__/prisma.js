@@ -1,5 +1,19 @@
-// Mock bcrypt agar tidak hashing sungguhan
+// Mock prisma client (supaya tidak benar-benar query DB)
 module.exports = {
-  hash: jest.fn().mockResolvedValue('hashedPassword'),
-  compare: jest.fn((plain, hashed) => plain === '1234'), // return true kalau password = '1234'
+  user: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    count: jest.fn(),
+  },
+  mahasiswa: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+  pengelolaasrama: {
+    create: jest.fn(),
+  },
 };

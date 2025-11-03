@@ -3,7 +3,10 @@ module.exports = {
   uploadMahasiswaFoto: {
     single: () => (req, res, next) => {
       // Simulasikan file agar req.file selalu ada
-      req.file = { filename: 'dummy.png', path: 'public/image/mahasiswa/dummy.png' };
+      req.file = { 
+        filename: 'dummy.png', 
+        path: 'mock/path/dummy.png' // ✅ Path mock yang tidak nyata
+      };
       next();
     },
   },
