@@ -7,7 +7,8 @@
     "migrate": "prisma migrate dev",
     "seed": "node prisma/seeder/userSeed.js",
     "seed-surat": "node prisma/seeder/suratBebasAsramaSeed.js",
-    "seed-pembayaran": "node prisma/seeder/pembayaranSeed.js"
+    "seed-pembayaran": "node prisma/seeder/pembayaranSeed.js",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -30,7 +31,9 @@
   },
   "devDependencies": {
     "@prisma/client": "^6.16.2",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.10",
-    "prisma": "^6.16.2"
+    "prisma": "^6.16.2",
+    "supertest": "^7.1.4"
   }
 }
