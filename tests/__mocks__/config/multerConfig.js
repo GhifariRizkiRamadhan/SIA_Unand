@@ -5,7 +5,7 @@ module.exports = {
       // Simulasikan file agar req.file selalu ada
       req.file = { 
         filename: 'dummy.png', 
-        path: 'mock/path/dummy.png' // ✅ Path mock yang tidak nyata
+        path: 'mock/path/dummy.png'   
       };
       next();
     },
