@@ -62,15 +62,15 @@ router.get("/mahasiswa/dashboard", authMiddleware, requireMahasiswa,controller3.
 // ====================== PEMBAYARAN (Mahasiswa) ======================
 
 router.get("/mahasiswa/pembayaran/:id", authMiddleware, requireMahasiswa, controller5.showPembayaran);
-router.post("/api/pembayaran", authMiddleware, uploadBukti, controller5.uploadBuktiPembayaran);
-router.get("/api/pembayaran/:id", authMiddleware, controller5.getDetailPembayaran);
-router.put("/api/pembayaran/:id/reupload", authMiddleware, uploadBukti, controller5.reuploadBuktiPembayaran);
+router.post("/api/pembayaran", authMiddleware, uploadBukti, requireMahasiswa, controller5.uploadBuktiPembayaran);
+router.get("/api/pembayaran/:id", authMiddleware, requireMahasiswa, controller5.getDetailPembayaran);
+router.put("/api/pembayaran/:id/reupload", authMiddleware, uploadBukti, requireMahasiswa, controller5.reuploadBuktiPembayaran);
 
 // ====================== BEBAS ASRAMA (Mahasiswa) ======================
 
 router.get("/mahasiswa/bebas-asrama", authMiddleware,requireMahasiswa, controller6.showBebasAsrama);
 router.post("/api/bebas-asrama", authMiddleware, controller6.ajukanBebasAsrama);
-router.get("/api/bebas-asrama/:id", authMiddleware, controller6.getStatusBebasAsrama);
+router.get("/api/bebas-asrama/:id", authMiddleware,requireMahasiswa, controller6.getStatusBebasAsrama);
 router.delete("/api/bebas-asrama/:id", authMiddleware, controller6.deleteBebasAsrama);
 router.get("/api/bebas-asrama/:id/surat", authMiddleware, controller6.downloadSurat);
 router.get("/api/tagihan/:id", authMiddleware, controller6.getTagihanMahasiswa);
@@ -112,18 +112,18 @@ router.put('/api/pengelola/pelaporan/:id/status', authMiddleware, requirePengelo
 // ====================== PEMBAYARAN (Pengelola) ======================
 
 
-router.get("/api/pengelola/pembayaran", authMiddleware, controller5.getAllPembayaran);
+router.get("/api/pengelola/pembayaran", authMiddleware,requirePengelola, controller5.getAllPembayaran);
 
-router.post("/api/pengelola/pembayaran/:id/approve", authMiddleware, controller5.approvePembayaran);
-router.post("/api/pengelola/pembayaran/:id/reject", authMiddleware, controller5.rejectPembayaran);
-router.get('/api/pengelola/surat/:id/bukti-pembayaran', authMiddleware, controller7.getBuktiPembayaran);
+router.post("/api/pengelola/pembayaran/:id/approve", authMiddleware,requirePengelola, controller5.approvePembayaran);
+router.post("/api/pengelola/pembayaran/:id/reject", authMiddleware, requirePengelola,controller5.rejectPembayaran);
+router.get('/api/pengelola/surat/:id/bukti-pembayaran', authMiddleware,requirePengelola, controller7.getBuktiPembayaran);
 
 // ====================== BEBAS ASRAMA (Pengelola) ======================
 
 router.get("/pengelola/pengelola-bebas-asrama", authMiddleware,requirePengelola, controller7.showBebasAsramaPengelola);
-router.get("/api/pengelola/bebas-asrama", authMiddleware, controller7.getAllBebasAsrama);
-router.get("/api/pengelola/bebas-asrama/:id", authMiddleware, controller7.getDetailBebasAsrama);
-router.post("/api/pengelola/bebas-asrama/:id/verifikasi-fasilitas", authMiddleware, controller7.verifikasiFasilitas);
+router.get("/api/pengelola/bebas-asrama", authMiddleware,requirePengelola, controller7.getAllBebasAsrama);
+router.get("/api/pengelola/bebas-asrama/:id", authMiddleware,requirePengelola, controller7.getDetailBebasAsrama);
+router.post("/api/pengelola/bebas-asrama/:id/verifikasi-fasilitas", authMiddleware,requirePengelola, controller7.verifikasiFasilitas);
 
 // ====================== PERIZINAN (Pengelola) ======================
 router.get('/pengelola/perizinan', authMiddleware, requirePengelola, conIzinKeluar.showIzinPengelola);
