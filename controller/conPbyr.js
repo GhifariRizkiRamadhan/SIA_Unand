@@ -18,6 +18,10 @@ const showPembayaran = async (req, res) => {
     // 2. Ambil data pengajuan spesifik dari database
     const pengajuan = await BebasAsrama.findById(pengajuanId);
 
+    if (!pengajuan) {
+      return res.status(404).render('error', { message: "Data pengajuan tidak ditemukan." });
+    }
+
     // TAMBAHKAN BLOK LOG INI DAN KIRIMKAN HASILNYA
     // ===============================================
     // console.log('===== DATA YANG AKAN DIKIRIM KE VIEW =====');
@@ -30,11 +34,6 @@ const showPembayaran = async (req, res) => {
       return res.status(500).render('error', { 
         message: "Data pembayaran tidak ditemukan. Hubungi administrator." 
       });
-    }
-
-    // 3. Handle jika pengajuan dengan ID tersebut tidak ditemukan
-    if (!pengajuan) {
-      return res.status(404).render('error', { message: "Data pengajuan tidak ditemukan." });
     }
 
     // Ambil data user yang sedang login (kode Anda sebelumnya)

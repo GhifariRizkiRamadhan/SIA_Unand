@@ -1,6 +1,15 @@
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../config/database');
 
+const isApiRequest = (req) => {
+  return (
+    (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
+    (req.get && typeof req.get === 'function' && (req.get('accept') || '').includes('application/json')) ||
+    (req.is && req.is('application/json')) ||
+    (req.xhr === true)
+  );
+};
+
 // Helper redirect sesuai role agar /login mengarahkan ke dashboard yang tepat
 const redirectByRole = (res, user) => {
   if (user.role === 'mahasiswa') {
@@ -14,13 +23,6 @@ const redirectByRole = (res, user) => {
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
-    
-    const isApiRequest = (
-      (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
-      (req.get && typeof req.get === 'function' && (req.get('accept') || '').includes('application/json')) ||
-      (req.is && req.is('application/json')) ||
-      (req.xhr === true)
-    );
 
     if (!token) {
       if (isApiRequest) {
@@ -100,28 +102,44 @@ const redirectIfAuthenticated = (req, res, next) => {
 
 // Middleware untuk mengecek role pengelola
 const requirePengelola = (req, res, next) => {
-  if (!req.user) {
-    return res.redirect('/login');
-  }
-  
-  if (req.user.role !== 'pengelola') {
-    return res.redirect('/mahasiswa/dashboard');
-  }
-  
-  next();
+  if (!req.user) {
+    if (isApiRequest(req)) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    return res.redirect('/login');
+  }
+  
+  if (req.user.role !== 'pengelola') {
+    // --- PERBAIKAN ---
+    if (isApiRequest(req)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Akses hanya untuk pengelola' });
+    }
+    // --- END ---
+    return res.redirect('/mahasiswa/dashboard');
+  }
+  
+  next();
 };
 
 // Middleware untuk mengecek role mahasiswa
 const requireMahasiswa = (req, res, next) => {
-  if (!req.user) {
-    return res.redirect('/login');
-  }
-  
-  if (req.user.role !== 'mahasiswa') {
-    return res.redirect('/pengelola/dashboard');
-  }
-  
-  next();
+  if (!req.user) {
+    if (isApiRequest(req)) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    return res.redirect('/login');
+  }
+  
+  if (req.user.role !== 'mahasiswa') {
+    // --- PERBAIKAN ---
+    if (isApiRequest(req)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Akses hanya untuk mahasiswa' });
+    }
+    // --- END ---
+    return res.redirect('/pengelola/dashboard');
+  }
+  
+  next();
 };
 
 

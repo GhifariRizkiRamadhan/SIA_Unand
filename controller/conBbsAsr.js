@@ -6,6 +6,7 @@ const User = require('../models/userModels');
 const path = require('path');
 const BebasAsrama = require('../models/bebasAsramaModel');
 const Pembayaran = require('../models/pembayaranModel');
+const notificationController = require('./notification');
 const PDFDocument = require('pdfkit');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -96,7 +97,6 @@ const ajukanBebasAsrama = async (req, res) => {
     });
 
     // Kirim notifikasi ke semua pengelola
-    const notificationController = require('./notification');
     const allPengelola = await prisma.pengelolaasrama.findMany({
       include: { user: true }
     });
@@ -135,6 +135,16 @@ const getStatusBebasAsrama = async (req, res) => {
 // Hapus pengajuan
 const deleteBebasAsrama = async (req, res) => {
   try {
+
+    // 1. Cek dulu apakah pengajuan ada
+    const pengajuan = await BebasAsrama.findById(req.params.id);
+
+    // 2. Jika tidak ada, kirim 404
+    if (!pengajuan) {
+      return res.status(404).json({ success: false, message: "Pengajuan tidak ditemukan" });
+    }
+
+    // 3. Jika ada, baru hapus
     await BebasAsrama.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Pengajuan dihapus" });
   } catch (err) {
