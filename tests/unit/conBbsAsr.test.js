@@ -1,7 +1,3 @@
-// ==========================================================
-// FILE: tests/unit/conBbsAsr.test.js (LENGKAP)
-// ==========================================================
-
 // 1. DEKLARASIKAN FUNGSI MOCK DI PALING ATAS
 const mockPrismaMahasiswaFindUnique = jest.fn();
 const mockPrismaPengelolaFindMany = jest.fn();
@@ -69,6 +65,7 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
   beforeEach(() => {
     // Reset semua mock history
     jest.clearAllMocks();
+    jest.resetAllMocks();
 
     // --- Atur Mock Default untuk Semua Tes ---
     mockPrismaMahasiswaFindUnique.mockResolvedValue(mockMahasiswa);
