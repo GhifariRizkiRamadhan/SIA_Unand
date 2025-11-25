@@ -90,6 +90,7 @@ describe('Integration Test: Endpoints Pembayaran', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.resetAllMocks();
     
     // Reset mock implementasi
     Pembayaran.findById.mockResolvedValue(mockPembayaran);

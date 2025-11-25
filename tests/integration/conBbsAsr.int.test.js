@@ -117,6 +117,7 @@ describe('Integration Test: Endpoints Bebas Asrama', () => {
   beforeEach(() => {
     // Reset semua mock history
     jest.clearAllMocks();
+    jest.resetAllMocks();
     
     // Reset mock token (penting agar mock findFirst di authMiddleware konsisten)
     mahasiswaToken = generateAuthToken({ user_id: 'mhs-1', role: 'mahasiswa', mahasiswa_id: 1 });
