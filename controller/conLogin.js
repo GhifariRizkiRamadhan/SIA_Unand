@@ -28,33 +28,41 @@ const redirectByRole = (res, user) => {
 };
 
 const authController = {
-  async login(req, res) {
+    async login(req, res) {
+    // FIX: deklarasi di luar try agar tersedia di catch
+    let isApiRequest = false;
+
     try {
       const { email, password, remember } = req.body;
-      const isApiRequest = (
+
+      // Tentukan apakah request adalah API/JSON
+      isApiRequest = (
         (req.originalUrl && req.originalUrl.startsWith('/api/')) ||
         (req.get && typeof req.get === 'function' && (req.get('accept') || '').includes('application/json')) ||
         (req.is && req.is('application/json')) ||
         (req.xhr === true)
       );
 
+      // ============================
       // Validation
+      // ============================
       if (!email || !password) {
         if (isApiRequest) {
           return res.status(400).json({
             success: false,
             message: "Email dan password harus diisi"
           });
-        } else {
-          return res.render("login", {
-            activePage: "login",
-            error: "Email dan password harus diisi",
-            success: null
-          });
         }
+        return res.render("login", {
+          activePage: "login",
+          error: "Email dan password harus diisi",
+          success: null
+        });
       }
 
+      // ============================
       // Find user
+      // ============================
       const user = await User.findByEmail(email);
       if (!user) {
         if (isApiRequest) {
@@ -62,16 +70,17 @@ const authController = {
             success: false,
             message: "Email atau password salah"
           });
-        } else {
-          return res.render("login", {
-            activePage: "login",
-            error: "Email atau password salah",
-            success: null
-          });
         }
+        return res.render("login", {
+          activePage: "login",
+          error: "Email atau password salah",
+          success: null
+        });
       }
 
+      // ============================
       // Verify password
+      // ============================
       const isValidPassword = await User.verifyPassword(password, user.password);
       if (!isValidPassword) {
         if (isApiRequest) {
@@ -79,16 +88,17 @@ const authController = {
             success: false,
             message: "Email atau password salah"
           });
-        } else {
-          return res.render("login", {
-            activePage: "login",
-            error: "Email atau password salah",
-            success: null
-          });
         }
+        return res.render("login", {
+          activePage: "login",
+          error: "Email atau password salah",
+          success: null
+        });
       }
 
-      // Generate JWT token
+      // ============================
+      // Generate JWT
+      // ============================
       const tokenPayload = {
         user_id: user.user_id,
         email: user.email,
@@ -103,39 +113,44 @@ const authController = {
       const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: remember ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+        maxAge: remember
+          ? 30 * 24 * 60 * 60 * 1000
+          : 24 * 60 * 60 * 1000
       };
 
       res.cookie('token', token, cookieOptions);
 
-      // --- Bedakan response ---
-      // Gunakan req.accepts('json') agar konsisten dengan middleware
+      // ============================
+      // Response
+      // ============================
       if (isApiRequest) {
-        // Kalau request dari Postman / API
         return res.status(200).json({
           message: "Login berhasil",
           token,
           role: user.role
         });
-      } else {
-        return redirectByRole(res, user);
       }
 
+      return redirectByRole(res, user);
 
     } catch (error) {
       console.error('Login error:', error);
+
+      // ============================
+      // FIX: sekarang isApiRequest aman
+      // ============================
       if (isApiRequest) {
         return res.status(500).json({
           success: false,
           message: "Terjadi kesalahan server"
         });
-      } else {
-        return res.render("login", {
-          activePage: "login",
-          error: "Terjadi kesalahan server",
-          success: null
-        });
       }
+
+      return res.render("login", {
+        activePage: "login",
+        error: "Terjadi kesalahan server",
+        success: null
+      });
     }
   },
 
