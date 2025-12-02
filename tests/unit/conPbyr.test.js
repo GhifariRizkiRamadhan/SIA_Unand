@@ -50,6 +50,14 @@ describe('Unit Test: controller/conPbyr.js', () => {
 
   // --- Upload ---
   it('uploadBuktiPembayaran: Happy', async () => { mockRequest.body.id = '1'; await controller.uploadBuktiPembayaran(mockRequest, mockResponse); });
+  it('Happy Path: Upload Sukses tapi Tidak Update Status Surat (No Surat ID)', async () => {
+        mockRequest.body.id = '1';
+        mockPembayaranFindById.mockResolvedValue({ id: 1 });
+        mockPembayaranFindByIdAndUpdate.mockResolvedValue({ id: 1, surat_id: null });
+        await controller.uploadBuktiPembayaran(mockRequest, mockResponse);
+        expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+        expect(mockBebasAsramaUpdateStatus).not.toHaveBeenCalled();
+    });
   it('uploadBuktiPembayaran: No File', async () => { mockRequest.file = null; await controller.uploadBuktiPembayaran(mockRequest, mockResponse); expect(mockResponse.status).toHaveBeenCalledWith(400); });
   it('uploadBuktiPembayaran: Not Found', async () => { mockPembayaranFindById.mockResolvedValue(null); mockRequest.body.id = '99'; await controller.uploadBuktiPembayaran(mockRequest, mockResponse); expect(mockResponse.status).toHaveBeenCalledWith(404); });
   it('uploadBuktiPembayaran: Error', async () => { mockPembayaranFindById.mockRejectedValue(new Error()); await controller.uploadBuktiPembayaran(mockRequest, mockResponse); });
@@ -61,10 +69,28 @@ describe('Unit Test: controller/conPbyr.js', () => {
 
   // --- Update ---
   it('updatePembayaran: Happy', async () => { await controller.updatePembayaran(mockRequest, mockResponse); });
+   it('Happy Path: No File (Cover Branch)', async () => {
+        mockRequest.params.id = '10';
+        mockRequest.file = null; 
+        await controller.updatePembayaran(mockRequest, mockResponse);
+  
+        expect(mockPembayaranFindByIdAndUpdate).toHaveBeenCalledWith(
+            '10', 
+            expect.objectContaining({ bukti_pembayaran: null }), 
+            expect.anything()
+        );
+    });
   it('updatePembayaran: Error', async () => { mockPembayaranFindByIdAndUpdate.mockRejectedValue(new Error()); await controller.updatePembayaran(mockRequest, mockResponse); });
 
   // --- Reupload ---
   it('reuploadBuktiPembayaran: Happy', async () => { mockRequest.params.id = '1'; await controller.reuploadBuktiPembayaran(mockRequest, mockResponse); });
+  it('Happy Path: No Surat ID (Branch Coverage)', async () => {
+        mockPembayaranFindByIdAndUpdate.mockResolvedValue({ id: 1, surat_id: null });
+        mockRequest.params.id = '1';
+        await controller.reuploadBuktiPembayaran(mockRequest, mockResponse);
+
+        expect(mockBebasAsramaUpdateStatus).not.toHaveBeenCalled();
+    });
   it('reuploadBuktiPembayaran: No File', async () => { mockRequest.file = null; await controller.reuploadBuktiPembayaran(mockRequest, mockResponse); });
   it('reuploadBuktiPembayaran: Not Found', async () => { mockPembayaranFindByIdAndUpdate.mockResolvedValue(null); mockRequest.params.id = '1'; await controller.reuploadBuktiPembayaran(mockRequest, mockResponse); });
   it('reuploadBuktiPembayaran: Error', async () => { mockPembayaranFindByIdAndUpdate.mockRejectedValue(new Error()); await controller.reuploadBuktiPembayaran(mockRequest, mockResponse); });

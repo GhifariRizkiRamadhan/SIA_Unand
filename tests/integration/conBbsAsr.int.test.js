@@ -1,7 +1,3 @@
-// ==========================================================
-// FILE: tests/integration/conBbsAsr.int.test.js (FINAL FIXED)
-// ==========================================================
-
 require('dotenv').config();
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'secret-rahasia-untuk-tes';
 
