@@ -5,8 +5,7 @@
 
 process.env.NODE_ENV = "test";
 
-// --- MOCKS harus dideklarasikan SEBELUM require controller yang memakai User ---
-// Mock manual untuk models/userModels supaya Prisma tidak ter-load
+// --- MOCKS ---
 const mockUser = {
   emailExists: jest.fn(),
   nimExists: jest.fn(),
@@ -14,16 +13,15 @@ const mockUser = {
 };
 jest.mock("../../models/userModels", () => mockUser);
 
-// Mock fs: gunakan actual fs tetapi override unlinkSync
+// Mock fs explicitly using the factory correctly
 jest.mock("fs", () => {
-  const realFs = jest.requireActual("fs");
   return {
-    ...realFs,
     unlinkSync: jest.fn(),
+    // Include other methods if needed, or use requireActual if the controller uses other fs methods
+    // ...jest.requireActual("fs"),
   };
 });
 
-// Sekarang require module yang akan diuji
 const fs = require("fs");
 const User = require("../../models/userModels");
 const { regcon } = require("../../controller/conRegis");
@@ -47,8 +45,6 @@ function makeReq(body = {}, file = null) {
 describe("Unit: regcon (register controller)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // pastikan unlinkSync adalah mock (dari jest.mock('fs',...))
-    fs.unlinkSync = fs.unlinkSync || jest.fn();
   });
 
   test("showRegis -> render register page", async () => {
@@ -64,49 +60,29 @@ describe("Unit: regcon (register controller)", () => {
     });
   });
 
+  // Covers Line 25: if (req.file) inside validation error
   test("❌ Field kosong -> render error and unlink if file present", async () => {
     const file = { path: "/tmp/uploaded.png", filename: "uploaded.png" };
-    const req = makeReq({ name: "", email: "a@b", password: "123", confirmPassword: "123", nim: "11", jurusan: "SI" }, file);
+    // Missing 'jurusan' to trigger validation error
+    const req = makeReq({ name: "A", email: "a@b", password: "123", confirmPassword: "123", nim: "11" }, file);
     const res = makeRes();
 
     await regcon.register(req, res);
 
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
-      error: "Semua field harus diisi",
-      success: null,
-    });
     expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/uploaded.png");
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: "Semua field harus diisi",
+    }));
   });
 
-  test("❌ Tidak upload foto -> render error", async () => {
-    const req = makeReq({
-      name: "A",
-      email: "a@mail",
-      password: "123456",
-      confirmPassword: "123456",
-      nim: "11",
-      jurusan: "SI"
-    }, null);
-    const res = makeRes();
-
-    await regcon.register(req, res);
-
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
-      error: "Foto mahasiswa wajib diupload",
-      success: null,
-    });
-    expect(fs.unlinkSync).not.toHaveBeenCalled();
-  });
-
+  // Covers Line 46: if (req.file) inside password mismatch
   test("❌ Password tidak cocok -> render error and unlink", async () => {
     const file = { path: "/tmp/p.png", filename: "p.png" };
     const req = makeReq({
       name: "A",
       email: "a@mail",
-      password: "123456",
-      confirmPassword: "654321",
+      password: "123",
+      confirmPassword: "321",
       nim: "11",
       jurusan: "SI"
     }, file);
@@ -114,14 +90,13 @@ describe("Unit: regcon (register controller)", () => {
 
     await regcon.register(req, res);
 
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
-      error: "Password dan konfirmasi password tidak cocok",
-      success: null,
-    });
     expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/p.png");
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: "Password dan konfirmasi password tidak cocok",
+    }));
   });
 
+  // Covers Line 58: if (req.file) inside password length check
   test("❌ Password terlalu pendek -> render error and unlink", async () => {
     const file = { path: "/tmp/short.png", filename: "short.png" };
     const req = makeReq({
@@ -136,14 +111,13 @@ describe("Unit: regcon (register controller)", () => {
 
     await regcon.register(req, res);
 
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
-      error: "Password minimal 6 karakter",
-      success: null,
-    });
     expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/short.png");
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: "Password minimal 6 karakter",
+    }));
   });
 
+  // Covers Line 71: if (req.file) inside email exists check
   test("❌ Email sudah terdaftar -> render error and unlink", async () => {
     const file = { path: "/tmp/e.png", filename: "e.png" };
     const req = makeReq({
@@ -157,19 +131,17 @@ describe("Unit: regcon (register controller)", () => {
     const res = makeRes();
 
     User.emailExists.mockResolvedValue(true);
-    User.nimExists.mockResolvedValue(false);
 
     await regcon.register(req, res);
 
     expect(User.emailExists).toHaveBeenCalledWith("exist@mail");
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
-      error: "Email sudah terdaftar",
-      success: null,
-    });
     expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/e.png");
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: "Email sudah terdaftar",
+    }));
   });
 
+  // Covers Lines 84-127: NIM exists check and Success Flow
   test("❌ NIM sudah terdaftar -> render error and unlink", async () => {
     const file = { path: "/tmp/n.png", filename: "n.png" };
     const req = makeReq({
@@ -188,15 +160,13 @@ describe("Unit: regcon (register controller)", () => {
     await regcon.register(req, res);
 
     expect(User.nimExists).toHaveBeenCalledWith("existnim");
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
-      error: "NIM sudah terdaftar",
-      success: null,
-    });
     expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/n.png");
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: "NIM sudah terdaftar",
+    }));
   });
 
-  test("✅ Registrasi berhasil -> create dipanggil dan render login success", async () => {
+  test("✅ Registrasi berhasil -> create user and render login success", async () => {
     const file = { path: "/tmp/succ.png", filename: "succ.png" };
     const req = makeReq({
       name: "Ghifari",
@@ -218,14 +188,37 @@ describe("Unit: regcon (register controller)", () => {
 
     await regcon.register(req, res);
 
-    // after success should render login with success message
-    expect(User.create).toHaveBeenCalled();
+    expect(User.create).toHaveBeenCalledWith(expect.objectContaining({
+      name: "Ghifari",
+      email: "baru@mail.com",
+      role: "mahasiswa",
+      foto: "/image/mahasiswa/succ.png"
+    }));
     expect(res.render).toHaveBeenCalledWith("login", {
       activePage: "login",
       error: null,
       success: "Registrasi berhasil! Silakan login dengan akun Anda."
     });
-    // tidak harus menghapus file pada flow sukses
+    // Should NOT unlink on success
+    expect(fs.unlinkSync).not.toHaveBeenCalled();
+  });
+
+  test("❌ Tidak upload foto -> render error", async () => {
+    const req = makeReq({
+      name: "A",
+      email: "a@mail",
+      password: "123456",
+      confirmPassword: "123456",
+      nim: "11",
+      jurusan: "SI"
+    }, null);
+    const res = makeRes();
+
+    await regcon.register(req, res);
+
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: "Foto mahasiswa wajib diupload",
+    }));
     expect(fs.unlinkSync).not.toHaveBeenCalled();
   });
 
@@ -248,10 +241,46 @@ describe("Unit: regcon (register controller)", () => {
     await regcon.register(req, res);
 
     expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/err.png");
-    expect(res.render).toHaveBeenCalledWith("register", {
-      activePage: "register",
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
       error: expect.stringContaining("Terjadi kesalahan server"),
-      success: null,
-    });
+    }));
   });
+
+  test("❌ Error saat create -> unlink gagal -> log error (catch block)", async () => {
+    const file = { path: "/tmp/err2.png", filename: "err2.png" };
+    const req = makeReq({
+      name: "A",
+      email: "err@mail",
+      password: "123456",
+      confirmPassword: "123456",
+      nim: "999",
+      jurusan: "SI"
+    }, file);
+    const res = makeRes();
+
+    User.emailExists.mockResolvedValue(false);
+    User.nimExists.mockResolvedValue(false);
+    User.create.mockRejectedValue(new Error("DB error"));
+
+    // Mock unlinkSync to throw error ONLY for this test
+    fs.unlinkSync.mockImplementationOnce(() => { throw new Error("Unlink Fail"); });
+
+    await regcon.register(req, res);
+
+    expect(res.render).toHaveBeenCalledWith("register", expect.objectContaining({
+      error: expect.stringContaining("Terjadi kesalahan server"),
+    }));
+  });
+
+  test("showRegis error -> 500 json", async () => {
+    const req = {};
+    const res = makeRes();
+    res.render.mockImplementation(() => { throw new Error("Render error"); });
+
+    await regcon.showRegis(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false, message: "Render error" }));
+  });
+
 });

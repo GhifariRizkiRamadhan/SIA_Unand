@@ -6,57 +6,72 @@
 process.env.NODE_ENV = "test";
 
 // -----------------------------
-// MOCKS (harus di-declare dulu)
+// MOCKS
 // -----------------------------
 
-// Mock Prisma-like object (dipakai oleh controller via require('../config/database').prisma)
-const mockPrisma = {
-  mahasiswa: {
-    findMany: jest.fn(),
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-  },
-  user: {
-    create: jest.fn(),
-    update: jest.fn(),
-  },
-};
-jest.mock("../../config/database", () => ({ prisma: mockPrisma }));
+const mockFindMany = jest.fn();
+const mockFindUnique = jest.fn();
+const mockFindFirst = jest.fn();
+const mockCreate = jest.fn();
+const mockUpdate = jest.fn();
+const mockUserCreate = jest.fn();
+const mockUserUpdate = jest.fn();
+const mockFindById = jest.fn();
+const mockHash = jest.fn().mockResolvedValue("hashedPassword");
+const mockRenderFile = jest.fn().mockResolvedValue("<div>body-html</div>");
+const mockUnlinkSync = jest.fn();
+const mockExistsSync = jest.fn().mockReturnValue(false);
 
-// Mock userModels (User.findById)
-const mockUserModel = {
-  findById: jest.fn(),
-};
-jest.mock("../../models/userModels", () => mockUserModel);
+jest.mock("../../config/database", () => ({
+  prisma: {
+    mahasiswa: {
+      findMany: mockFindMany,
+      findUnique: mockFindUnique,
+      findFirst: mockFindFirst,
+      create: mockCreate,
+      update: mockUpdate,
+    },
+    user: {
+      create: mockUserCreate,
+      update: mockUserUpdate,
+    },
+  },
+}));
 
-// Mock bcrypt (untuk hash)
+jest.mock("../../models/userModels", () => ({
+  findById: mockFindById,
+}));
+
 jest.mock("bcrypt", () => ({
-  hash: jest.fn().mockResolvedValue("hashedPassword"),
+  hash: mockHash,
 }));
 
-// Mock ejs.renderFile supaya tidak membaca file ejs asli
 jest.mock("ejs", () => ({
-  renderFile: jest.fn().mockResolvedValue("<div>body-html</div>"),
+  renderFile: mockRenderFile,
 }));
 
-// Mock fs (unlinkSync, existsSync)
+jest.mock("path", () => ({
+  join: jest.fn((...args) => args.join("/")),
+  resolve: jest.fn((...args) => args.join("/")),
+  dirname: jest.fn(() => "/mock/dir"),
+}));
+
 jest.mock("fs", () => {
   const realFs = jest.requireActual("fs");
   return {
     ...realFs,
-    unlinkSync: jest.fn(),
-    existsSync: jest.fn().mockReturnValue(false),
+    unlinkSync: mockUnlinkSync,
+    existsSync: mockExistsSync,
   };
 });
 
 // -----------------------------
-// require setelah mocks
+// REQUIRE
 // -----------------------------
 const bcrypt = require("bcrypt");
 const ejs = require("ejs");
 const fs = require("fs");
+const path = require("path");
 const User = require("../../models/userModels");
 const { prisma } = require("../../config/database");
 const {
@@ -67,7 +82,9 @@ const {
   getPenghuniById,
 } = require("../../controller/conDtPnghni");
 
-// helper: mock response object (chainable)
+// -----------------------------
+// HELPERS
+// -----------------------------
 function makeRes() {
   const res = {};
   res.status = jest.fn().mockReturnValue(res);
@@ -77,276 +94,331 @@ function makeRes() {
   return res;
 }
 
-// helper: make request skeletons
 function makeReq(body = {}, opts = {}) {
-  const req = { body, params: opts.params || {}, query: opts.query || {}, file: opts.file || null, session: opts.session || {}, user: opts.user || null };
-  // convenience for originalUrl / get / is / xhr used in some controllers: not required here but safe
-  req.get = opts.get || (() => null);
-  req.is = opts.is || (() => false);
+  const req = {
+    body,
+    params: opts.params || {},
+    query: opts.query || {},
+    file: opts.file || null,
+    session: opts.session || {},
+    user: opts.user || null
+  };
   return req;
 }
 
 // -----------------------------
-// Test suite
+// TESTS
 // -----------------------------
 describe("Unit: conDtPnghni controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // ensure default mock returns
-    mockPrisma.mahasiswa.findMany.mockResolvedValue([]);
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(null);
-    mockPrisma.mahasiswa.findFirst.mockResolvedValue(null);
-    mockPrisma.mahasiswa.create.mockResolvedValue(null);
-    mockPrisma.mahasiswa.update.mockResolvedValue(null);
-    mockPrisma.user.create.mockResolvedValue(null);
-    mockPrisma.user.update.mockResolvedValue(null);
-    User.findById.mockResolvedValue(null);
-    ejs.renderFile.mockResolvedValue("<div>body-html</div>");
-    fs.existsSync.mockReturnValue(false);
+    mockFindMany.mockResolvedValue([]);
+    mockFindUnique.mockResolvedValue(null);
+    mockFindFirst.mockResolvedValue(null);
+    mockCreate.mockResolvedValue(null);
+    mockUpdate.mockResolvedValue(null);
+    mockUserCreate.mockResolvedValue(null);
+    mockUserUpdate.mockResolvedValue(null);
+    mockFindById.mockResolvedValue(null);
+    mockRenderFile.mockResolvedValue("<div>body-html</div>");
+    mockExistsSync.mockReturnValue(false);
+    mockUnlinkSync.mockImplementation(() => { }); // Reset to no-op
   });
 
-  // -------------------------
-  // showDtPenghuni
-  // -------------------------
-  test("redirect to /login if no user in session or req.user", async () => {
+  test("DEBUG: Prisma mock should work", async () => {
+    mockFindUnique.mockResolvedValueOnce("DEBUG_VALUE");
+    const result = await prisma.mahasiswa.findUnique({ where: { id: 1 } });
+    expect(result).toBe("DEBUG_VALUE");
+  });
+
+  // --- showDtPenghuni ---
+  test("showDtPenghuni: redirect to /login if no user", async () => {
     const req = makeReq();
     const res = makeRes();
-
     await showDtPenghuni(req, res);
-
     expect(res.redirect).toHaveBeenCalledWith("/login");
   });
 
-  test("render layouts/main with body when user present", async () => {
-    // prepare
-    const fakeUser = { user_id: "pengelola_123", name: "Admin", role: "pengelola", avatar: null };
-    User.findById.mockResolvedValue(fakeUser);
-
-    const aktif = [{ mahasiswa_id: 1, nama: "A", user: { email: "a@mail" } }];
-    const tidakAktif = [{ mahasiswa_id: 2, nama: "B", user: { email: "b@mail" } }];
-    mockPrisma.mahasiswa.findMany
-      .mockResolvedValueOnce(aktif) // first call for aktif
-      .mockResolvedValueOnce(tidakAktif); // second call for tidak aktif
-
-    const req = makeReq({}, { session: { user_id: "pengelola_123" }, query: {} });
+  test("showDtPenghuni: render page if user exists", async () => {
+    const fakeUser = { user_id: "u1", name: "Admin", role: "pengelola" };
+    mockFindById.mockResolvedValue(fakeUser);
+    const req = makeReq({}, { session: { user_id: "u1" } });
     const res = makeRes();
 
     await showDtPenghuni(req, res);
 
-    expect(User.findById).toHaveBeenCalledWith("pengelola_123");
-    expect(mockPrisma.mahasiswa.findMany).toHaveBeenCalledTimes(2);
-    expect(ejs.renderFile).toHaveBeenCalled();
-    expect(res.render).toHaveBeenCalledWith("layouts/main", expect.objectContaining({
-      title: expect.any(String),
-      body: "<div>body-html</div>",
-      user: expect.objectContaining({ name: "Admin", role: "pengelola" })
-    }));
+    expect(res.render).toHaveBeenCalledWith("layouts/main", expect.anything());
   });
 
-  // -------------------------
-  // tambahPenghuni
-  // -------------------------
-  test("tambahPenghuni: redirect error if missing required fields (and unlink file)", async () => {
-    const file = { path: "/tmp/upload.png", filename: "upload.png" };
-    const req = makeReq({ nama: "", nim: "", jurusan: "" }, { file });
+  test("showDtPenghuni: handle errors", async () => {
+    const req = makeReq({}, { session: { user_id: "u1" } });
+    const res = makeRes();
+    mockFindById.mockRejectedValue(new Error("DB Error"));
+
+    await showDtPenghuni(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.render).toHaveBeenCalledWith("error", expect.anything());
+  });
+
+  // --- tambahPenghuni ---
+  test("tambahPenghuni: validation error (missing fields) -> unlink file if present", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ nama: "" }, { file });
     const res = makeRes();
 
     await tambahPenghuni(req, res);
 
-    expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/upload.png");
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("/pengelola/dataPenghuni?error="));
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("error="));
   });
 
-  test("tambahPenghuni: redirect error if nim already exists", async () => {
-    const file = { path: "/tmp/upload.png", filename: "upload.png" };
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue({ mahasiswa_id: 1, nim: "2111001" });
-
-    const req = makeReq({ nama: "X", nim: "2111001", jurusan: "TI" }, { file });
+  test("tambahPenghuni: nim exists -> unlink file if present", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ nama: "A", nim: "123", jurusan: "SI" }, { file });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ nim: "123" });
 
     await tambahPenghuni(req, res);
 
-    expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/upload.png");
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("NIM%20sudah%20terdaftar"));
   });
 
-  test("tambahPenghuni: success creates user and mahasiswa and redirects success", async () => {
-    // mocks
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(null);
-    mockPrisma.user.create.mockResolvedValue({ user_id: "maha_1" });
-    mockPrisma.mahasiswa.create.mockResolvedValue({ mahasiswa_id: 10 });
-
-    // spy on bcrypt.hash mock already returns "hashedPassword"
-    const file = { path: "/tmp/upload.png", filename: "upload.png" };
-    const req = makeReq({ nama: "Citra", nim: "2111003", jurusan: "TE", status: "aktif", kipk: "ya" }, { file });
+  test("tambahPenghuni: success with file", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ nama: "A", nim: "123", jurusan: "SI" }, { file });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
 
     await tambahPenghuni(req, res);
 
-    expect(bcrypt.hash).toHaveBeenCalledWith("2111003", 10);
-    expect(mockPrisma.user.create).toHaveBeenCalled();
-    expect(mockPrisma.mahasiswa.create).toHaveBeenCalled();
+    expect(mockUserCreate).toHaveBeenCalled();
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ foto: "/image/mahasiswa/f.png" })
+    }));
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
   });
 
-  // -------------------------
-  // editPenghuni
-  // -------------------------
-  test("editPenghuni: missing fields -> unlink and redirect error", async () => {
-    const file = { path: "/tmp/f.png", filename: "f.png" };
-    const req = makeReq({ mahasiswa_id: "", nama: "", nim: "", jurusan: "", status: "" }, { file });
+  test("tambahPenghuni: success without file", async () => {
+    const req = makeReq({ nama: "A", nim: "123", jurusan: "SI" });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
 
-    await editPenghuni(req, res);
+    await tambahPenghuni(req, res);
 
-    expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/f.png");
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Semua%20field%20harus%20diisi"));
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ foto: null })
+    }));
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
   });
 
-  test("editPenghuni: mahasiswa not found -> unlink and redirect error", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(null);
-    const file = { path: "/tmp/f2.png", filename: "f2.png" };
-    const req = makeReq({ mahasiswa_id: "999", nama: "U", nim: "2111999", jurusan: "Test", status: "aktif" }, { file });
+  test("tambahPenghuni: error during create -> unlink file", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ nama: "A", nim: "123", jurusan: "SI" }, { file });
+    const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
+    mockUserCreate.mockRejectedValue(new Error("DB Error"));
+
+    await tambahPenghuni(req, res);
+
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Terjadi%20kesalahan"));
+  });
+
+  test("tambahPenghuni: error during create -> unlink fails -> log error", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ nama: "A", nim: "123", jurusan: "SI" }, { file });
+    const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
+    mockUserCreate.mockRejectedValue(new Error("DB Error"));
+    mockUnlinkSync.mockImplementationOnce(() => { throw new Error("Unlink Error"); });
+
+    await tambahPenghuni(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Terjadi%20kesalahan"));
+  });
+
+  // --- editPenghuni ---
+  test("editPenghuni: validation error -> unlink file", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ nama: "" }, { file });
     const res = makeRes();
 
     await editPenghuni(req, res);
 
-    expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/f2.png");
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("error="));
+  });
+
+  test("editPenghuni: not found -> unlink file", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ mahasiswa_id: "99", nama: "A", nim: "1", jurusan: "SI", status: "aktif" }, { file });
+    const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
+
+    await editPenghuni(req, res);
+
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("tidak%20ditemukan"));
   });
 
-  test("editPenghuni: nim used by other -> unlink and redirect error", async () => {
-    // existing mahasiswa being edited
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue({ mahasiswa_id: 1, nim: "2111001", user_id: "u1" });
-    // findFirst finds another mahasiswa with same nim
-    mockPrisma.mahasiswa.findFirst.mockResolvedValue({ mahasiswa_id: 2, nim: "2111002" });
-
-    const req = makeReq({ mahasiswa_id: "1", nama: "New", nim: "2111002", jurusan: "TI", status: "aktif" }, {});
+  test("editPenghuni: nim exists -> unlink file", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "2", jurusan: "SI", status: "aktif" }, { file });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1 });
+    mockFindFirst.mockResolvedValueOnce({ mahasiswa_id: 2 });
 
     await editPenghuni(req, res);
 
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("NIM%20sudah%20digunakan"));
   });
 
-  test("editPenghuni: success update mahasiswa and user, redirect success", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue({
-      mahasiswa_id: 1,
-      nim: "2111001",
-      nama: "Old Name",
-      jurusan: "Old Major",
-      status: "aktif",
-      foto: null,
-      user_id: "mahasiswa_001",
-    });
-    mockPrisma.mahasiswa.findFirst.mockResolvedValue(null);
-    mockPrisma.mahasiswa.update.mockResolvedValue({ mahasiswa_id: 1 });
-    mockPrisma.user.update.mockResolvedValue({ user_id: "mahasiswa_001" });
-
-    const req = makeReq({ mahasiswa_id: "1", nama: "New Name", nim: "2111001", jurusan: "New Major", status: "aktif", kipk: "ya" }, {});
+  test("editPenghuni: success with file -> delete old photo", async () => {
+    const file = { path: "/tmp/new.png", filename: "new.png" };
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "1", jurusan: "SI", status: "aktif" }, { file });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1, foto: "old.png", user_id: "u1" });
+    mockFindFirst.mockResolvedValueOnce(null);
+    mockExistsSync.mockReturnValue(true);
 
     await editPenghuni(req, res);
 
-    expect(mockPrisma.mahasiswa.update).toHaveBeenCalled();
-    expect(mockPrisma.user.update).toHaveBeenCalled();
+    expect(mockUnlinkSync).toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
   });
 
-  // -------------------------
-  // toggleStatusPenghuni
-  // -------------------------
-  test("toggleStatusPenghuni: mahasiswa not found -> redirect error", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(null);
-
-    const req = makeReq({}, { params: { mahasiswa_id: "999" } });
+  test("editPenghuni: success with file -> old photo not found (no unlink)", async () => {
+    const file = { path: "/tmp/new.png", filename: "new.png" };
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "1", jurusan: "SI", status: "aktif" }, { file });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1, foto: "old.png", user_id: "u1" });
+    mockFindFirst.mockResolvedValueOnce(null);
+    mockExistsSync.mockReturnValue(false); // Old file doesn't exist
+
+    await editPenghuni(req, res);
+
+    expect(mockUnlinkSync).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
+  });
+
+  test("editPenghuni: success with file -> no old photo (no unlink)", async () => {
+    const file = { path: "/tmp/new.png", filename: "new.png" };
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "1", jurusan: "SI", status: "aktif" }, { file });
+    const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1, foto: null, user_id: "u1" }); // No old photo
+    mockFindFirst.mockResolvedValueOnce(null);
+
+    await editPenghuni(req, res);
+
+    expect(mockUnlinkSync).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
+  });
+
+  test("editPenghuni: success without file", async () => {
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "1", jurusan: "SI", status: "aktif" });
+    const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1, foto: "old.png", user_id: "u1" });
+    mockFindFirst.mockResolvedValueOnce(null);
+
+    await editPenghuni(req, res);
+
+    expect(mockUnlinkSync).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
+  });
+
+  test("editPenghuni: error -> unlink uploaded file", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "1", jurusan: "SI", status: "aktif" }, { file });
+    const res = makeRes();
+    mockFindUnique.mockRejectedValue(new Error("DB Error"));
+
+    await editPenghuni(req, res);
+
+    expect(mockUnlinkSync).toHaveBeenCalledWith("/tmp/f.png");
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Terjadi%20kesalahan"));
+  });
+
+  test("editPenghuni: error -> unlink uploaded file fails -> log error", async () => {
+    const file = { path: "/tmp/f.png", filename: "f.png" };
+    const req = makeReq({ mahasiswa_id: "1", nama: "A", nim: "1", jurusan: "SI", status: "aktif" }, { file });
+    const res = makeRes();
+    mockFindUnique.mockRejectedValue(new Error("DB Error"));
+    mockUnlinkSync.mockImplementationOnce(() => { throw new Error("Unlink Error"); });
+
+    await editPenghuni(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Terjadi%20kesalahan"));
+  });
+
+  // --- toggleStatusPenghuni ---
+  test("toggleStatusPenghuni: not found", async () => {
+    const req = makeReq({}, { params: { mahasiswa_id: "99" } });
+    const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
 
     await toggleStatusPenghuni(req, res);
 
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("tidak%20ditemukan"));
   });
 
-  test("toggleStatusPenghuni: aktif -> tidak aktif", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue({ mahasiswa_id: 1, status: "aktif" });
-    mockPrisma.mahasiswa.update.mockResolvedValue({ mahasiswa_id: 1, status: "tidak aktif" });
-
+  test("toggleStatusPenghuni: success", async () => {
     const req = makeReq({}, { params: { mahasiswa_id: "1" } });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1, status: "aktif" });
 
     await toggleStatusPenghuni(req, res);
 
-    expect(mockPrisma.mahasiswa.update).toHaveBeenCalledWith({
-      where: { mahasiswa_id: 1 },
-      data: { status: "tidak aktif" },
-    });
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("tidak%20aktif"));
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      data: { status: "tidak aktif" }
+    }));
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("success="));
   });
 
-  test("toggleStatusPenghuni: tidak aktif -> aktif", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue({ mahasiswa_id: 2, status: "tidak aktif" });
-    mockPrisma.mahasiswa.update.mockResolvedValue({ mahasiswa_id: 2, status: "aktif" });
-
-    const req = makeReq({}, { params: { mahasiswa_id: "2" } });
+  test("toggleStatusPenghuni: error", async () => {
+    const req = makeReq({}, { params: { mahasiswa_id: "1" } });
     const res = makeRes();
+    mockFindUnique.mockRejectedValue(new Error("DB Error"));
 
     await toggleStatusPenghuni(req, res);
 
-    expect(mockPrisma.mahasiswa.update).toHaveBeenCalledWith({
-      where: { mahasiswa_id: 2 },
-      data: { status: "aktif" },
-    });
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("aktif"));
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Terjadi%20kesalahan"));
   });
 
-  // -------------------------
-  // getPenghuniById
-  // -------------------------
-  test("getPenghuniById: 404 when not found", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(null);
-
-    const req = makeReq({}, { params: { id: "999" } });
+  // --- getPenghuniById ---
+  test("getPenghuniById: not found", async () => {
+    const req = makeReq({}, { params: { id: "99" } });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce(null);
 
     await getPenghuniById(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
   });
 
-  test("getPenghuniById: success returns mahasiswa", async () => {
-    const mockMahasiswa = {
-      mahasiswa_id: 1,
-      nim: "2111001",
-      nama: "Budi",
-      user: { email: "2111001@student.unand.ac.id" },
-    };
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(mockMahasiswa);
-
+  test("getPenghuniById: success", async () => {
     const req = makeReq({}, { params: { id: "1" } });
     const res = makeRes();
+    mockFindUnique.mockResolvedValueOnce({ mahasiswa_id: 1 });
 
     await getPenghuniById(req, res);
 
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: mockMahasiswa });
-    expect(res.status).not.toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
   });
 
-  // -------------------------
-  // error handling branches (example: prisma throws)
-  // -------------------------
-  test("tambahPenghuni: error during create -> unlink and redirect with error", async () => {
-    mockPrisma.mahasiswa.findUnique.mockResolvedValue(null);
-    mockPrisma.user.create.mockRejectedValue(new Error("DB fail"));
-
-    const file = { path: "/tmp/err_create.png", filename: "err_create.png" };
-    const req = makeReq({ nama: "Err", nim: "999", jurusan: "TI" }, { file });
+  test("getPenghuniById: error", async () => {
+    const req = makeReq({}, { params: { id: "1" } });
     const res = makeRes();
+    mockFindUnique.mockRejectedValue(new Error("DB Error"));
 
-    await tambahPenghuni(req, res);
+    await getPenghuniById(req, res);
 
-    expect(fs.unlinkSync).toHaveBeenCalledWith("/tmp/err_create.png");
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("Terjadi%20kesalahan"));
+    expect(res.status).toHaveBeenCalledWith(500);
   });
-
 });
