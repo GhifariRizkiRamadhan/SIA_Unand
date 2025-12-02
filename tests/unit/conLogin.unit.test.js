@@ -241,9 +241,42 @@ describe("Unit: redirectByRole", () => {
     expect(res.redirect).toHaveBeenCalledWith("/pengelola/dashboard");
   });
 
-  test("redirect fallback", () => {
+  test("redirect unknown role -> fallback to /", () => {
     const res = makeRes();
     redirectByRole(res, { role: "unknown" });
     expect(res.redirect).toHaveBeenCalledWith("/");
+  });
+});
+
+describe("Unit: authController.logout", () => {
+  test("logout success", async () => {
+    const req = {};
+    const res = makeRes();
+    await authController.logout(req, res);
+    expect(res.clearCookie).toHaveBeenCalledWith("token");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
+  });
+
+  test("logout error -> log error and redirect", async () => {
+    const req = {};
+    const res = makeRes();
+    res.clearCookie.mockImplementation(() => { throw new Error("Cookie error"); });
+
+    await authController.logout(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith("/login");
+  });
+});
+
+describe("Unit: showLogin error", () => {
+  test("showLogin error -> 500 json", async () => {
+    const req = {};
+    const res = makeRes();
+    res.render.mockImplementation(() => { throw new Error("Render error"); });
+
+    await showLogin(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: expect.anything() }));
   });
 });

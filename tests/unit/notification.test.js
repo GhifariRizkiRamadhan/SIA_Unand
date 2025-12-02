@@ -36,13 +36,13 @@ describe('Unit Test: controller/notification.js (Notification Management)', () =
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockRequest = {
       session: { user_id: 'user-1' },
       user: { user_id: 'user-1' },
       params: {}
     };
-    
+
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis()
@@ -313,6 +313,29 @@ describe('Unit Test: controller/notification.js (Notification Management)', () =
     }));
   });
 
+  it('createIzinKeluarNotification: Uses default status null (new request)', async () => {
+    const mockMahasiswa = {
+      mahasiswa_id: 1,
+      user: { user_id: 'user-1', name: 'John Doe' }
+    };
+    const mockPengelolas = [{ user_id: 'pengelola-1', user: { user_id: 'pengelola-1' } }];
+
+    mockPrismaMahasiswaFindUnique.mockResolvedValue(mockMahasiswa);
+    mockPrismaPengelolaFindMany.mockResolvedValue(mockPengelolas);
+    mockPrismaNotificationCreate.mockResolvedValue({ notification_id: 1 });
+
+    // Call without status argument
+    await controller.createIzinKeluarNotification(1, 'izin-123');
+
+    expect(mockPrismaPengelolaFindMany).toHaveBeenCalled();
+    expect(mockPrismaNotificationCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: 'Pengajuan Izin Keluar Baru',
+        type: 'izin_keluar'
+      })
+    }));
+  });
+
   // --- createKerusakanNotification ---
   it('createKerusakanNotification: Sends to pengelola for new report', async () => {
     const mockMahasiswa = {
@@ -353,6 +376,29 @@ describe('Unit Test: controller/notification.js (Notification Management)', () =
       data: expect.objectContaining({
         title: 'Update Status Laporan Kerusakan',
         type: 'kerusakan_status'
+      })
+    }));
+  });
+
+  it('createKerusakanNotification: Uses default status null (new report)', async () => {
+    const mockMahasiswa = {
+      mahasiswa_id: 1,
+      user: { user_id: 'user-1', name: 'John Doe' }
+    };
+    const mockPengelolas = [{ user_id: 'pengelola-1', user: { user_id: 'pengelola-1' } }];
+
+    mockPrismaMahasiswaFindUnique.mockResolvedValue(mockMahasiswa);
+    mockPrismaPengelolaFindMany.mockResolvedValue(mockPengelolas);
+    mockPrismaNotificationCreate.mockResolvedValue({ notification_id: 1 });
+
+    // Call without status argument
+    await controller.createKerusakanNotification(1, 'kerusakan-123');
+
+    expect(mockPrismaPengelolaFindMany).toHaveBeenCalled();
+    expect(mockPrismaNotificationCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        title: 'Laporan Kerusakan Baru',
+        type: 'kerusakan'
       })
     }));
   });
@@ -432,5 +478,48 @@ describe('Unit Test: controller/notification.js (Notification Management)', () =
 
     expect(mockResponse.status).toHaveBeenCalledWith(500);
     expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+  });
+
+  it('markAsRead: Handles database errors', async () => {
+    mockRequest.params = { notificationId: '5' };
+    mockPrismaNotificationUpdateMany.mockRejectedValue(new Error('DB Error'));
+
+    await controller.markAsRead(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(500);
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+  });
+
+  it('markAllAsRead: Handles database errors', async () => {
+    mockPrismaNotificationUpdateMany.mockRejectedValue(new Error('DB Error'));
+
+    await controller.markAllAsRead(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(500);
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+  });
+
+  it('createStatusUpdateNotification: Handles errors gracefully', async () => {
+    mockPrismaMahasiswaFindUnique.mockRejectedValue(new Error('DB Error'));
+
+    await expect(controller.createStatusUpdateNotification(1, 'approved', 'surat-123')).rejects.toThrow('DB Error');
+  });
+
+  it('createPemberitahuanNotification: Handles errors gracefully', async () => {
+    mockPrismaMahasiswaFindMany.mockRejectedValue(new Error('DB Error'));
+
+    await expect(controller.createPemberitahuanNotification('Title', 'pb-123')).rejects.toThrow('DB Error');
+  });
+
+  it('createKerusakanNotification: Handles errors gracefully', async () => {
+    mockPrismaMahasiswaFindUnique.mockRejectedValue(new Error('DB Error'));
+
+    await expect(controller.createKerusakanNotification(1, 'kerusakan-123', null)).rejects.toThrow('DB Error');
+  });
+
+  it('createPembayaranNotification: Handles errors gracefully', async () => {
+    mockPrismaMahasiswaFindUnique.mockRejectedValue(new Error('DB Error'));
+
+    await expect(controller.createPembayaranNotification(1, 'payment-123', 'pending')).rejects.toThrow('DB Error');
   });
 });
