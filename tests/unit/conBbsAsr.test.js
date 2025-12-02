@@ -109,6 +109,7 @@ describe('Unit Test: controller/conBbsAsr.js (High Coverage)', () => {
 
   // --- Get Riwayat ---
   it('getRiwayatPengajuan: Happy', async () => { mockRequest.params.id = '1'; await controller.getRiwayatPengajuan(mockRequest, mockResponse); });
+  it('getRiwayatPengajuan: Happy', async () => {mockRequest.params.id = '1'; BebasAsrama.findByMahasiswaId.mockResolvedValue(null); await controller.getRiwayatPengajuan(mockRequest, mockResponse);expect(mockResponse.json).toHaveBeenCalledWith({ success: true, data: [] }); });
   it('getRiwayatPengajuan: Error', async () => { BebasAsrama.findByMahasiswaId.mockRejectedValue(new Error()); await controller.getRiwayatPengajuan(mockRequest, mockResponse); });
 
   // --- Check Active ---

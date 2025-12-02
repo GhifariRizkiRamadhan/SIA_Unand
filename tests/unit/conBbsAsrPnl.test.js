@@ -114,7 +114,14 @@ describe('Unit Test: controller/conBbsAsrPnl.js', () => {
 
   // --- Show Page ---
   it('showBebasAsramaPengelola: Happy', async () => await controller.showBebasAsramaPengelola(mockRequest, mockResponse));
-  it('showBebasAsramaPengelola: No Auth', async () => { mockRequest.user = null; await controller.showBebasAsramaPengelola(mockRequest, mockResponse); });
+  it('showBebasAsramaPengelola: No Auth', async () => {
+        mockRequest.user = null;      // Kosongkan user
+        mockRequest.session = null;   // <--- TAMBAHAN PENTING: Kosongkan session juga!
+        
+        await controller.showBebasAsramaPengelola(mockRequest, mockResponse);
+        
+        expect(mockResponse.redirect).toHaveBeenCalledWith('/login');
+      });
   it('showBebasAsramaPengelola: Error', async () => { User.findById.mockRejectedValue(new Error('Fail')); await controller.showBebasAsramaPengelola(mockRequest, mockResponse); });
 
   // --- Get All ---
@@ -136,6 +143,34 @@ describe('Unit Test: controller/conBbsAsrPnl.js', () => {
       mockRequest.params.id = '1'; 
       mockRequest.body = { fasilitas_status: 'TIDAK_LENGKAP', kerusakan: [{ nama_fasilitas: 'X', biaya_kerusakan: 10 }] }; 
       await controller.verifikasiFasilitas(mockRequest, mockResponse); 
+  });
+
+    it('verifikasiFasilitas: Calc Logic Check (Invalid Cost)', async () => {
+      mockRequest.params.id = '1';
+      // Kirim data kerusakan yang aneh (null/string) untuk memicu logika '|| 0'
+      mockRequest.body = { 
+          fasilitas_status: 'TIDAK_LENGKAP', 
+          kerusakan: [
+              { nama_fasilitas: 'Valid', biaya_kerusakan: 50000 },
+              { nama_fasilitas: 'Invalid', biaya_kerusakan: null }, // Memicu || 0
+              { nama_fasilitas: 'Invalid2', biaya_kerusakan: 'abc' } // Memicu || 0
+          ] 
+      }; 
+      await controller.verifikasiFasilitas(mockRequest, mockResponse); 
+      
+      // Pastikan total biaya terhitung benar (Hanya menghitung yang valid: 2jt + 50rb)
+      expect(mockPrismaSuratUpdate).toHaveBeenCalledWith(expect.objectContaining({
+          data: expect.objectContaining({ total_biaya: 2050000 })
+      }));
+  });
+
+   it('verifikasiFasilitas: Notification Skip (No User Found)', async () => {
+    mockRequest.params.id = '1';
+    mockRequest.body = { fasilitas_status: 'LENGKAP' };
+    mockPrismaMahasiswaFindUnique.mockResolvedValue(null);
+
+    await controller.verifikasiFasilitas(mockRequest, mockResponse);
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
   });
 
   it('verifikasiFasilitas: Happy KIPK', async () => {
