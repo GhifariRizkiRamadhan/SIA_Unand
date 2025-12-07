@@ -8,17 +8,53 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    
+    # 1. Create a MySQL Service Container
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sia_unand_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        
     - name: Install dependencies
       run: npm ci
+      
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+
+    # 2. Wait for MySQL to be ready (optional but good practice)
+    # The 'service' health check usually handles this, but sometimes a small sleep helps.
+    
+    # 3. Setup Database Schema
+    - name: Run Prisma DB Push
+      run: npx prisma db push
+      env:
+        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/sia_unand_test"
+
+    # 4. Seed Database
+    - name: Seed Database
+      run: npm run seed
+      env:
+        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/sia_unand_test"
+
+    # 5. Run Tests
     - name: Run Playwright tests
       run: npx playwright test
+      env:
+        DATABASE_URL: "mysql://root:root@127.0.0.1:3306/sia_unand_test"
+        # Add other env vars if needed, e.g. JWT_SECRET
+        JWT_SECRET: "supersecretkey" 
+
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
