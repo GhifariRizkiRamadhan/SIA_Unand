@@ -4,8 +4,6 @@ const jwt = require('jsonwebtoken');
 const ejs = require('ejs');
 const User = require('../models/userModels');
 const path = require('path');
-const BebasAsrama = require('../models/bebasAsramaModel');
-const Pembayaran = require('../models/pembayaranModel');
 const notificationController = require('./notification');
 const PDFDocument = require('pdfkit');
 const { PrismaClient } = require('@prisma/client');
@@ -21,9 +19,10 @@ const showBebasAsrama = async (req, res) => {
 
     const body = await ejs.renderFile(
       path.join(__dirname, '../views/mahasiswa/bebasAsrama.ejs'),
-      { user: user,
+      {
+        user: user,
         mahasiswaId: req.user.mahasiswa_id
-       }
+      }
     );
 
     res.render('layouts/main', {
@@ -52,13 +51,13 @@ const ajukanBebasAsrama = async (req, res) => {
     const mahasiswaId = req.user?.mahasiswa_id;
 
     if (!mahasiswaId) {
-      return res.status(403).json({ 
-        success: false, 
-        message: "Forbidden: Akun Anda tidak terhubung dengan data mahasiswa." 
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Akun Anda tidak terhubung dengan data mahasiswa."
       });
     }
 
-     const mahasiswa = await prisma.mahasiswa.findUnique({
+    const mahasiswa = await prisma.mahasiswa.findUnique({
       where: {
         // Change 'id' to 'mahasiswa_id' (or whatever your @id field is named)
         mahasiswa_id: mahasiswaId
@@ -70,18 +69,27 @@ const ajukanBebasAsrama = async (req, res) => {
 
     // Handle case where mahasiswa is not found
     if (!mahasiswa) {
-        return res.status(404).json({
-            success: false,
-            message: "Data mahasiswa tidak ditemukan."
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Data mahasiswa tidak ditemukan."
+      });
     }
 
-    const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
+    // REPLACED: const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
+    const activeSubmission = await prisma.suratbebasasrama.findFirst({
+      where: {
+        mahasiswa_id: mahasiswaId,
+        NOT: {
+          status_pengajuan: 'SELESAI'
+        }
+      }
+    });
+
     if (activeSubmission) {
       // Kirim status 409 Conflict jika sudah ada pengajuan aktif
-      return res.status(409).json({ 
-          success: false, 
-          message: "Anda sudah memiliki pengajuan yang sedang diproses. Silakan batalkan pengajuan sebelumnya untuk membuat yang baru." 
+      return res.status(409).json({
+        success: false,
+        message: "Anda sudah memiliki pengajuan yang sedang diproses. Silakan batalkan pengajuan sebelumnya untuk membuat yang baru."
       });
     }
 
@@ -89,11 +97,14 @@ const ajukanBebasAsrama = async (req, res) => {
     const isKipk = String(mahasiswa.kipk).toLowerCase().trim() === 'ya';
     const totalBiaya = isKipk ? 0 : BIAYA_DEFAULT;
 
-    const pengajuan = await BebasAsrama.create({
-      mahasiswa_id: mahasiswaId,
-      nomor_pengajuan: `SB-${Date.now()}`,
-      total_biaya: totalBiaya,
-      status_pengajuan: "VERIFIKASI_FASILITAS"
+    // REPLACED: const pengajuan = await BebasAsrama.create({ ... });
+    const pengajuan = await prisma.suratbebasasrama.create({
+      data: {
+        mahasiswa_id: mahasiswaId,
+        nomor_pengajuan: `SB-${Date.now()}`,
+        total_biaya: totalBiaya,
+        status_pengajuan: "VERIFIKASI_FASILITAS"
+      }
     });
 
     // Kirim notifikasi ke semua pengelola
@@ -122,7 +133,26 @@ const ajukanBebasAsrama = async (req, res) => {
 // Mahasiswa cek status pengajuan
 const getStatusBebasAsrama = async (req, res) => {
   try {
-    const pengajuan = await BebasAsrama.findById(req.params.id);
+    // REPLACED: const pengajuan = await BebasAsrama.findById(req.params.id);
+    const numericId = parseInt(req.params.id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID tidak valid" });
+    }
+
+    const pengajuan = await prisma.suratbebasasrama.findUnique({
+      where: { Surat_id: numericId },
+      include: {
+        mahasiswa: {
+          include: {
+            user: true
+          }
+        },
+        pengelolaasrama: true,
+        pembayaran: true,
+        kerusakanFasilitas: true
+      }
+    });
+
     if (!pengajuan) return res.status(404).json({ success: false, message: "Pengajuan tidak ditemukan" });
     res.json({ success: true, data: pengajuan });
   } catch (err) {
@@ -135,9 +165,16 @@ const getStatusBebasAsrama = async (req, res) => {
 // Hapus pengajuan
 const deleteBebasAsrama = async (req, res) => {
   try {
+    const numericId = parseInt(req.params.id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID tidak valid" });
+    }
 
     // 1. Cek dulu apakah pengajuan ada
-    const pengajuan = await BebasAsrama.findById(req.params.id);
+    // REPLACED: const pengajuan = await BebasAsrama.findById(req.params.id);
+    const pengajuan = await prisma.suratbebasasrama.findUnique({
+      where: { Surat_id: numericId }
+    });
 
     // 2. Jika tidak ada, kirim 404
     if (!pengajuan) {
@@ -145,7 +182,13 @@ const deleteBebasAsrama = async (req, res) => {
     }
 
     // 3. Jika ada, baru hapus
-    await BebasAsrama.findByIdAndDelete(req.params.id);
+    // REPLACED: await BebasAsrama.findByIdAndDelete(req.params.id);
+    await prisma.suratbebasasrama.delete({
+      where: {
+        Surat_id: numericId
+      }
+    });
+
     res.json({ success: true, message: "Pengajuan dihapus" });
   } catch (err) {
     console.error(err);
@@ -156,9 +199,21 @@ const deleteBebasAsrama = async (req, res) => {
 // Unduh surat bebas asrama (sementara dummy file)
 const downloadSurat = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID tidak valid" });
+    }
 
-    const pengajuan = await BebasAsrama.findByIdWithMahasiswa(id); 
+    // REPLACED: const pengajuan = await BebasAsrama.findByIdWithMahasiswa(id); 
+    const pengajuan = await prisma.suratbebasasrama.findUnique({
+      where: {
+        Surat_id: numericId
+      },
+      include: {
+        mahasiswa: true
+      }
+    });
 
     if (!pengajuan) {
       return res.status(404).json({ success: false, message: "Data pengajuan tidak ditemukan." });
@@ -176,7 +231,7 @@ const downloadSurat = async (req, res) => {
     doc.pipe(res);
 
     // Judul Surat
-    doc.font('Times-Bold').fontSize(14).text(`SURAT KETERANGAN BEBAS ASRAMA UNIVERSITAS ANDALAS ${tahunSekarang}`, { align: 'center'});
+    doc.font('Times-Bold').fontSize(14).text(`SURAT KETERANGAN BEBAS ASRAMA UNIVERSITAS ANDALAS ${tahunSekarang}`, { align: 'center' });
     doc.font('Times-Roman').fontSize(11).text(`Nomor: ${pengajuan.nomor_pengajuan}`, { align: 'center' });
     doc.moveDown(2);
 
@@ -185,24 +240,24 @@ const downloadSurat = async (req, res) => {
     doc.moveDown();
 
     // Data Mahasiswa (diambil dari database)
-    doc.text(`Nama               : ${pengajuan.mahasiswa.nama}`,textOptions);
-    doc.text(`NIM                : ${pengajuan.mahasiswa.nim}`,textOptions);
-    doc.text(`Jurusan            : ${pengajuan.mahasiswa.jurusan}`,textOptions); 
+    doc.text(`Nama               : ${pengajuan.mahasiswa.nama}`, textOptions);
+    doc.text(`NIM                : ${pengajuan.mahasiswa.nim}`, textOptions);
+    doc.text(`Jurusan            : ${pengajuan.mahasiswa.jurusan}`, textOptions);
     doc.moveDown();
 
     doc.text('Telah menyelesaikan seluruh kewajiban dan administrasi di Asrama Universitas Andalas dan dinyatakan telah BEBAS ASRAMA.', { align: 'justify' });
     doc.moveDown();
-    
-    doc.text('Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.',{align: 'justify'});
+
+    doc.text('Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.', { align: 'justify' });
     doc.moveDown(4);
 
     // Tanda Tangan
-  
-    doc.text(`Padang, ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`,{align: 'right'});
-    doc.text('Kepala Asrama Mahasiswa,',{align: 'right'});
+
+    doc.text(`Padang, ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, { align: 'right' });
+    doc.text('Kepala Asrama Mahasiswa,', { align: 'right' });
     doc.moveDown(1);
 
-    const imageWidth = 150; 
+    const imageWidth = 150;
     const xPosition = doc.page.width - doc.page.margins.right - imageWidth;
 
     doc.image(signaturePath, xPosition, doc.y, {
@@ -211,8 +266,8 @@ const downloadSurat = async (req, res) => {
 
     doc.moveDown(6);
 
-    doc.text('Asmiruddin Abdullah S, S.E',{align: 'right'});
-    doc.text('NIP. 19801234 200501 1 001',{align: 'right'});
+    doc.text('Asmiruddin Abdullah S, S.E', { align: 'right' });
+    doc.text('NIP. 19801234 200501 1 001', { align: 'right' });
 
     doc.end();
 
@@ -229,7 +284,20 @@ const getTagihanMahasiswa = async (req, res) => {
     console.log("Tipe data ID dari URL:", typeof req.params.id);
 
     const mahasiswaId = req.params.id;
-    const data = await Pembayaran.findByMahasiswaId(mahasiswaId);
+    const numericId = parseInt(mahasiswaId, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID Mahasiswa tidak valid." });
+    }
+
+    // REPLACED: const data = await Pembayaran.findByMahasiswaId(mahasiswaId);
+    const data = await prisma.pembayaran.findMany({
+      where: {
+        mahasiswa_id: numericId
+      },
+      include: {
+        suratbebasasrama: true
+      }
+    });
 
     if (!data || data.length === 0) {
       return res.status(404).json({ success: false, message: "Tagihan untuk mahasiswa ini tidak ditemukan." });
@@ -245,10 +313,22 @@ const getTagihanMahasiswa = async (req, res) => {
 const getRiwayatPengajuan = async (req, res) => {
   try {
     const mahasiswaId = req.params.id;
-    
-    const riwayat = await BebasAsrama.findByMahasiswaId(mahasiswaId);
+    const numericId = parseInt(mahasiswaId, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID Mahasiswa tidak valid." });
+    }
 
-     res.json({ success: true, data: riwayat || [] });
+    // REPLACED: const riwayat = await BebasAsrama.findByMahasiswaId(mahasiswaId);
+    const riwayat = await prisma.suratbebasasrama.findMany({
+      where: {
+        mahasiswa_id: numericId
+      },
+      orderBy: {
+        tanggal_pengajuan: 'desc'
+      }
+    });
+
+    res.json({ success: true, data: riwayat || [] });
   } catch (err) {
     console.error("Gagal ambil riwayat pengajuan:", err);
     res.status(500).json({ success: false, message: "Gagal mengambil riwayat pengajuan." });
@@ -260,7 +340,20 @@ const getRiwayatPengajuan = async (req, res) => {
 const checkActiveSubmission = async (req, res) => {
   try {
     const mahasiswaId = req.params.id;
-    const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
+    const numericId = parseInt(mahasiswaId, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID Mahasiswa tidak valid." });
+    }
+
+    // REPLACED: const activeSubmission = await BebasAsrama.findActiveByMahasiswaId(mahasiswaId);
+    const activeSubmission = await prisma.suratbebasasrama.findFirst({
+      where: {
+        mahasiswa_id: numericId,
+        NOT: {
+          status_pengajuan: 'SELESAI'
+        }
+      }
+    });
 
     if (activeSubmission) {
       res.json({

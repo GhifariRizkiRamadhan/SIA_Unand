@@ -4,8 +4,6 @@ const jwt = require('jsonwebtoken');
 const ejs = require('ejs');
 const path = require('path');
 const User = require('../models/userModels');
-const Pembayaran = require('../models/pembayaranModel');
-const BebasAsrama = require('../models/bebasAsramaModel');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -16,23 +14,34 @@ const showPembayaran = async (req, res) => {
     if (!pengajuanId) return res.redirect('/mahasiswa/bebas-asrama');
 
     // 2. Ambil data pengajuan spesifik dari database
-    const pengajuan = await BebasAsrama.findById(pengajuanId);
+    // REPLACED: const pengajuan = await BebasAsrama.findById(pengajuanId);
+    const numericId = parseInt(pengajuanId, 10);
+    if (isNaN(numericId)) {
+      return res.status(404).render('error', { message: "ID pengajuan tidak valid." });
+    }
+
+    const pengajuan = await prisma.suratbebasasrama.findUnique({
+      where: { Surat_id: numericId },
+      include: {
+        mahasiswa: {
+          include: {
+            user: true
+          }
+        },
+        pengelolaasrama: true,
+        pembayaran: true,
+        kerusakanFasilitas: true
+      }
+    });
 
     if (!pengajuan) {
-      return res.status(404).render('error', { message: "Data pengajuan tidak ditemukan." });
-    }
-
-    // TAMBAHKAN BLOK LOG INI DAN KIRIMKAN HASILNYA
-    // ===============================================
-    // console.log('===== DATA YANG AKAN DIKIRIM KE VIEW =====');
-    // console.log(JSON.stringify(pengajuan, null, 2));
-    // console.log('========================================');
-    // ===============================================
+      return res.status(404).render('error', { message: "Data pengajuan tidak ditemukan." });
+    }
 
     // VALIDASI: Pastikan ada record pembayaran
     if (!pengajuan.pembayaran || pengajuan.pembayaran.length === 0) {
-      return res.status(500).render('error', { 
-        message: "Data pembayaran tidak ditemukan. Hubungi administrator." 
+      return res.status(500).render('error', {
+        message: "Data pembayaran tidak ditemukan. Hubungi administrator."
       });
     }
 
@@ -42,7 +51,7 @@ const showPembayaran = async (req, res) => {
     // 4. Kirim data 'pengajuan' ke view saat me-render body
     const body = await ejs.renderFile(
       path.join(__dirname, '../views/mahasiswa/pembayaran.ejs'),
-      { 
+      {
         user: user,
         pengajuan: pengajuan // <-- Data pengajuan dikirim ke view
       }
@@ -71,26 +80,40 @@ const uploadBuktiPembayaran = async (req, res) => {
     const buktiPath = req.file?.path || null;
 
     if (!buktiPath) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "File bukti tidak ditemukan" 
+      return res.status(400).json({
+        success: false,
+        message: "File bukti tidak ditemukan"
       });
     }
 
     // Cek apakah pembayaran dengan ID ini sudah ada
-    const existingPembayaran = await Pembayaran.findById(id);
+    // REPLACED: const existingPembayaran = await Pembayaran.findById(id);
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID pembayaran tidak valid" });
+    }
+
+    const existingPembayaran = await prisma.pembayaran.findUnique({
+      where: { pembayaran_id: numericId },
+      include: {
+        mahasiswa: true,
+        suratbebasasrama: true
+      }
+    });
 
     let updated;
     if (existingPembayaran) {
       // Jika sudah ada, lakukan UPDATE (re-upload)
-      updated = await Pembayaran.findByIdAndUpdate(
-        id,
-        {
+      // REPLACED: updated = await Pembayaran.findByIdAndUpdate(id, { ... }, { new: true });
+      updated = await prisma.pembayaran.update({
+        where: {
+          pembayaran_id: numericId
+        },
+        data: {
           bukti_pembayaran: buktiPath,
           status_bukti: "BELUM_DIVERIFIKASI"
-        },
-        { new: true }
-      );
+        }
+      });
     } else {
       // Jika belum ada, buat baru (seharusnya tidak terjadi jika flow benar)
       return res.status(404).json({
@@ -101,15 +124,22 @@ const uploadBuktiPembayaran = async (req, res) => {
 
     // Update status pengajuan
     if (updated && updated.surat_id) {
-      await BebasAsrama.updateStatus(updated.surat_id, "VERIFIKASI_PEMBAYARAN");
+      // REPLACED: await BebasAsrama.updateStatus(updated.surat_id, "VERIFIKASI_PEMBAYARAN");
+      const numericSuratId = parseInt(updated.surat_id, 10);
+      if (!isNaN(numericSuratId)) {
+        await prisma.suratbebasasrama.update({
+          where: { Surat_id: numericSuratId },
+          data: { status_pengajuan: "VERIFIKASI_PEMBAYARAN" }
+        });
+      }
     }
 
     res.json({ success: true, data: updated });
   } catch (err) {
     console.error("Gagal upload bukti:", err);
-    res.status(500).json({ 
-      success: false, 
-      message: "Gagal upload bukti pembayaran" 
+    res.status(500).json({
+      success: false,
+      message: "Gagal upload bukti pembayaran"
     });
   }
 };
@@ -117,7 +147,20 @@ const uploadBuktiPembayaran = async (req, res) => {
 // Detail status pembayaran (Mahasiswa)
 const getDetailPembayaran = async (req, res) => {
   try {
-    const pembayaran = await Pembayaran.findById(req.params.id);
+    // REPLACED: const pembayaran = await Pembayaran.findById(req.params.id);
+    const numericId = parseInt(req.params.id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID tidak valid" });
+    }
+
+    const pembayaran = await prisma.pembayaran.findUnique({
+      where: { pembayaran_id: numericId },
+      include: {
+        mahasiswa: true,
+        suratbebasasrama: true
+      }
+    });
+
     if (!pembayaran) return res.status(404).json({ success: false, message: "Data tidak ditemukan" });
     res.json({ success: true, data: pembayaran });
   } catch (err) {
@@ -130,14 +173,22 @@ const getDetailPembayaran = async (req, res) => {
 const updatePembayaran = async (req, res) => {
   try {
     const buktiPath = req.file?.path || null;
-    const updated = await Pembayaran.findByIdAndUpdate(
-      req.params.id,
-      {
+    // REPLACED: const updated = await Pembayaran.findByIdAndUpdate(req.params.id, { ... }, { new: true });
+    const numericId = parseInt(req.params.id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID tidak valid" });
+    }
+
+    const updated = await prisma.pembayaran.update({
+      where: {
+        pembayaran_id: numericId
+      },
+      data: {
         bukti_pembayaran: buktiPath,
         status_bukti: "BELUM_DIVERIFIKASI"
-      },
-      { new: true }
-    );
+      }
+    });
+
     res.json({ success: true, data: updated });
   } catch (err) {
     console.error(err);
@@ -149,7 +200,13 @@ const updatePembayaran = async (req, res) => {
 
 const getAllPembayaran = async (req, res) => {
   try {
-    const data = await Pembayaran.findAll();
+    // REPLACED: const data = await Pembayaran.findAll();
+    const data = await prisma.pembayaran.findMany({
+      include: {
+        mahasiswa: true,
+        suratbebasasrama: true
+      }
+    });
     res.json({ success: true, data });
   } catch (err) {
     console.error(err);
@@ -158,31 +215,64 @@ const getAllPembayaran = async (req, res) => {
 };
 
 const approvePembayaran = async (req, res) => {
-    try {
-        const suratId = req.params.id; // Ini adalah ID Pengajuan/Surat
-
-        // Panggil fungsi baru untuk update status pembayaran
-        await Pembayaran.updateStatusBySuratId(suratId, "VALID");
-
-        // Lanjutkan status pengajuan menjadi SELESAI
-        await BebasAsrama.updateStatus(suratId, "SELESAI");
-
-        res.json({ success: true, message: "Pembayaran disetujui." });
-    } catch (err) {
-      console.error("Gagal approve pembayaran:", err);
-      res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
+  try {
+    const suratId = req.params.id; // Ini adalah ID Pengajuan/Surat
+    const numericSuratId = parseInt(suratId, 10);
+    if (isNaN(numericSuratId)) {
+      return res.status(400).json({ success: false, message: "ID Surat tidak valid" });
     }
+
+    // Panggil fungsi baru untuk update status pembayaran
+    // REPLACED: await Pembayaran.updateStatusBySuratId(suratId, "VALID");
+    await prisma.pembayaran.updateMany({
+      where: {
+        surat_id: numericSuratId
+      },
+      data: {
+        status_bukti: "VALID"
+      }
+    });
+
+    // Lanjutkan status pengajuan menjadi SELESAI
+    // REPLACED: await BebasAsrama.updateStatus(suratId, "SELESAI");
+    await prisma.suratbebasasrama.update({
+      where: { Surat_id: numericSuratId },
+      data: { status_pengajuan: "SELESAI" }
+    });
+
+    res.json({ success: true, message: "Pembayaran disetujui." });
+  } catch (err) {
+    console.error("Gagal approve pembayaran:", err);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
+  }
 };
 
 const rejectPembayaran = async (req, res) => {
   try {
     const suratId = req.params.id;
+    const numericSuratId = parseInt(suratId, 10);
+    if (isNaN(numericSuratId)) {
+      return res.status(400).json({ success: false, message: "ID Surat tidak valid" });
+    }
 
     // Panggil fungsi baru untuk mereset pembayaran
-    await Pembayaran.resetPaymentStatusBySuratId(suratId);
+    // REPLACED: await Pembayaran.resetPaymentStatusBySuratId(suratId);
+    await prisma.pembayaran.updateMany({
+      where: {
+        surat_id: numericSuratId
+      },
+      data: {
+        status_bukti: 'TIDAK_VALID',
+        bukti_pembayaran: null
+      }
+    });
 
     // Kembalikan status pengajuan ke MENUNGGU_PEMBAYARAN
-    await BebasAsrama.updateStatus(suratId, "MENUNGGU_PEMBAYARAN");
+    // REPLACED: await BebasAsrama.updateStatus(suratId, "MENUNGGU_PEMBAYARAN");
+    await prisma.suratbebasasrama.update({
+      where: { Surat_id: numericSuratId },
+      data: { status_pengajuan: "MENUNGGU_PEMBAYARAN" }
+    });
 
     res.json({ success: true, message: "Pembayaran telah ditolak dan mahasiswa diminta untuk mengunggah ulang." });
   } catch (err) {
@@ -200,9 +290,20 @@ const reuploadBuktiPembayaran = async (req, res) => {
       return res.status(400).json({ success: false, message: "File tidak ditemukan" });
     }
 
-    const updated = await Pembayaran.findByIdAndUpdate(id, {
-      bukti_pembayaran: buktiPath,
-      status_bukti: "BELUM_DIVERIFIKASI"
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ success: false, message: "ID tidak valid" });
+    }
+
+    // REPLACED: const updated = await Pembayaran.findByIdAndUpdate(id, { ... });
+    const updated = await prisma.pembayaran.update({
+      where: {
+        pembayaran_id: numericId
+      },
+      data: {
+        bukti_pembayaran: buktiPath,
+        status_bukti: "BELUM_DIVERIFIKASI"
+      }
     });
 
     if (!updated) {
@@ -210,7 +311,14 @@ const reuploadBuktiPembayaran = async (req, res) => {
     }
 
     if (updated.surat_id) {
-      await BebasAsrama.updateStatus(updated.surat_id, "VERIFIKASI_PEMBAYARAN");
+      // REPLACED: await BebasAsrama.updateStatus(updated.surat_id, "VERIFIKASI_PEMBAYARAN");
+      const numericSuratId = parseInt(updated.surat_id, 10);
+      if (!isNaN(numericSuratId)) {
+        await prisma.suratbebasasrama.update({
+          where: { Surat_id: numericSuratId },
+          data: { status_pengajuan: "VERIFIKASI_PEMBAYARAN" }
+        });
+      }
     }
 
     res.json({ success: true, message: "Bukti berhasil diunggah ulang", data: updated });
