@@ -2,8 +2,8 @@ node_modules
 .env
 uploads
 coverage
-/tests/__mocks__/
-/tests/integration/
+debug-db.js
+debug_log.txt
 
 # Playwright
 /test-results/
@@ -11,3 +11,4 @@ coverage
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
