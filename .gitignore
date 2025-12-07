@@ -4,6 +4,9 @@ uploads
 coverage
 debug-db.js
 debug_log.txt
+npm-debug.log
+.DS_Store
+Thumbs.db
 
 # Playwright
 /test-results/
