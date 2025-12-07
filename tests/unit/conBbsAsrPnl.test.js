@@ -1,7 +1,3 @@
-// ==========================================================
-// FILE: tests/unit/conBbsAsrPnl.test.js
-// ==========================================================
-
 const mockPrismaTransaction = jest.fn();
 const mockPrismaSuratFindUnique = jest.fn();
 const mockPrismaSuratUpdate = jest.fn();

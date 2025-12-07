@@ -1,7 +1,3 @@
-// ==========================================================
-// FILE: tests/unit/conBbsAsr.test.js
-// ==========================================================
-
 const mockPrismaMahasiswaFindUnique = jest.fn();
 const mockPrismaPengelolaFindMany = jest.fn();
 const mockPrismaSuratFindFirst = jest.fn();

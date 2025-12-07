@@ -378,5 +378,5 @@ module.exports = {
   downloadSurat,
   getTagihanMahasiswa,
   getRiwayatPengajuan,
-  checkActiveSubmission,
+  checkActiveSubmission
 };
