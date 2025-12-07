@@ -1,36 +1,44 @@
 // ==========================================================
-// FILE: tests/unit/conBbsAsr.test.js (FIXED PDF PIPE)
+// FILE: tests/unit/conBbsAsr.test.js
 // ==========================================================
 
 const mockPrismaMahasiswaFindUnique = jest.fn();
 const mockPrismaPengelolaFindMany = jest.fn();
-const mockPrismaMahasiswaFindFirst = jest.fn();
-const mockPrismaPengelolaFindFirst = jest.fn();
+const mockPrismaSuratFindFirst = jest.fn();
+const mockPrismaSuratCreate = jest.fn();
+const mockPrismaSuratFindUnique = jest.fn();
+const mockPrismaSuratDelete = jest.fn();
+const mockPrismaSuratFindMany = jest.fn();
+const mockPrismaPembayaranFindMany = jest.fn();
 
 jest.mock('@prisma/client', () => ({
     PrismaClient: jest.fn().mockImplementation(() => ({
         mahasiswa: {
             findUnique: mockPrismaMahasiswaFindUnique,
-            findFirst: mockPrismaMahasiswaFindFirst,
         },
         pengelolaasrama: {
             findMany: mockPrismaPengelolaFindMany,
-            findFirst: mockPrismaPengelolaFindFirst,
         },
+        suratbebasasrama: {
+            findFirst: mockPrismaSuratFindFirst,
+            create: mockPrismaSuratCreate,
+            findUnique: mockPrismaSuratFindUnique,
+            delete: mockPrismaSuratDelete,
+            findMany: mockPrismaSuratFindMany,
+        },
+        pembayaran: {
+            findMany: mockPrismaPembayaranFindMany,
+        }
     })),
 }));
 
 const controller = require('../../controller/conBbsAsr');
 const User = require('../../models/userModels');
-const BebasAsrama = require('../../models/bebasAsramaModel');
-const Pembayaran = require('../../models/pembayaranModel');
 const notificationController = require('../../controller/notification');
 const ejs = require('ejs');
 const PDFDocument = require('pdfkit');
 
 jest.mock('../../models/userModels');
-jest.mock('../../models/bebasAsramaModel');
-jest.mock('../../models/pembayaranModel');
 jest.mock('../../controller/notification', () => ({
     createNotification: jest.fn().mockResolvedValue({}),
 }));
@@ -41,7 +49,7 @@ global.io = { to: jest.fn().mockReturnThis(), emit: jest.fn() };
 
 describe('Unit Test: controller/conBbsAsr.js', () => {
     let mockRequest, mockResponse;
-    let pdfMock; // Variabel untuk menyimpan instance mock PDF
+    let pdfMock;
 
     const mockMahasiswa = { mahasiswa_id: 1, kipk: 'tidak', nim: '12345', user: { user_id: 'u1', name: 'Test' } };
     const mockPengajuan = { Surat_id: 1, status_pengajuan: 'VERIFIKASI_FASILITAS', total_biaya: 2000000 };
@@ -51,20 +59,14 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
 
         mockPrismaMahasiswaFindUnique.mockResolvedValue(mockMahasiswa);
         mockPrismaPengelolaFindMany.mockResolvedValue([{ user_id: 'p1' }]);
+        mockPrismaSuratFindFirst.mockResolvedValue(null);
+        mockPrismaSuratCreate.mockResolvedValue(mockPengajuan);
+        mockPrismaSuratFindUnique.mockResolvedValue(mockPengajuan);
+        mockPrismaSuratDelete.mockResolvedValue({ count: 1 });
+        mockPrismaSuratFindMany.mockResolvedValue([{ id: 1 }]);
+        mockPrismaPembayaranFindMany.mockResolvedValue([{ id: 1 }]);
 
         User.findById.mockResolvedValue({ name: 'User', role: 'mahasiswa' });
-
-        BebasAsrama.findActiveByMahasiswaId.mockResolvedValue(null);
-        BebasAsrama.create.mockResolvedValue(mockPengajuan);
-        BebasAsrama.findById.mockResolvedValue(mockPengajuan);
-        BebasAsrama.findByIdAndDelete.mockResolvedValue({ count: 1 });
-        BebasAsrama.findByIdWithMahasiswa.mockResolvedValue({
-            ...mockPengajuan,
-            mahasiswa: { nim: '12345', nama: 'Test', jurusan: 'SI' }
-        });
-        BebasAsrama.findByMahasiswaId.mockResolvedValue([{ id: 1 }]);
-
-        Pembayaran.findByMahasiswaId.mockResolvedValue([{ id: 1 }]);
 
         ejs.renderFile.mockResolvedValue('<html></html>');
 
@@ -75,7 +77,7 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
             text: jest.fn().mockReturnThis(),
             moveDown: jest.fn().mockReturnThis(),
             image: jest.fn().mockReturnThis(),
-            pipe: jest.fn(), // Ini yang kita cek nanti
+            pipe: jest.fn(),
             end: jest.fn(),
             page: { width: 100, margins: { right: 10 } },
             y: 10
@@ -89,7 +91,8 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
             json: jest.fn(),
             status: jest.fn(() => mockResponse),
             setHeader: jest.fn(),
-            pipe: jest.fn()
+            pipe: jest.fn(),
+            sendFile: jest.fn()
         };
     });
 
@@ -114,14 +117,14 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
     // --- Ajukan ---
     it('ajukanBebasAsrama: Happy Non-KIPK', async () => {
         await controller.ajukanBebasAsrama(mockRequest, mockResponse);
-        expect(BebasAsrama.create).toHaveBeenCalledWith(expect.objectContaining({ total_biaya: 2000000 }));
+        expect(mockPrismaSuratCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ total_biaya: 2000000 }) }));
         expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     });
 
     it('ajukanBebasAsrama: Happy KIPK', async () => {
         mockPrismaMahasiswaFindUnique.mockResolvedValue({ ...mockMahasiswa, kipk: 'ya' });
         await controller.ajukanBebasAsrama(mockRequest, mockResponse);
-        expect(BebasAsrama.create).toHaveBeenCalledWith(expect.objectContaining({ total_biaya: 0 }));
+        expect(mockPrismaSuratCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ total_biaya: 0 }) }));
     });
 
     it('ajukanBebasAsrama: Forbidden', async () => {
@@ -137,13 +140,13 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
     });
 
     it('ajukanBebasAsrama: Conflict', async () => {
-        BebasAsrama.findActiveByMahasiswaId.mockResolvedValue({ id: 1 });
+        mockPrismaSuratFindFirst.mockResolvedValue({ id: 1 });
         await controller.ajukanBebasAsrama(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(409);
     });
 
     it('ajukanBebasAsrama: Error', async () => {
-        BebasAsrama.create.mockRejectedValue(new Error('DB Fail'));
+        mockPrismaSuratCreate.mockRejectedValue(new Error('DB Fail'));
         await controller.ajukanBebasAsrama(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
@@ -157,13 +160,20 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
 
     it('getStatusBebasAsrama: Not Found', async () => {
         mockRequest.params.id = '99';
-        BebasAsrama.findById.mockResolvedValue(null);
+        mockPrismaSuratFindUnique.mockResolvedValue(null);
         await controller.getStatusBebasAsrama(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
     });
 
+    it('getStatusBebasAsrama: Invalid ID', async () => {
+        mockRequest.params.id = 'abc';
+        await controller.getStatusBebasAsrama(mockRequest, mockResponse);
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
     it('getStatusBebasAsrama: Error', async () => {
-        BebasAsrama.findById.mockRejectedValue(new Error('DB Fail'));
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindUnique.mockRejectedValue(new Error('DB Fail'));
         await controller.getStatusBebasAsrama(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
@@ -177,13 +187,20 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
 
     it('deleteBebasAsrama: Not Found (Mock Find)', async () => {
         mockRequest.params.id = '99';
-        BebasAsrama.findById.mockResolvedValue(null);
+        mockPrismaSuratFindUnique.mockResolvedValue(null);
         await controller.deleteBebasAsrama(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
     });
 
+    it('deleteBebasAsrama: Invalid ID', async () => {
+        mockRequest.params.id = 'abc';
+        await controller.deleteBebasAsrama(mockRequest, mockResponse);
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
     it('deleteBebasAsrama: Error', async () => {
-        BebasAsrama.findById.mockRejectedValue(new Error('DB Fail'));
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindUnique.mockRejectedValue(new Error('DB Fail'));
         await controller.deleteBebasAsrama(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
@@ -191,6 +208,10 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
     // --- Download ---
     it('downloadSurat: Happy', async () => {
         mockRequest.params.id = '1';
+        mockPrismaSuratFindUnique.mockResolvedValue({
+            ...mockPengajuan,
+            mahasiswa: { nim: '12345', nama: 'Test', jurusan: 'SI' }
+        });
         await controller.downloadSurat(mockRequest, mockResponse);
         expect(mockResponse.setHeader).toHaveBeenCalled();
         expect(pdfMock.pipe).toHaveBeenCalledWith(mockResponse);
@@ -203,13 +224,21 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
     });
 
     it('downloadSurat: Not Found', async () => {
-        BebasAsrama.findByIdWithMahasiswa.mockResolvedValue(null);
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindUnique.mockResolvedValue(null);
         await controller.downloadSurat(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
     });
 
+    it('downloadSurat: Invalid ID', async () => {
+        mockRequest.params.id = 'abc';
+        await controller.downloadSurat(mockRequest, mockResponse);
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
     it('downloadSurat: Error', async () => {
-        BebasAsrama.findByIdWithMahasiswa.mockRejectedValue(new Error('DB Fail'));
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindUnique.mockRejectedValue(new Error('DB Fail'));
         await controller.downloadSurat(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
@@ -222,13 +251,21 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
     });
 
     it('getTagihanMahasiswa: Empty', async () => {
-        Pembayaran.findByMahasiswaId.mockResolvedValue([]);
+        mockRequest.params.id = '1';
+        mockPrismaPembayaranFindMany.mockResolvedValue([]);
         await controller.getTagihanMahasiswa(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
     });
 
+    it('getTagihanMahasiswa: Invalid ID', async () => {
+        mockRequest.params.id = 'abc';
+        await controller.getTagihanMahasiswa(mockRequest, mockResponse);
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
     it('getTagihanMahasiswa: Error', async () => {
-        Pembayaran.findByMahasiswaId.mockRejectedValue(new Error('DB Fail'));
+        mockRequest.params.id = '1';
+        mockPrismaPembayaranFindMany.mockRejectedValue(new Error('DB Fail'));
         await controller.getTagihanMahasiswa(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
@@ -240,33 +277,49 @@ describe('Unit Test: controller/conBbsAsr.js', () => {
         expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     });
 
-    it('getRiwayatPengajuan: Empty (Null Data)', async () => {
+    it('getRiwayatPengajuan: Happy (Null Data)', async () => {
         mockRequest.params.id = '1';
-        BebasAsrama.findByMahasiswaId.mockResolvedValue(null);
+        mockPrismaSuratFindMany.mockResolvedValue(null);
         await controller.getRiwayatPengajuan(mockRequest, mockResponse);
         expect(mockResponse.json).toHaveBeenCalledWith({ success: true, data: [] });
     });
 
+    it('getRiwayatPengajuan: Invalid ID', async () => {
+        mockRequest.params.id = 'abc';
+        await controller.getRiwayatPengajuan(mockRequest, mockResponse);
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
     it('getRiwayatPengajuan: Error', async () => {
-        BebasAsrama.findByMahasiswaId.mockRejectedValue(new Error('DB Fail'));
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindMany.mockRejectedValue(new Error('DB Fail'));
         await controller.getRiwayatPengajuan(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
 
     // --- Check Active ---
     it('checkActiveSubmission: Active', async () => {
-        BebasAsrama.findActiveByMahasiswaId.mockResolvedValue({ id: 1 });
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindFirst.mockResolvedValue({ id: 1 });
         await controller.checkActiveSubmission(mockRequest, mockResponse);
         expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ hasActive: true }));
     });
 
     it('checkActiveSubmission: Inactive', async () => {
+        mockRequest.params.id = '1';
         await controller.checkActiveSubmission(mockRequest, mockResponse);
         expect(mockResponse.json).toHaveBeenCalledWith({ hasActive: false });
     });
 
+    it('checkActiveSubmission: Invalid ID', async () => {
+        mockRequest.params.id = 'abc';
+        await controller.checkActiveSubmission(mockRequest, mockResponse);
+        expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
     it('checkActiveSubmission: Error', async () => {
-        BebasAsrama.findActiveByMahasiswaId.mockRejectedValue(new Error('DB Fail'));
+        mockRequest.params.id = '1';
+        mockPrismaSuratFindFirst.mockRejectedValue(new Error('DB Fail'));
         await controller.checkActiveSubmission(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
