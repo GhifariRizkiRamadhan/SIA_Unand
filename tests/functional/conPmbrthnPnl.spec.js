@@ -1,9 +1,4 @@
 // Functional tests for Pemberitahuan (Pengelola) using Playwright
-// Requirements:
-// - The application server must be running at http://localhost:3000
-// - The database should have seeded users (see prisma/seeder/userSeed.js)
-// - Dev dependency: @playwright/test
-// To run: `npx playwright test tests/functional/conPmbrthnPnl.spec.js`
 
 const { test, expect } = require('@playwright/test');
 

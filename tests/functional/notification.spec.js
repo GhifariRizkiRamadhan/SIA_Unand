@@ -1,9 +1,4 @@
 // Functional tests for Notification Controller using Playwright
-// Requirements:
-// - The application server must be running at http://localhost:3000
-// - The database should have seeded users (see prisma/seeder/userSeed.js)
-// - Dev dependency: @playwright/test
-// To run: `npx playwright test tests/functional/notification.spec.js`
 
 const { test, expect } = require('@playwright/test');
 
