@@ -49,7 +49,7 @@ const notifications = require("../controller/notification");
 // Notifications
 // ===================
 router.get("/api/notifications", authMiddleware, notifications.getNotifications);
-router.put("/api/notifications/:id/read", authMiddleware, notifications.markAsRead);
+router.put("/api/notifications/:notificationId/read", authMiddleware, notifications.markAsRead);
 router.put("/api/notifications/read-all", authMiddleware, notifications.markAllAsRead);
 
 const controller5 = require("../controller/conPbyr");

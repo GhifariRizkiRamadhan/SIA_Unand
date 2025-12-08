@@ -444,3 +444,107 @@ describe('Unit Test: controller/conPmbrthnPnl.js (Pemberitahuan Management)', ()
     expect(mockResponse.status).toHaveBeenCalledWith(500);
   });
 });
+
+describe('Tambahan coverage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockExistsSync.mockReturnValue(false);
+    mockUnlinkSync.mockImplementation(() => { });
+    mockRequest = {
+      session: { user_id: 'user-pengelola-1' },
+      user: { user_id: 'user-pengelola-1', role: 'pengelola' },
+      body: {},
+      params: {},
+      query: {},
+      file: null
+    };
+    mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      render: jest.fn().mockReturnThis(),
+      redirect: jest.fn()
+    };
+    User.findById.mockResolvedValue({ user_id: 'user-pengelola-1', role: 'pengelola', name: 'Admin' });
+    mockPrismaPengelolaFindFirst.mockResolvedValue({ Pengelola_id: 7, user_id: 'user-pengelola-1' });
+  });
+
+  it('showPemberitahuanPengelola: pagination hasNext and hasPrev branches', async () => {
+    // Simulate page 2 with many items so hasNext=true and hasPrev=true
+    mockRequest.query = { page: '2' };
+    const mockPemberitahuan = [{ pemberitahuan_id: 1, title: 'T1' }];
+
+    const prismaMock = require('@prisma/client').PrismaClient();
+    prismaMock.pemberitahuan.findMany = jest.fn().mockResolvedValue(mockPemberitahuan);
+    prismaMock.pemberitahuan.count = jest.fn().mockResolvedValue(100);
+
+    await controller.showPemberitahuanPengelola(mockRequest, mockResponse);
+
+    expect(mockResponse.render).toHaveBeenCalledWith('layouts/main', expect.objectContaining({
+      body: expect.any(String),
+      user: expect.objectContaining({ role: 'pengelola' }),
+      // ensure pagination object exists
+      activeMenu: 'pemberitahuan'
+    }));
+  });
+
+  it('tambahPemberitahuan: handles notification send error (createNotification throws)', async () => {
+    mockRequest.body = { title: 'Title', content: 'Content' };
+    const mockNotificationData = { pemberitahuan_id: 99, title: 'Test', content: 'C', Pengelola_id: 7 };
+    mockPrismaNotificationCreate.mockResolvedValue(mockNotificationData);
+    mockPrismaMahasiswaFindMany.mockResolvedValue([{ user_id: 'm1' }]);
+    // Make notification throw
+    notificationController.createNotification.mockRejectedValue(new Error('Notify fail'));
+
+    await controller.tambahPemberitahuan(mockRequest, mockResponse);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(500);
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+  });
+
+  it('editPemberitahuan: when old image does not exist, skip unlink and update', async () => {
+    mockRequest.params = { id: '5' };
+    mockRequest.body = { title: 'Updated', content: 'Content' };
+    mockRequest.file = { filename: 'new.png' };
+
+    mockPrismaPengelolaFindFirst.mockResolvedValue({ Pengelola_id: 7 });
+    mockPrismaNotificationFindFirst.mockResolvedValue({ pemberitahuan_id: 5, Pengelola_id: 7, image: 'old.png' });
+    mockPrismaNotificationUpdate.mockResolvedValue({ pemberitahuan_id: 5 });
+
+    // existsSync false -> unlink should not be called
+    mockExistsSync.mockReturnValue(false);
+
+    await controller.editPemberitahuan(mockRequest, mockResponse);
+
+    expect(mockUnlinkSync).not.toHaveBeenCalled();
+    expect(mockPrismaNotificationUpdate).toHaveBeenCalled();
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+  });
+
+  it('hapusPemberitahuan: when image exists but file missing, skip unlink and still succeed', async () => {
+    mockRequest.params = { id: '123' };
+    const mockInnerPrisma = {
+      pengelolaasrama: { findFirst: jest.fn().mockResolvedValue({ Pengelola_id: 99 }) },
+      pemberitahuan: {
+        findFirst: jest.fn().mockResolvedValue({ pemberitahuan_id: 123, image: '/uploads/pemberitahuan/missing.png', Pengelola_id: 99 }),
+        delete: jest.fn().mockResolvedValue({ pemberitahuan_id: 123 })
+      },
+      notification: { deleteMany: jest.fn().mockResolvedValue({}) }
+    };
+    mockPrismaTransaction.mockImplementation(async (fn) => await fn(mockInnerPrisma));
+
+    mockExistsSync.mockReturnValue(false);
+
+    await controller.hapusPemberitahuan(mockRequest, mockResponse);
+
+    expect(mockUnlinkSync).not.toHaveBeenCalled();
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+  });
+  it('tambahPemberitahuan: returns 401 when not authenticated', async () => {
+    mockRequest.session = {};
+    mockRequest.user = null;
+    mockRequest.body = { title: 'Title', content: 'Content' };
+    await controller.tambahPemberitahuan(mockRequest, mockResponse);
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+  });
+});
