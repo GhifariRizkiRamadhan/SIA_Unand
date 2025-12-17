@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { prisma } = require('../config/database');
 
 // Fungsi untuk membuat notifikasi baru
 const createNotification = async (userId, title, message, type, referenceId = null) => {
