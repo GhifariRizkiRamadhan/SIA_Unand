@@ -13,6 +13,7 @@ function createInMemoryPrisma() {
   ];
   let izinkeluar = [];
   let pelaporankerusakan = [];
+  let pemberitahuan = [];
 
   const clone = (x) => (x == null ? x : JSON.parse(JSON.stringify(x)));
   const pick = (obj, select) => {
@@ -27,6 +28,41 @@ function createInMemoryPrisma() {
   return {
     $connect: async () => {},
     $disconnect: async () => {},
+    $transaction: async (fn) => {
+      const tx = {
+        pengelolaasrama: {
+          findFirst: async ({ where } = {}) => {
+            if (where?.user?.user_id) {
+              return clone(pengelolaasrama.find(p => p.user_id === where.user.user_id) || null);
+            }
+            if (where?.user_id) {
+              return clone(pengelolaasrama.find(p => p.user_id === where.user_id) || null);
+            }
+            return null;
+          }
+        },
+        pemberitahuan: {
+          findFirst: async ({ where } = {}) => {
+            return clone(pemberitahuan.find(p => p.pemberitahuan_id === Number(where?.pemberitahuan_id) && (where?.Pengelola_id == null || p.Pengelola_id === where.Pengelola_id)) || null);
+          },
+          delete: async ({ where }) => {
+            const idx = pemberitahuan.findIndex(p => p.pemberitahuan_id === Number(where.pemberitahuan_id));
+            if (idx !== -1) {
+              const del = pemberitahuan[idx];
+              pemberitahuan.splice(idx, 1);
+              return clone(del);
+            }
+            return null;
+          }
+        },
+        notification: {
+          deleteMany: async ({ where } = {}) => {
+            return { count: 0 };
+          }
+        }
+      };
+      return await fn(tx);
+    },
     user: {
       findUnique: async ({ where }) => {
         if (where?.email) return clone(users.find(u => u.email === where.email) || null);
@@ -134,8 +170,50 @@ function createInMemoryPrisma() {
     },
     notification: {
       create: async ({ data }) => ({ notification_id: Date.now(), ...data }),
-      findMany: async () => [],
-      updateMany: async () => ({ count: 0 })
+      findMany: async ({ where, orderBy } = {}) => {
+        return [];
+      },
+      updateMany: async ({ where, data } = {}) => ({ count: 1 }),
+      deleteMany: async ({ where } = {}) => ({ count: 0 })
+    },
+    pemberitahuan: {
+      count: async () => pemberitahuan.length,
+      findMany: async ({ orderBy, skip = 0, take = 20, include } = {}) => {
+        let list = pemberitahuan.slice();
+        if (orderBy?.date === 'desc') list.sort((a,b)=> new Date(b.date || 0) - new Date(a.date || 0));
+        list = list.slice(skip, skip + take);
+        if (include?.pengelolaasrama?.include?.user?.select?.name) {
+          list = list.map(p => ({ ...p, pengelolaasrama: { user: { name: (users.find(u => u.user_id === (pengelolaasrama.find(x => x.Pengelola_id === p.Pengelola_id)?.user_id))?.name) || 'Admin' } } }));
+        }
+        return clone(list);
+      },
+      findFirst: async ({ where } = {}) => {
+        return clone(pemberitahuan.find(p => p.pemberitahuan_id === Number(where?.pemberitahuan_id) && (where?.Pengelola_id == null || p.Pengelola_id === where.Pengelola_id)) || null);
+      },
+      findUnique: async ({ where } = {}) => {
+        return clone(pemberitahuan.find(p => p.pemberitahuan_id === Number(where?.pemberitahuan_id)) || null);
+      },
+      create: async ({ data, include } = {}) => {
+        const id = (pemberitahuan[pemberitahuan.length - 1]?.pemberitahuan_id || 0) + 1;
+        const rec = { pemberitahuan_id: id, date: new Date(), ...data };
+        pemberitahuan.push(rec);
+        if (include?.pengelolaasrama?.include?.user?.select?.name) {
+          const peng = pengelolaasrama.find(x => x.Pengelola_id === rec.Pengelola_id);
+          return clone({ ...rec, pengelolaasrama: { user: { name: (users.find(u => u.user_id === peng?.user_id)?.name) || 'Admin' } } });
+        }
+        return clone(rec);
+      },
+      update: async ({ where, data, include } = {}) => {
+        const idx = pemberitahuan.findIndex(p => p.pemberitahuan_id === Number(where.pemberitahuan_id));
+        if (idx === -1) return null;
+        pemberitahuan[idx] = { ...pemberitahuan[idx], ...data };
+        let rec = pemberitahuan[idx];
+        if (include?.pengelolaasrama?.include?.user?.select?.name) {
+          const peng = pengelolaasrama.find(x => x.Pengelola_id === rec.Pengelola_id);
+          rec = { ...rec, pengelolaasrama: { user: { name: (users.find(u => u.user_id === peng?.user_id)?.name) || 'Admin' } } };
+        }
+        return clone(rec);
+      }
     }
   };
 }
