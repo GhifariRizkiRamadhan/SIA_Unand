@@ -1,44 +1,55 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
-/**
- * @see https://playwright.dev/docs/test-configuration
- */
+const isHostingTest = !!process.env.HOSTING_TEST;
+
 module.exports = defineConfig({
-    testDir: './tests/functional',
-    /* Run tests in files in parallel */
-    fullyParallel: false,
-    /* Fail the build on CI if you accidentally left test.only in the source code. */
-    forbidOnly: !!process.env.CI,
-    /* Retry on CI only */
-    retries: process.env.CI ? 2 : 0,
-    /* Opt out of parallel tests on CI. */
-    workers: 1,
-    /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: 'html',
-    /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-    use: {
-        /* Base URL to use in actions like `await page.goto('/')`. */
-        baseURL: 'http://localhost:3000',
+  testDir: './tests',
 
-        /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-        trace: 'on-first-retry',
+  fullyParallel: false,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: 1,
+  reporter: 'html',
+
+  use: {
+    baseURL: isHostingTest
+      ? 'https://hosting-tash-pop-186188422008.asia-southeast1.run.app'
+      : 'http://localhost:3000',
+    trace: 'on-first-retry',
+  },
+
+  projects: [
+    // FUNCTIONAL TEST → CHROMIUM SAJA
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
 
-    /* Configure projects for major browsers */
-    projects: [
-        {
-            name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+    // COMPATIBILITY TEST → FIREFOX
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: /compatibility\/.*\.spec\.js/,
+    },
+
+    // COMPATIBILITY TEST → SAFARI (WEBKIT)
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /compatibility\/.*\.spec\.js/,
+    },
+  ],
+
+  ...(isHostingTest
+    ? {}
+    : {
+        webServer: {
+          command: 'npm start',
+          url: 'http://localhost:3000',
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+          env: { JWT_SECRET: 'test_secret', NODE_ENV: 'test' },
         },
-    ],
-
-    /* Run your local dev server before starting the tests */
-    webServer: {
-        command: 'npm start',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-        env: { JWT_SECRET: 'test_secret', NODE_ENV: 'test' },
-    },
+      }),
 });
