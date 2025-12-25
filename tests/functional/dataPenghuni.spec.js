@@ -2,8 +2,8 @@
 const { test, expect } = require('@playwright/test');
 
 const PENGELOLA = {
-  email: 'gipadmin@admin.com',
-  password: 'gipa123'
+ email: 'adminpengelola@example.com',
+  password: 'pengelola123'
 };
 
 // Login
