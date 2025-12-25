@@ -6,25 +6,24 @@ const PENGELOLA = {
 };
 
 test.describe('Compatibility Test - Login Pengelola (Hosting)', () => {
-  test('Login di berbagai browser', async ({ page }) => {
+  test('Login di berbagai browser', async ({ page }, testInfo) => {
+
+    // 1. Buka halaman login 
     await page.goto('/login');
 
+    // 2. Isi kredensial
     await page.fill('#email', PENGELOLA.email);
     await page.fill('#password', PENGELOLA.password);
 
+    // 3. Submit login
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
       page.click('button[type="submit"]'),
     ]);
 
+    // 4. Validasi login berhasil
     await expect(page).toHaveURL(/pengelola/);
+    await expect(page.locator('#profile-dropdown')).toBeVisible();
 
-    const profile = page.locator('#profile-dropdown');
-    await expect(profile).toBeVisible();
-
-    await page.screenshot({
-      path: `test-results/compatibility-login-${test.info().project.name}.png`,
-      fullPage: true,
-    });
   });
 });
