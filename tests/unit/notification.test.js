@@ -6,8 +6,8 @@ const mockPrismaMahasiswaFindUnique = jest.fn();
 const mockPrismaMahasiswaFindMany = jest.fn();
 const mockPrismaPengelolaFindMany = jest.fn();
 
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
+jest.mock('../../config/database', () => ({
+  prisma: {
     notification: {
       create: mockPrismaNotificationCreate,
       updateMany: mockPrismaNotificationUpdateMany,
@@ -20,7 +20,7 @@ jest.mock('@prisma/client', () => ({
     pengelolaasrama: {
       findMany: mockPrismaPengelolaFindMany
     }
-  })),
+  }
 }));
 
 // Mock global.io for socket.io emissions

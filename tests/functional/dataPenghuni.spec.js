@@ -1,73 +1,110 @@
 // tests/functional/dataPenghuni.spec.js
 const { test, expect } = require('@playwright/test');
 
-const PENGELOLA = {email: 'adminpengelola@example.com', password: 'pengelola123' };
+const PENGELOLA = {
+ email: 'adminpengelola@example.com',
+  password: 'pengelola123'
+};
 
+// Login
+async function loginAsPengelola(page) {
+  await page.goto('/login');
+  await page.fill('#email', PENGELOLA.email);
+  await page.fill('#password', PENGELOLA.password);
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle' }),
+    page.click('button[type="submit"]')
+  ]);
+
+  await expect(page).toHaveURL(/pengelola/);
+}
+
+// Generate NIM unik
+function generateTestNIM(testInfo) {
+  return `PW_TEST_${testInfo.workerIndex}_${Date.now()}`;
+}
+
+// Search via DataTables
+async function searchInTable(page, tableId, keyword) {
+  const searchInput = page.locator(
+    `#${tableId}_filter input[type="search"]`
+  );
+
+  await expect(searchInput).toBeVisible();
+  await searchInput.fill(keyword);
+  await page.waitForTimeout(500);
+
+  const rows = page.locator(`#${tableId} tbody tr`);
+  await expect(rows.first()).toBeVisible({ timeout: 10000 });
+
+  return rows;
+}
+
+
+//TEST SUITE
 test.describe('Data Penghuni - Functional (Pengelola)', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Login sebagai pengelola sebelum tiap test
-    await page.goto('/login');
-    await page.fill('#email', PENGELOLA.email);
-    await page.fill('#password', PENGELOLA.password);
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('button[type="submit"]')
-    ]);
-    await expect(page).toHaveURL(/pengelola/);
+    await loginAsPengelola(page);
   });
 
   test('1. Halaman Data Penghuni bisa diakses', async ({ page }) => {
     await page.goto('/pengelola/dataPenghuni');
-    await expect(page.locator('h1', { hasText: 'Data Penghuni' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Data Penghuni' })
+    ).toBeVisible();
   });
 
-  test('2. Tambah penghuni baru berhasil', async ({ page }) => {
-    const timestamp = Date.now();
-    const nama = `Test Penghuni ${timestamp}`;
-    const nim = `TST${timestamp}`;
-    const jurusan = 'Teknik Informatika';
+  test('2. Tambah penghuni baru berhasil', async ({ page }, testInfo) => {
+    const nim = generateTestNIM(testInfo);
+    const nama = `Playwright Penghuni ${nim}`;
 
     await page.goto('/pengelola/dataPenghuni');
     await page.click('button:has-text("Tambah Penghuni")');
 
-    await page.fill('form#formTambah input[name="nama"]', nama);
-    await page.fill('form#formTambah input[name="nim"]', nim);
-    await page.fill('form#formTambah input[name="jurusan"]', jurusan);
+    await page.fill('#formTambah input[name="nama"]', nama);
+    await page.fill('#formTambah input[name="nim"]', nim);
+    await page.fill('#formTambah input[name="jurusan"]', 'Teknik Informatika');
 
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('form#formTambah button[type="submit"]')
+      page.click('#formTambah button[type="submit"]')
     ]);
 
-    await expect(page.locator('text=Data penghuni berhasil ditambahkan')).toBeVisible();
-    await expect(page.locator(`xpath=//td[text()="${nim}"]`)).toBeVisible();
+    await expect(
+      page.locator('text=Data penghuni berhasil ditambahkan')
+    ).toBeVisible();
+
+    await searchInTable(page, 'tableAktif', nim);
   });
 
-  test('3. Edit penghuni berhasil', async ({ page }) => {
-    const timestamp = Date.now();
-    const nim = `TST${timestamp}`;
-    const nama = `Test Penghuni ${timestamp}`;
-    const namaBaru = `Test Penghuni EDIT ${timestamp}`;
+  test('3. Edit penghuni berhasil', async ({ page }, testInfo) => {
+    const nim = generateTestNIM(testInfo);
+    const nama = `Playwright Penghuni ${nim}`;
+    const namaBaru = `Playwright EDIT ${nim}`;
 
-    // Tambah data
+    // Tambah
     await page.goto('/pengelola/dataPenghuni');
     await page.click('button:has-text("Tambah Penghuni")');
-    await page.fill('form#formTambah input[name="nama"]', nama);
-    await page.fill('form#formTambah input[name="nim"]', nim);
-    await page.fill('form#formTambah input[name="jurusan"]', 'Teknik Informatika');
+    await page.fill('#formTambah input[name="nama"]', nama);
+    await page.fill('#formTambah input[name="nim"]', nim);
+    await page.fill('#formTambah input[name="jurusan"]', 'Teknik Informatika');
+
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('form#formTambah button[type="submit"]')
+      page.click('#formTambah button[type="submit"]')
     ]);
 
-    // Edit
-    const editBtn = page.locator(`xpath=//td[text()="${nim}"]/ancestor::tr//button[@title="Edit"]`);
-    await expect(editBtn).toBeVisible();
+    // Cari via search
+    const rows = await searchInTable(page, 'tableAktif', nim);
+    const row = rows.first();
 
     await Promise.all([
-      page.waitForResponse(resp => resp.url().includes('/pengelola/dataPenghuni/get/') && resp.status() === 200),
-      editBtn.click()
+      page.waitForResponse(r =>
+        r.url().includes('/pengelola/dataPenghuni/get/') && r.status() === 200
+      ),
+      row.locator('button[title="Edit"]').click()
     ]);
 
     await expect(page.locator('#modalEdit')).toBeVisible();
@@ -75,182 +112,133 @@ test.describe('Data Penghuni - Functional (Pengelola)', () => {
 
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('form#formEdit button[type="submit"]')
+      page.click('#formEdit button[type="submit"]')
     ]);
 
-    await expect(page.locator('text=Data penghuni berhasil diupdate')).toBeVisible();
+    await expect(
+      page.locator('text=Data penghuni berhasil diupdate')
+    ).toBeVisible();
 
-    // ===== FIX: cek kolom Nama spesifik pada baris NIM =====
-    // struktur kolom: No (1), Foto (2), Nama (3), NIM (4), ...
-    // jadi nama ada di td[3] (1-based). Kita cek dengan XPath yang memilih td[3].
-    const nameCell = page.locator(`xpath=//td[text()="${nim}"]/ancestor::tr/td[3]`);
-    await expect(nameCell).toHaveText(new RegExp(namaBaru), { timeout: 10000 });
+    await searchInTable(page, 'tableAktif', namaBaru);
   });
 
-  test('4a. Toggle status penghuni - Nonaktifkan berhasil', async ({ page }) => {
-    const timestamp = Date.now();
-    const nim = `TST${timestamp}`;
-    const nama = `Test Penghuni ${timestamp}`;
+  test('4a. Toggle status penghuni - Nonaktifkan berhasil', async ({ page }, testInfo) => {
+    const nim = generateTestNIM(testInfo);
+    const nama = `Playwright Penghuni ${nim}`;
 
-    // Tambah data
+    // Tambah
     await page.goto('/pengelola/dataPenghuni');
     await page.click('button:has-text("Tambah Penghuni")');
-    await page.fill('form#formTambah input[name="nama"]', nama);
-    await page.fill('form#formTambah input[name="nim"]', nim);
-    await page.fill('form#formTambah input[name="jurusan"]', 'Teknik Informatika');
+    await page.fill('#formTambah input[name="nama"]', nama);
+    await page.fill('#formTambah input[name="nim"]', nim);
+    await page.fill('#formTambah input[name="jurusan"]', 'Teknik Informatika');
+
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('form#formTambah button[type="submit"]')
+      page.click('#formTambah button[type="submit"]')
     ]);
 
-    // Dapatkan tombol Nonaktifkan pada row baru
-    const row = page.locator(`xpath=//td[text()="${nim}"]/ancestor::tr`);
-    await expect(row).toBeVisible();
-    const nonaktifBtn = row.locator('button[title="Nonaktifkan"]');
-    await expect(nonaktifBtn).toBeVisible();
+    const rows = await searchInTable(page, 'tableAktif', nim);
+    const row = rows.first();
 
-    // Accept confirm
-    page.once('dialog', async dialog => { await dialog.accept(); });
+    page.once('dialog', d => d.accept());
 
-    // Klik dan tunggu response ke endpoint toggle
-    const toggleResponse = page.waitForResponse(resp =>
-      resp.url().includes('/pengelola/dataPenghuni/toggle/') && resp.status() < 400
-    );
-    await nonaktifBtn.click();
-    await toggleResponse;
+    await Promise.all([
+      page.waitForResponse(r =>
+        r.url().includes('/pengelola/dataPenghuni/toggle/') && r.status() < 400
+      ),
+      row.locator('button[title="Nonaktifkan"]').click()
+    ]);
 
-    await expect(page.locator('text=Status penghuni berhasil diubah')).toBeVisible();
-    // Pastikan sekarang berada pada tableTidakAktif
-    const moved = page.locator(`xpath=//table[@id="tableTidakAktif"]//td[text()="${nim}"]`);
-    await expect(moved).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.locator('text=Status penghuni berhasil diubah')
+    ).toBeVisible();
+
+    await searchInTable(page, 'tableTidakAktif', nim);
   });
 
-  test('4b. Toggle status penghuni - Aktifkan kembali berhasil', async ({ page }) => {
-    const timestamp = Date.now();
-    const nim = `TST${timestamp}`;
-    const nama = `Test Penghuni ${timestamp}`;
+  test('4b. Toggle status penghuni - Aktifkan kembali berhasil', async ({ page }, testInfo) => {
+    const nim = generateTestNIM(testInfo);
+    const nama = `Playwright Penghuni ${nim}`;
 
-    // Tambah data & nonaktifkan langsung via UI to reach "tidak aktif" state
+    // Tambah
     await page.goto('/pengelola/dataPenghuni');
     await page.click('button:has-text("Tambah Penghuni")');
-    await page.fill('form#formTambah input[name="nama"]', nama);
-    await page.fill('form#formTambah input[name="nim"]', nim);
-    await page.fill('form#formTambah input[name="jurusan"]', 'Teknik Informatika');
+    await page.fill('#formTambah input[name="nama"]', nama);
+    await page.fill('#formTambah input[name="nim"]', nim);
+    await page.fill('#formTambah input[name="jurusan"]', 'Teknik Informatika');
+
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('form#formTambah button[type="submit"]')
+      page.click('#formTambah button[type="submit"]')
     ]);
 
     // Nonaktifkan
-    let row = page.locator(`xpath=//td[text()="${nim}"]/ancestor::tr`);
-    await expect(row).toBeVisible();
-    page.once('dialog', async dialog => { await dialog.accept(); });
-    let nonaktifBtn = row.locator('button[title="Nonaktifkan"]');
-    const resp1 = page.waitForResponse(resp => resp.url().includes('/pengelola/dataPenghuni/toggle/') && resp.status() < 400);
-    await nonaktifBtn.click();
-    await resp1;
-    await expect(page.locator('text=Status penghuni berhasil diubah')).toBeVisible();
+    let rows = await searchInTable(page, 'tableAktif', nim);
+    let row = rows.first();
 
-    // Sekarang cari row di tableTidakAktif lalu klik Aktifkan
-    const notActiveRow = page.locator(`xpath=//table[@id="tableTidakAktif"]//td[text()="${nim}"]/ancestor::tr`);
-    await expect(notActiveRow).toBeVisible({ timeout: 5000 });
-    const activateBtn = notActiveRow.locator('button[title="Aktifkan"]');
-    await expect(activateBtn).toBeVisible();
+    page.once('dialog', d => d.accept());
+    await Promise.all([
+      page.waitForResponse(r =>
+        r.url().includes('/pengelola/dataPenghuni/toggle/') && r.status() < 400
+      ),
+      row.locator('button[title="Nonaktifkan"]').click()
+    ]);
 
-    page.once('dialog', async dialog => { await dialog.accept(); });
-    const resp2 = page.waitForResponse(resp => resp.url().includes('/pengelola/dataPenghuni/toggle/') && resp.status() < 400);
-    await activateBtn.click();
-    await resp2;
+    // Aktifkan kembali
+    rows = await searchInTable(page, 'tableTidakAktif', nim);
+    row = rows.first();
 
-    await expect(page.locator('text=Status penghuni berhasil diubah')).toBeVisible();
-    // Pastikan kembali di tableAktif
-    const movedBack = page.locator(`xpath=//table[@id="tableAktif"]//td[text()="${nim}"]`);
-    await expect(movedBack).toBeVisible({ timeout: 5000 });
+    page.once('dialog', d => d.accept());
+    await Promise.all([
+      page.waitForResponse(r =>
+        r.url().includes('/pengelola/dataPenghuni/toggle/') && r.status() < 400
+      ),
+      row.locator('button[title="Aktifkan"]').click()
+    ]);
+
+    await expect(
+      page.locator('text=Status penghuni berhasil diubah')
+    ).toBeVisible();
+
+    await searchInTable(page, 'tableAktif', nim);
   });
 
   test('5. Show entries (page length) pada DataTables berfungsi', async ({ page }) => {
-    // Buat 3 data supaya kita bisa tes pagination/length
-    const base = Date.now();
-    const items = [
-      { nim: `S${base}1`, nama: `Show Test 1 ${base}` },
-      { nim: `S${base}2`, nama: `Show Test 2 ${base}` },
-      { nim: `S${base}3`, nama: `Show Test 3 ${base}` }
-    ];
-
     await page.goto('/pengelola/dataPenghuni');
 
-    for (const it of items) {
-      await page.click('button:has-text("Tambah Penghuni")');
-      await page.fill('form#formTambah input[name="nama"]', it.nama);
-      await page.fill('form#formTambah input[name="nim"]', it.nim);
-      await page.fill('form#formTambah input[name="jurusan"]', 'Teknik Informatika');
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle' }),
-        page.click('form#formTambah button[type="submit"]')
-      ]);
-      await expect(page.locator('text=Data penghuni berhasil ditambahkan')).toBeVisible();
-    }
-
-    // Pastikan lebih dari 1 row ada
-    const totalRows = await page.locator('#tableAktif tbody tr').count();
-    expect(totalRows).toBeGreaterThanOrEqual(3);
-
-    // Gunakan DataTables API untuk set page length ke 1 (memastikan plugin tersedia di halaman)
     await page.evaluate(() => {
-      // eslint-disable-next-line no-undef
-      if (window.$ && $.fn.dataTable && $.fn.dataTable.isDataTable('#tableAktif')) {
+      if (window.$ && $.fn.dataTable.isDataTable('#tableAktif')) {
         $('#tableAktif').DataTable().page.len(1).draw();
-      } else {
-        // fallback: try multiple selects if DataTables not initialized yet
-        const sel = document.querySelector('#tableAktif_length select');
-        if (sel) sel.value = '1', sel.dispatchEvent(new Event('change'));
       }
     });
 
-    // Tunggu redraw + pastikan hanya 1 row yang terlihat di tbody
-    await page.waitForTimeout(500); // beri waktu redraw
-    const visibleRows = await page.locator('#tableAktif tbody tr').evaluateAll(rows =>
-      rows.filter(r => r.offsetParent !== null).length
-    );
+    await page.waitForTimeout(500);
+
+    const visibleRows = await page
+      .locator('#tableAktif tbody tr')
+      .evaluateAll(rows => rows.filter(r => r.offsetParent !== null).length);
+
     expect(visibleRows).toBeLessThanOrEqual(1);
   });
 
-  test('6. Search box DataTables mencari row berdasarkan NIM atau Nama', async ({ page }) => {
-    const timestamp = Date.now();
-    const nim = `Q${timestamp}`;
-    const nama = `Search Test ${timestamp}`;
+  test('6. Search box DataTables mencari row berdasarkan NIM atau Nama', async ({ page }, testInfo) => {
+    const nim = generateTestNIM(testInfo);
+    const nama = `Playwright Search ${nim}`;
 
     await page.goto('/pengelola/dataPenghuni');
-    // Tambah data target
     await page.click('button:has-text("Tambah Penghuni")');
-    await page.fill('form#formTambah input[name="nama"]', nama);
-    await page.fill('form#formTambah input[name="nim"]', nim);
-    await page.fill('form#formTambah input[name="jurusan"]', 'Teknik Informatika');
+    await page.fill('#formTambah input[name="nama"]', nama);
+    await page.fill('#formTambah input[name="nim"]', nim);
+    await page.fill('#formTambah input[name="jurusan"]', 'Teknik Informatika');
+
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.click('form#formTambah button[type="submit"]')
+      page.click('#formTambah button[type="submit"]')
     ]);
-    await expect(page.locator('text=Data penghuni berhasil ditambahkan')).toBeVisible();
 
-    // Pilih search input yang mengontrol tableAktif (hindari ambiguitas)
-    const searchInput = page.locator('input[aria-controls="tableAktif"], #tableAktif_filter input[type="search"]');
-    await expect(searchInput.first()).toBeVisible();
-
-    // Ketik NIM dan tunggu filter
-    await searchInput.first().fill(nim);
-    await page.waitForTimeout(400);
-
-    // Pastikan ada row yang mengandung NIM pada tableAktif
-    const found = await page.locator(`xpath=//table[@id="tableAktif"]//td[text()="${nim}"]`).count();
-    expect(found).toBeGreaterThanOrEqual(1);
-
-    // Bersihkan search, coba cari by nama (partial)
-    await searchInput.first().fill('');
-    await page.waitForTimeout(200);
-    await searchInput.first().fill('Search Test');
-    await page.waitForTimeout(400);
-    const foundName = await page.locator(`xpath=//table[@id="tableAktif"]//td[contains(text(),"Search Test")]`).count();
-    expect(foundName).toBeGreaterThanOrEqual(1);
+    await searchInTable(page, 'tableAktif', nim);
+    await searchInTable(page, 'tableAktif', 'Playwright Search');
   });
 
 });

@@ -9,8 +9,8 @@ const mockPrismaPengelolaFindFirst = jest.fn();
 const mockPrismaMahasiswaFindMany = jest.fn();
 const mockPrismaTransaction = jest.fn();
 
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
+jest.mock('../../config/database', () => ({
+  prisma: {
     pemberitahuan: {
       create: mockPrismaNotificationCreate,
       update: mockPrismaNotificationUpdate,
@@ -30,7 +30,7 @@ jest.mock('@prisma/client', () => ({
       deleteMany: mockPrismaNotificationDeleteMany
     },
     $transaction: mockPrismaTransaction
-  })),
+  }
 }));
 
 jest.mock('../../models/userModels');
@@ -121,7 +121,7 @@ describe('Unit Test: controller/conPmbrthnPnl.js (Pemberitahuan Management)', ()
     const mockPrismaPemberitahuanCount = jest.fn().mockResolvedValue(mockCount);
 
     // Update mock implementation
-    const prismaMock = require('@prisma/client').PrismaClient();
+    const { prisma: prismaMock } = require('../../config/database');
     prismaMock.pemberitahuan.findMany = mockPrismaPemberitahuanFindMany;
     prismaMock.pemberitahuan.count = mockPrismaPemberitahuanCount;
 
@@ -473,7 +473,7 @@ describe('Tambahan coverage', () => {
     mockRequest.query = { page: '2' };
     const mockPemberitahuan = [{ pemberitahuan_id: 1, title: 'T1' }];
 
-    const prismaMock = require('@prisma/client').PrismaClient();
+    const { prisma: prismaMock } = require('../../config/database');
     prismaMock.pemberitahuan.findMany = jest.fn().mockResolvedValue(mockPemberitahuan);
     prismaMock.pemberitahuan.count = jest.fn().mockResolvedValue(100);
 
