@@ -332,37 +332,4 @@ describe('Unit Test: controller/conPbyr.js', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(500);
     });
   });
-
-  // --- Update (Redundant) ---
-  describe('updatePembayaran', () => {
-    it('Happy Path', async () => {
-      mockRequest.params.id = '10';
-      await controller.updatePembayaran(mockRequest, mockResponse);
-      expect(mockPrismaPembayaranUpdate).toHaveBeenCalled();
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
-    });
-
-    it('Happy Path: No File', async () => {
-      mockRequest.params.id = '10';
-      mockRequest.file = null;
-      await controller.updatePembayaran(mockRequest, mockResponse);
-      expect(mockPrismaPembayaranUpdate).toHaveBeenCalledWith(expect.objectContaining({
-        where: { pembayaran_id: 10 },
-        data: expect.objectContaining({ bukti_pembayaran: null })
-      }));
-    });
-
-    it('Sad Path: Invalid ID', async () => {
-      mockRequest.params.id = 'abc';
-      await controller.updatePembayaran(mockRequest, mockResponse);
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
-    });
-
-    it('Error', async () => {
-      mockRequest.params.id = '10';
-      mockPrismaPembayaranUpdate.mockRejectedValue(new Error());
-      await controller.updatePembayaran(mockRequest, mockResponse);
-      expect(mockResponse.status).toHaveBeenCalledWith(500);
-    });
-  });
 });

@@ -102,6 +102,7 @@ test.describe('Bebas Asrama & Pembayaran Functional Tests', () => {
         }
     }
 
+
     async function verifyFacilities(page, isComplete, damageCost = 0) {
         await page.goto('/pengelola/pengelola-bebas-asrama');
         await page.reload();

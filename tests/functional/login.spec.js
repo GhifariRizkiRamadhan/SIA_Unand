@@ -1,8 +1,8 @@
 // tests/functional/login.spec.js
 const { test, expect } = require('@playwright/test');
 
-const MAHASISWA = { email: '2211522011_ghifari@student.unand.ac.id', password: 'gipa123' };
-const PENGELOLA  = { email: 'gipadmin@admin.com', password: 'gipa123' };
+const MAHASISWA = { email: 'mahasiswa@example.com', password: 'mahasiswa123' };
+const PENGELOLA  = { email: 'adminpengelola@example.com', password: 'pengelola123' };
 
 test.describe('Login Functional Tests', () => {
   test('Mahasiswa: login success -> redirect to /mahasiswa/dashboard and profile visible', async ({ page }) => {

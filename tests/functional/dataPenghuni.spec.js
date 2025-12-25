@@ -1,7 +1,7 @@
 // tests/functional/dataPenghuni.spec.js
 const { test, expect } = require('@playwright/test');
 
-const PENGELOLA = { email: 'gipadmin@admin.com', password: 'gipa123' };
+const PENGELOLA = {email: 'adminpengelola@example.com', password: 'pengelola123' };
 
 test.describe('Data Penghuni - Functional (Pengelola)', () => {
 

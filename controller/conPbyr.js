@@ -170,31 +170,31 @@ const getDetailPembayaran = async (req, res) => {
 };
 
 // Update pembayaran (re-upload bukti)
-const updatePembayaran = async (req, res) => {
-  try {
-    const buktiPath = req.file?.path || null;
-    // REPLACED: const updated = await Pembayaran.findByIdAndUpdate(req.params.id, { ... }, { new: true });
-    const numericId = parseInt(req.params.id, 10);
-    if (isNaN(numericId)) {
-      return res.status(400).json({ success: false, message: "ID tidak valid" });
-    }
+// const updatePembayaran = async (req, res) => {
+//   try {
+//     const buktiPath = req.file?.path || null;
+//     // REPLACED: const updated = await Pembayaran.findByIdAndUpdate(req.params.id, { ... }, { new: true });
+//     const numericId = parseInt(req.params.id, 10);
+//     if (isNaN(numericId)) {
+//       return res.status(400).json({ success: false, message: "ID tidak valid" });
+//     }
 
-    const updated = await prisma.pembayaran.update({
-      where: {
-        pembayaran_id: numericId
-      },
-      data: {
-        bukti_pembayaran: buktiPath,
-        status_bukti: "BELUM_DIVERIFIKASI"
-      }
-    });
+//     const updated = await prisma.pembayaran.update({
+//       where: {
+//         pembayaran_id: numericId
+//       },
+//       data: {
+//         bukti_pembayaran: buktiPath,
+//         status_bukti: "BELUM_DIVERIFIKASI"
+//       }
+//     });
 
-    res.json({ success: true, data: updated });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Gagal update pembayaran" });
-  }
-};
+//     res.json({ success: true, data: updated });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: "Gagal update pembayaran" });
+//   }
+// };
 
 // ====================== Pengelola ======================
 
@@ -333,7 +333,7 @@ module.exports = {
   showPembayaran,
   uploadBuktiPembayaran,
   getDetailPembayaran,
-  updatePembayaran,
+  //updatePembayaran,
   // pengelola
   getAllPembayaran,
   approvePembayaran,
