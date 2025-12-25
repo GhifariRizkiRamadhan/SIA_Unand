@@ -65,7 +65,14 @@ test.describe('Pelaporan Kerusakan Fasilitas', () => {
     await page.waitForSelector('#adminLaporanTable tbody tr');
     const rowAfter = page.locator('#adminLaporanTable tbody tr', { hasText: 'Lampu kamar mati' }).first();
     await expect(rowAfter).toContainText('ditangani');
+    await rowAfter.locator('button[data-action="status"][data-status="selesai"]').click();
+    await expect(page.locator('#confirmModal')).toBeVisible();
+    await page.click('#confirmOkBtn');
+    await expect(page.locator('#notifyModal')).toBeVisible();
+    await page.click('#notifyOkBtn');
+    await page.waitForSelector('#adminLaporanTable tbody tr');
+    const rowDone = page.locator('#adminLaporanTable tbody tr', { hasText: 'Lampu kamar mati' }).first();
+    await expect(rowDone).toContainText('selesai');
     await logout(page);
   });
 });
-

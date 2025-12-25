@@ -74,5 +74,46 @@ test.describe('Izin Keluar Jam Reguler', () => {
     await expect(rowAfter).toContainText('Approved');
     await logout(page);
   });
+
+  test('Mahasiswa ajukan izin lalu admin reject dengan catatan', async ({ page }) => {
+    const dateStr = ymd(new Date());
+
+    await login(page, MAHASISWA_CRED.email, MAHASISWA_CRED.password);
+    await page.goto('/pengajuan-surat-izin');
+    await page.fill('#reason', 'Keperluan non-reguler - ditolak');
+    await page.fill('#date_out', dateStr);
+    await page.fill('#time_out', '09:00');
+    await page.fill('#date_return', dateStr);
+    await page.fill('#time_return', '12:00');
+    await page.locator('input#document').setInputFiles({ name: 'izin.pdf', mimeType: 'application/pdf', buffer: Buffer.from('PDF') });
+    await page.click('#izinForm button[type="submit"]');
+    await expect(page.locator('#notifyModal')).toBeVisible();
+    await page.click('#notifyOkBtn');
+    await expect(page.locator('#izinTable')).toContainText('Keperluan non-reguler - ditolak');
+    await expect(page.locator('#izinTable')).toContainText('pending');
+    await logout(page);
+
+    await login(page, PENGELOLA_CRED.email, PENGELOLA_CRED.password);
+    await page.goto('/pengelola/perizinan');
+    await page.waitForSelector('#tableIzin tbody');
+    const row2 = page.locator('#tableIzin tbody tr', { hasText: 'Keperluan non-reguler - ditolak' }).first();
+    await expect(row2).toBeVisible();
+    await row2.locator('button[data-action="reject"]').click();
+    await expect(page.locator('#notesModal')).toBeVisible();
+    await page.fill('#notesInput', 'Tidak sesuai kebijakan');
+    await page.click('#notesSaveBtn');
+    await page.waitForSelector('#tableIzin tbody tr');
+    const row2After = page.locator('#tableIzin tbody tr', { hasText: 'Keperluan non-reguler - ditolak' }).first();
+    await expect(row2After).toContainText('Rejected');
+    const notesAttr = await row2After.getAttribute('data-notes');
+    expect(notesAttr).toBe('Tidak sesuai kebijakan');
+    await logout(page);
+
+    await login(page, MAHASISWA_CRED.email, MAHASISWA_CRED.password);
+    await page.goto('/pengajuan-surat-izin');
+    await expect(page.locator('#izinTable')).toContainText('Keperluan non-reguler - ditolak');
+    await expect(page.locator('#izinTable')).toContainText('Rejected');
+    await logout(page);
+  });
 });
 
